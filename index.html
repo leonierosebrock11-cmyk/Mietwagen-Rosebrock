@@ -266,7 +266,7 @@
 
     <div class="main-container">
 
-        <!-- STARTSEITE (4 Kacheln) -->
+        <!-- STARTSEITE (4 Kacheln genau wie auf dem Screenshot) -->
         <div id="home-view" class="view active">
             <h2 style="font-size: 1.2rem; margin-bottom: 5px;">Willkommen im Betriebssystem</h2>
             <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 25px;">Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an und greifen Sie auf Ihre Funktionen zu:</p>
@@ -315,7 +315,7 @@
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
             <h2 class="section-title">Mietwagenverkehr Rosebrock – Admin Leitstand</h2>
 
-            <!-- NEU HINZUGEFÜGT: Live-Übersicht Krankmeldungen & Schulschließungen (Oben im Leitstand) -->
+            <!-- Live-Übersicht Krankmeldungen & Schulschließungen (Oben im Leitstand) -->
             <div class="admin-box" style="border-left: 4px solid var(--danger-color);">
                 <h3>Live-Übersicht: Krankmeldungen & Schulschließungen</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -425,10 +425,15 @@
         <div id="driver-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
             <h2 class="section-title">Fahrer-Portal</h2>
-            <p style="font-size: 0.9rem; color: #4a5568;">Dienststatus melden & Pausenzeiten verwalten.</p>
+            <div class="admin-box">
+                <h3>Dienststatus & Pausenzeiten</h3>
+                <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 12px;">Hier können Sie Ihren aktuellen Dienststatus verwalten und Pausen eintragen.</p>
+                <button class="btn btn-success" onclick="alert('Status auf Bereit gesetzt!')">Als Bereit melden</button>
+                <button class="btn btn-danger" onclick="alert('Pause eingetragen!')" style="margin-left: 10px;">Pause machen</button>
+            </div>
         </div>
 
-        <!-- ELTERN PORTAL -->
+        <!-- ELTERN PORTAL (Exakt wie auf deinem Screenshot) -->
         <div id="parent-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
             <h2 class="section-title">Eltern-Portal (Familie Müller (Kind: Timmy))</h2>
@@ -451,7 +456,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 class="section-title" style="margin-bottom: 0;">Schul-Portal</h2>
                 <div>
-                    <!-- NEU HINZUGEFÜGT: Meldebutton auf der Schul-Startseite -->
+                    <!-- Roter Meldebutton für Schulausfälle -->
                     <button class="btn btn-danger" onclick="openClosureModal()">🚨 Schulausfall / Schließung melden</button>
                     <button class="back-btn" style="margin-bottom: 0; margin-left: 10px;" onclick="showView('home-view')">← Zurück</button>
                 </div>
@@ -461,7 +466,7 @@
 
     </div>
 
-    <!-- NEU HINZUGEFÜGT: Modal für Schulausfall-Meldung -->
+    <!-- Modal für Schulausfall-Meldung -->
     <div id="closure-modal" class="modal">
         <div class="modal-content">
             <h3>Schulausfall / Schließung melden</h3>

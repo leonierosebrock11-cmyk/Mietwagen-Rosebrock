@@ -29,11 +29,11 @@
         .login-box { background: white; padding: 12px; border-radius: 6px; border: 1px solid #e1e4e8; margin-top: 15px; }
         .form-control { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         
-        .btn { width: 100%; padding: 9px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
-        .btn-admin { background-color: #6f42c1; }
-        .btn-driver { background-color: #28a745; }
-        .btn-parent { background-color: #fd7e14; }
-        .btn-school { background-color: #e83e8c; }
+        .btn { padding: 8px 14px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; font-size: 0.85rem; }
+        .btn-admin { background-color: #6f42c1; width: 100%; }
+        .btn-driver { background-color: #28a745; width: 100%; }
+        .btn-parent { background-color: #fd7e14; width: 100%; }
+        .btn-school { background-color: #e83e8c; width: 100%; }
 
         /* Steuerung der Ansichten */
         .portal-section { display: none; }
@@ -42,13 +42,20 @@
         .back-btn { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-bottom: 20px; font-weight: bold; }
         .back-btn:hover { background: #5a6268; }
         
-        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .table th, .table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
+        .table th, .table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; font-size: 0.9rem; }
         .table th { background-color: #003366; color: white; }
+        
         .alert { background-color: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; margin-top: 15px; font-size: 0.9rem; }
-        .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .card { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         
         .credentials-hint { font-size: 0.75rem; color: #666; background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #ccc; }
+
+        /* Admin spezifische Styles nach Screenshot */
+        .admin-section-title { font-size: 1.15rem; color: #003366; margin-bottom: 15px; font-weight: bold; }
+        .invoice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .invoice-box { border: 1px dashed #b0bec5; background: #fafbfc; padding: 15px; border-radius: 6px; }
+        .invoice-box h4 { margin-top: 0; font-size: 0.95rem; color: #333; }
     </style>
 </head>
 <body>
@@ -159,7 +166,7 @@
                     </tbody>
                 </table>
                 <h4 style="margin-top: 20px;">Tourenplan (PDF)</h4>
-                <button onclick="alert('Öffne Tourenplan als PDF...')" class="btn" style="background-color: #004080; width: auto; padding: 8px 15px;">📄 Meinen Tourenplan (PDF) öffnen</button>
+                <button onclick="alert('Öffne Tourenplan als PDF...')" class="btn" style="background-color: #004080; width: auto;">📄 Meinen Tourenplan (PDF) öffnen</button>
             </div>
 
             <div class="alert">
@@ -184,19 +191,96 @@
             </div>
         </div>
 
-        <!-- 3. ADMIN-PORTAL -->
+        <!-- 3. ADMIN-PORTAL (EXAKT NACH DEINEM SCREENSHOT) -->
         <div id="admin-portal" class="portal-section">
             <button onclick="goHome()" class="back-btn">⬅ Zurück zur Übersicht</button>
-            <h2>Admin-Leitstand (Inhaber: Fred Rosebrock)</h2>
+            <h2 style="margin-bottom: 25px;">Mietwagenverkehr Rosebrock – Admin Leitstand</h2>
+            
+            <!-- Sektion 1: Fahrer-Anträge -->
             <div class="card">
-                <h3>Übersicht Fahrer & Status</h3>
-                <table class="table" id="admin-driver-table">
+                <div class="admin-section-title">Fahrer-Anträge (Urlaub & Anliegen)</div>
+                <table class="table">
                     <thead>
-                        <tr><th>Name</th><th>Fahrzeug</th><th>Status</th><th>Standort</th></tr>
+                        <tr>
+                            <th style="width: 25%;">Fahrer</th>
+                            <th style="width: 20%;">Art</th>
+                            <th style="width: 40%;">Nachricht</th>
+                            <th style="width: 15%;">Zeit</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        <tr><td>Hans Rosebrock</td><td>Mercedes Sprinter (Bus 1)</td><td>Frei</td><td>Zentrale Verden</td></tr>
-                        <tr><td>Karl Meyer</td><td>VW Caravelle (Bus 2)</td><td>In Tour</td><td>Grundschule Altenhagen</td></tr>
+                        <tr>
+                            <td colspan="4" style="color: #666; font-style: italic;">Keine Anträge vorhanden.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sektion 2: Rechnungsstellung (Excel & Word Vorlagen) -->
+            <div class="card">
+                <div class="admin-section-title">Rechnungsstellung (Excel & Word Vorlagen)</div>
+                
+                <div class="invoice-grid">
+                    <!-- 1. Excel-Tabelle -->
+                    <div class="invoice-box">
+                        <h4>1. Excel-Tabelle hochladen</h4>
+                        <input type="file" class="form-control" style="background: white; font-size: 0.85rem;" accept=".xlsx, .xls">
+                        <button onclick="alert('Excel-Tabelle erfolgreich eingelesen!')" class="btn" style="background-color: #003366; margin-top: 5px;">Excel einlesen</button>
+                    </div>
+
+                    <!-- 2. Word-Vorlage -->
+                    <div class="invoice-box">
+                        <h4>2. Word-Vorlage hochladen (.docx)</h4>
+                        <input type="file" class="form-control" style="background: white; font-size: 0.85rem;" accept=".docx">
+                        <button onclick="alert('Word-Vorlage erfolgreich gespeichert!')" class="btn" style="background-color: #28a745; margin-top: 5px;">Word-Vorlage speichern</button>
+                    </div>
+                </div>
+
+                <button onclick="alert('Monats-Rechnungen werden generiert...')" class="btn" style="background-color: #28a745; padding: 10px 20px;">Monats-Rechnungen generieren</button>
+            </div>
+
+            <!-- Sektion 3: Fahrer-Disposition & Tourenplan-PDF Zuweisung -->
+            <div class="card">
+                <div class="admin-section-title">Fahrer-Disposition & Tourenplan-PDF Zuweisung</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fahrer</th>
+                            <th>Fahrzeug</th>
+                            <th>Status</th>
+                            <th>Tourenplan hochladen</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Michael Rosebrock</td>
+                            <td>VW Caddy (Rollstuhl)</td>
+                            <td style="color: #28a745; font-weight: bold;">Im Dienst / Bereit</td>
+                            <td><input type="file" style="font-size: 0.8rem;" accept=".pdf"> <button onclick="alert('Tourenplan hochgeladen')" class="btn" style="background-color: #003366; padding: 4px 8px; font-size: 0.75rem;">Hochladen</button></td>
+                            <td><button onclick="alert('Status auf Pause gesetzt')" class="btn" style="background-color: #dc3545; padding: 5px 12px;">Pause</button></td>
+                        </tr>
+                        <tr>
+                            <td>Stefan Meyer</td>
+                            <td>Ford Tourneo</td>
+                            <td style="color: #dc3545; font-weight: bold;">Krank</td>
+                            <td><input type="file" style="font-size: 0.8rem;" accept=".pdf"> <button onclick="alert('Tourenplan hochgeladen')" class="btn" style="background-color: #003366; padding: 4px 8px; font-size: 0.75rem;">Hochladen</button></td>
+                            <td><button onclick="alert('Status auf Bereit gesetzt')" class="btn" style="background-color: #28a745; padding: 5px 12px;">Bereit</button></td>
+                        </tr>
+                        <tr>
+                            <td>Andreas Schmidt</td>
+                            <td>Mercedes Sprinter</td>
+                            <td style="color: #dc3545; font-weight: bold;">Krank</td>
+                            <td><input type="file" style="font-size: 0.8rem;" accept=".pdf"> <button onclick="alert('Tourenplan hochgeladen')" class="btn" style="background-color: #003366; padding: 4px 8px; font-size: 0.75rem;">Hochladen</button></td>
+                            <td><button onclick="alert('Status auf Bereit gesetzt')" class="btn" style="background-color: #28a745; padding: 5px 12px;">Bereit</button></td>
+                        </tr>
+                        <tr>
+                            <td>Thomas Weber</td>
+                            <td>VW Caravelle</td>
+                            <td style="color: #e65100; font-weight: bold;">In Pause</td>
+                            <td><input type="file" style="font-size: 0.8rem;" accept=".pdf"> <button onclick="alert('Tourenplan hochgeladen')" class="btn" style="background-color: #003366; padding: 4px 8px; font-size: 0.75rem;">Hochladen</button></td>
+                            <td><button onclick="alert('Status auf Bereit gesetzt')" class="btn" style="background-color: #28a745; padding: 5px 12px;">Bereit</button></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -255,7 +339,7 @@
             document.getElementById('dashboard-home').classList.add('active');
         }
 
-        // --- DATENBANK / LOGIN VALIDIERUNG ---
+        // --- LOGIN VALIDIERUNG ---
 
         function adminLogin() {
             const user = document.getElementById('admin-user').value.trim();

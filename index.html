@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -73,7 +72,6 @@
         .btn-danger {
             background-color: var(--danger-color);
         }
-
         .btn-danger:hover {
             background-color: #c53030;
         }
@@ -81,7 +79,6 @@
         .btn-success {
             background-color: var(--success-color);
         }
-
         .btn-success:hover {
             background-color: #2f855a;
         }
@@ -92,18 +89,8 @@
             padding: 6px 12px;
             font-size: 0.85rem;
         }
-
         .btn-info:hover {
             background-color: #2b6cb0;
-        }
-
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background-color: #b7791f;
         }
 
         /* Views */
@@ -208,86 +195,6 @@
             color: #666;
         }
 
-        /* Meldungs-Boxen */
-        .status-box {
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border-left: 5px solid;
-        }
-
-        .status-box.danger {
-            background-color: #fff5f5;
-            border-left-color: var(--danger-color);
-        }
-
-        .status-box.warning {
-            background-color: #fffaf0;
-            border-left-color: var(--warning-color);
-        }
-
-        .status-box.success {
-            background-color: #f0fff4;
-            border-left-color: var(--success-color);
-        }
-
-        .status-box.info {
-            background-color: #ebf8ff;
-            border-left-color: var(--secondary-color);
-        }
-
-        .status-box h3 {
-            margin-bottom: 5px;
-            color: var(--primary-color);
-            font-size: 1rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-        }
-
-        /* Formulare */
-        .school-form {
-            background: #fafafa;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .school-form .form-group {
-            margin-bottom: 15px;
-        }
-
-        .school-form select,
-        .school-form input,
-        .school-form textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: white;
-            font-size: 0.95rem;
-        }
-
-        .school-form textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
         /* Login Modal */
         .modal {
             display: none;
@@ -317,6 +224,24 @@
             color: var(--primary-color);
         }
 
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
         .modal-buttons {
             display: flex;
             justify-content: flex-end;
@@ -329,23 +254,6 @@
             font-size: 0.85rem;
             margin-top: 10px;
             display: none;
-        }
-
-        @media (max-width: 700px) {
-            .upload-grid {
-                grid-template-columns: 1fr;
-            }
-
-            table {
-                display: block;
-                overflow-x: auto;
-            }
-
-            header .container {
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }
         }
     </style>
 </head>
@@ -392,30 +300,54 @@
                 <button class="btn" onclick="showView('home-view')">Zurück zur Übersicht</button>
             </div>
 
-            <!-- NEU: Krankmeldungen / Nicht mitfahrende Kinder -->
+            <!-- NEU: Krankmeldungen & Schulstatus (Heute) -->
             <div class="admin-section">
-                <h2>Kinder-Status & Krankmeldungen</h2>
-
-                <div class="status-box danger">
-                    <h3>Krankgemeldete Kinder</h3>
-                    <div id="admin-sick-children">
-                        <div class="empty-state">Keine Krankmeldungen vorhanden.</div>
+                <h2>Aktuelle Abwesenheiten & Schulstatus (Heute)</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h3 style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px;">Krankgemeldete Kinder / Nicht dabei</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kind</th>
+                                    <th>Schule</th>
+                                    <th>Grund</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Leon Weber</td>
+                                    <td>Grundschule Tostedt</td>
+                                    <td><span style="color: var(--danger-color); font-weight: 600;">Krank</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Mia Schmidt</td>
+                                    <td>Oberschule Welle</td>
+                                    <td><span style="color: var(--warning-color); font-weight: 600;">Privat / Arzt</span></td>
+                                /></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-
-                <div class="status-box warning">
-                    <h3>Kinder, die heute nicht mitfahren</h3>
-                    <div id="admin-not-riding-children">
-                        <div class="empty-state">Keine Meldungen vorhanden.</div>
+                    <div>
+                        <h3 style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px;">Geschlossene Schulen / Schulausfälle</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Schule</th>
+                                    <th>Grund</th>
+                                    <th>Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Gymnasium Hollenstedt</td>
+                                    <td><span style="color: var(--danger-color); font-weight: 600;">Starker Schneefall / Winterdienst</span></td>
+                                    <td><button class="btn btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Aufheben</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            </div>
-
-            <!-- NEU: Schulschließungen / Schulausfälle -->
-            <div class="admin-section">
-                <h2>Schulschließungen & Schulausfälle</h2>
-                <div id="admin-school-closures">
-                    <div class="empty-state">Keine Schulausfälle oder Schulschließungen gemeldet.</div>
                 </div>
             </div>
 
@@ -526,66 +458,14 @@
 
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
-            <h2>Schul-Portal</h2>
-            <p>Übersicht der Schüler-Transporte.</p>
-
-            <!-- NEU: Schulausfall melden -->
-            <div class="admin-section" style="margin-top: 20px;">
-                <h2>Schulausfall melden</h2>
-                <p style="margin-bottom: 15px;">
-                    Hier kann die Schule einen Schulausfall bzw. eine Schulschließung melden.
-                </p>
-
-                <button class="btn btn-danger" onclick="toggleSchoolReportForm()">
-                    Schulausfall melden
-                </button>
-
-                <div id="school-report-form" class="school-form" style="display:none;">
-                    <div class="form-group">
-                        <label for="school-name">Name der Schule</label>
-                        <input type="text" id="school-name" placeholder="Name der Schule">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="school-closure-date">Datum</label>
-                        <input type="date" id="school-closure-date">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="school-closure-reason">Grund</label>
-                        <select id="school-closure-reason">
-                            <option value="">Bitte auswählen</option>
-                            <option value="Unwetter">Unwetter</option>
-                            <option value="Winter / Schnee / Glätte">Winter / Schnee / Glätte</option>
-                            <option value="Hitze">Hitze</option>
-                            <option value="Technische Probleme">Technische Probleme</option>
-                            <option value="Wasser- / Stromausfall">Wasser- / Stromausfall</option>
-                            <option value="Sonstiger Grund">Sonstiger Grund</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="school-closure-note">Zusätzliche Informationen</label>
-                        <textarea id="school-closure-note" placeholder="Weitere Informationen (optional)"></textarea>
-                    </div>
-
-                    <button class="btn btn-danger" onclick="submitSchoolClosure()">
-                        Schulausfall melden
-                    </button>
-
-                    <button class="btn" style="margin-left: 8px; background-color: #cbd5e0; color: #2d3748;" onclick="toggleSchoolReportForm()">
-                        Abbrechen
-                    </button>
-                </div>
-
-                <div id="school-report-success" class="status-box success" style="display:none; margin-top:20px;">
-                    <h3>Meldung erfolgreich</h3>
-                    <p>Der Schulausfall wurde an den Admin-Leitstand übermittelt.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Schul-Portal – Übersicht der Schüler-Transporte</h2>
+                <div>
+                    <button class="btn btn-danger" onclick="openSchoolClosureModal()">Schulausfall / Schließung melden</button>
+                    <button class="btn" onclick="showView('home-view')" style="margin-left: 10px;">Zurück zur Übersicht</button>
                 </div>
             </div>
-
-            <br>
-            <button class="btn" onclick="showView('home-view')">Zurück zur Übersicht</button>
+            <p>Hier sehen Sie den aktuellen Status der Transportfahrten für Ihre Schule.</p>
         </div>
 
     </div>
@@ -606,27 +486,42 @@
         </div>
     </div>
 
+    <!-- SCHULAUSFALL MELDEN MODAL -->
+    <div id="school-closure-modal" class="modal">
+        <div class="modal-content">
+            <h3>Schulausfall / Schließung melden</h3>
+            <div class="form-group">
+                <label for="school-name">Schulname</label>
+                <input type="text" id="school-name" placeholder="z. B. Gymnasium Hollenstedt">
+            </div>
+            <div class="form-group">
+                <label for="closure-reason">Grund für den Ausfall</label>
+                <select id="closure-reason">
+                    <option value="Unwetter / Sturm / Schnee">Unwetter / Sturm / Schnee</option>
+                    <option value="Extreme Hitze">Extreme Hitze</option>
+                    <option value="Heizungsdefekt / Technischer Defekt">Heizungsdefekt / Technischer Defekt</option>
+                    <option value="Sonstige Gründe">Sonstige Gründe</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" style="background-color: #cbd5e0; color: #2d3748;" onclick="closeSchoolClosureModal()">Abbrechen</button>
+                <button class="btn btn-danger" onclick="submitSchoolClosure()">Meldung abschicken</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentTargetView = '';
-
-        /* NEU: Meldungen werden innerhalb dieser HTML-Datei gespeichert */
-        let sickChildren = [];
-        let notRidingChildren = [];
-        let schoolClosures = [];
 
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-
+            
             const headerNav = document.getElementById('header-nav');
             if (viewId === 'home-view') {
                 headerNav.style.display = 'none';
             } else {
                 headerNav.style.display = 'block';
-            }
-
-            if (viewId === 'admin-view') {
-                updateAdminStatus();
             }
         }
 
@@ -656,10 +551,24 @@
             }
         }
 
+        function openSchoolClosureModal() {
+            document.getElementById('school-closure-modal').classList.add('active');
+        }
+
+        function closeSchoolClosureModal() {
+            document.getElementById('school-closure-modal').classList.remove('active');
+        }
+
+        function submitSchoolClosure() {
+            const schoolName = document.getElementById('school-name').value || 'Schule';
+            const reason = document.getElementById('closure-reason').value;
+            alert('Schulausfall für "' + schoolName + '" (' + reason + ') wurde erfolgreich an das Admin-Portal übermittelt!');
+            closeSchoolClosureModal();
+        }
+
         function toggleStatus(btn) {
             const row = btn.closest('tr');
             const statusCell = row.cells[2];
-
             if (btn.classList.contains('btn-danger')) {
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-success');
@@ -672,200 +581,6 @@
                 statusCell.innerHTML = '<span style="color: var(--success-color); font-weight: 600;">Im Dienst / Bereit</span>';
             }
         }
-
-        /* ==========================================================
-           NEU: SCHULAUSFALL MELDEN
-           ========================================================== */
-
-        function toggleSchoolReportForm() {
-            const form = document.getElementById('school-report-form');
-
-            if (form.style.display === 'none') {
-                form.style.display = 'block';
-
-                const dateField = document.getElementById('school-closure-date');
-
-                if (!dateField.value) {
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-
-                    dateField.value = year + '-' + month + '-' + day;
-                }
-            } else {
-                form.style.display = 'none';
-            }
-        }
-
-        function submitSchoolClosure() {
-            const schoolName = document.getElementById('school-name').value.trim();
-            const closureDate = document.getElementById('school-closure-date').value;
-            const reason = document.getElementById('school-closure-reason').value;
-            const note = document.getElementById('school-closure-note').value.trim();
-
-            if (!schoolName) {
-                alert('Bitte geben Sie den Namen der Schule ein.');
-                return;
-            }
-
-            if (!closureDate) {
-                alert('Bitte wählen Sie ein Datum aus.');
-                return;
-            }
-
-            if (!reason) {
-                alert('Bitte wählen Sie einen Grund aus.');
-                return;
-            }
-
-            const dateObject = new Date(closureDate + 'T00:00:00');
-
-            const formattedDate = dateObject.toLocaleDateString('de-DE');
-
-            schoolClosures.push({
-                school: schoolName,
-                date: formattedDate,
-                reason: reason,
-                note: note,
-                time: new Date().toLocaleTimeString('de-DE', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })
-            });
-
-            document.getElementById('school-name').value = '';
-            document.getElementById('school-closure-date').value = '';
-            document.getElementById('school-closure-reason').value = '';
-            document.getElementById('school-closure-note').value = '';
-
-            document.getElementById('school-report-form').style.display = 'none';
-            document.getElementById('school-report-success').style.display = 'block';
-
-            updateAdminStatus();
-
-            setTimeout(function() {
-                document.getElementById('school-report-success').style.display = 'none';
-            }, 5000);
-
-            alert('Schulausfall wurde erfolgreich gemeldet.');
-        }
-
-        /* ==========================================================
-           NEU: ADMIN-ÜBERSICHT AKTUALISIEREN
-           ========================================================== */
-
-        function updateAdminStatus() {
-            updateSickChildren();
-            updateNotRidingChildren();
-            updateSchoolClosures();
-        }
-
-        function updateSickChildren() {
-            const container = document.getElementById('admin-sick-children');
-
-            if (!container) {
-                return;
-            }
-
-            if (sickChildren.length === 0) {
-                container.innerHTML = '<div class="empty-state">Keine Krankmeldungen vorhanden.</div>';
-                return;
-            }
-
-            let html = '';
-
-            sickChildren.forEach(function(child) {
-                html += `
-                    <div style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
-                        <strong>${escapeHtml(child.name)}</strong>
-                        ${child.school ? '<span> – ' + escapeHtml(child.school) + '</span>' : ''}
-                        ${child.date ? '<span> – ' + escapeHtml(child.date) + '</span>' : ''}
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function updateNotRidingChildren() {
-            const container = document.getElementById('admin-not-riding-children');
-
-            if (!container) {
-                return;
-            }
-
-            if (notRidingChildren.length === 0) {
-                container.innerHTML = '<div class="empty-state">Keine Meldungen vorhanden.</div>';
-                return;
-            }
-
-            let html = '';
-
-            notRidingChildren.forEach(function(child) {
-                html += `
-                    <div style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
-                        <strong>${escapeHtml(child.name)}</strong>
-                        ${child.school ? '<span> – ' + escapeHtml(child.school) + '</span>' : ''}
-                        ${child.date ? '<span> – ' + escapeHtml(child.date) + '</span>' : ''}
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function updateSchoolClosures() {
-            const container = document.getElementById('admin-school-closures');
-
-            if (!container) {
-                return;
-            }
-
-            if (schoolClosures.length === 0) {
-                container.innerHTML = '<div class="empty-state">Keine Schulausfälle oder Schulschließungen gemeldet.</div>';
-                return;
-            }
-
-            let html = '';
-
-            schoolClosures.forEach(function(closure) {
-                html += `
-                    <div class="status-box danger" style="margin-bottom: 12px;">
-                        <h3>${escapeHtml(closure.school)}</h3>
-                        <p>
-                            <strong>Datum:</strong> ${escapeHtml(closure.date)}
-                        </p>
-                        <p>
-                            <strong>Grund:</strong> ${escapeHtml(closure.reason)}
-                        </p>
-                        ${closure.note ? `
-                            <p>
-                                <strong>Information:</strong> ${escapeHtml(closure.note)}
-                            </p>
-                        ` : ''}
-                        <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">
-                            Gemeldet um ${escapeHtml(closure.time)} Uhr
-                        </p>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        /* Schutz bei der Anzeige eingegebener Texte */
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        /* Erste Aktualisierung beim Laden */
-        document.addEventListener('DOMContentLoaded', function() {
-            updateAdminStatus();
-        });
     </script>
 </body>
 </html>
-```

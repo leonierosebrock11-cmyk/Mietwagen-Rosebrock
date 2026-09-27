@@ -6,94 +6,61 @@
     <title>Mietwagenverkehr Rosebrock</title>
     <style>
         :root {
-            --primary-color: #1a365d;
-            --secondary-color: #2b6cb0;
-            --bg-color: #f7fafc;
+            --primary-color: #0b3c65;
+            --bg-color: #f0f4f8;
             --card-bg: #ffffff;
-            --text-color: #2d3748;
-            --border-color: #e2e8f0;
-            --success-color: #38a169;
-            --danger-color: #e53e3e;
-            --warning-color: #d69e2e;
+            --text-color: #1a202c;
+            --border-color: #cbd5e0;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            line-height: 1.5;
         }
 
         header {
             background-color: var(--primary-color);
             color: white;
-            padding: 20px 0;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        header .container {
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        h1 {
-            font-size: 1.5rem;
-        }
-
-        .btn {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
+        header h1 {
+            font-size: 1.25rem;
             font-weight: 600;
-            transition: background-color 0.2s;
         }
 
-        .btn:hover {
-            background-color: #1a4971;
+        header p {
+            font-size: 0.8rem;
+            opacity: 0.85;
         }
 
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-        .btn-danger:hover {
-            background-color: #c53030;
+        .time-display {
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
-        .btn-success {
-            background-color: var(--success-color);
-        }
-        .btn-success:hover {
-            background-color: #2f855a;
-        }
-
-        .btn-info {
-            background-color: #1a365d;
-            color: white;
-            padding: 6px 12px;
-            font-size: 0.85rem;
-        }
-        .btn-info:hover {
-            background-color: #2b6cb0;
+        .main-container {
+            max-width: 1100px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 30px;
+            border: 1px solid #e2e8f0;
         }
 
-        /* Views */
         .view {
             display: none;
         }
@@ -102,65 +69,140 @@
             display: block;
         }
 
-        /* Startseite Kacheln */
-        .grid {
+        /* 4 Kacheln Startseite */
+        .portal-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-top: 20px;
         }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid var(--border-color);
+        .portal-card {
+            background: #fff;
+            border-radius: 6px;
+            padding: 20px;
+            border-top: 4px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            border-left: 1px solid #edf2f7;
+            border-right: 1px solid #edf2f7;
+            border-bottom: 1px solid #edf2f7;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-        }
+        .portal-card.admin { border-top-color: #805ad5; }
+        .portal-card.driver { border-top-color: #38a169; }
+        .portal-card.parent { border-top-color: #dd6b20; }
+        .portal-card.school { border-top-color: #d53f8c; }
 
-        .card h3 {
+        .portal-card h3 {
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+        }
+        .portal-card.admin h3 { color: #6b46c1; }
+        .portal-card.driver h3 { color: #2f855a; }
+        .portal-card.parent h3 { color: #c05621; }
+        .portal-card.school h3 { color: #b83280; }
+
+        .portal-card p {
+            font-size: 0.8rem;
+            color: #4a5568;
             margin-bottom: 15px;
-            color: var(--primary-color);
+            min-height: 35px;
         }
 
-        /* Admin Leitstand */
-        .admin-section {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        .portal-input {
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 8px;
             border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.85rem;
         }
 
-        .admin-section h2 {
-            color: var(--primary-color);
-            font-size: 1.25rem;
+        .portal-btn {
+            width: 100%;
+            padding: 8px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .portal-card.admin .portal-btn { background-color: #805ad5; }
+        .portal-card.admin .portal-btn:hover { background-color: #6b46c1; }
+        .portal-card.driver .portal-btn { background-color: #38a169; }
+        .portal-card.driver .portal-btn:hover { background-color: #2f855a; }
+        .portal-card.parent .portal-btn { background-color: #dd6b20; }
+        .portal-card.parent .portal-btn:hover { background-color: #c05621; }
+        .portal-card.school .portal-btn { background-color: #d53f8c; }
+        .portal-card.school .portal-btn:hover { background-color: #b83280; }
+
+        /* Allgemeine Buttons & Elemente */
+        .btn {
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .btn:hover { background-color: #2d3748; }
+        
+        .btn-danger { background-color: #e53e3e; }
+        .btn-danger:hover { background-color: #c53030; }
+
+        .btn-success { background-color: #38a169; }
+        .btn-success:hover { background-color: #2f855a; }
+
+        .btn-primary { background-color: #2b6cb0; }
+        .btn-primary:hover { background-color: #1a4971; }
+
+        .back-btn {
+            background-color: #718096;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
             margin-bottom: 20px;
+        }
+
+        h2.section-title {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        /* Admin Sektionen */
+        .admin-box {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .admin-box h3 {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 15px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            background: white;
-            border-radius: 4px;
-            overflow: hidden;
+            margin-top: 5px;
         }
 
         th, td {
-            padding: 12px 15px;
+            padding: 10px 12px;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.95rem;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 0.9rem;
         }
 
         th {
@@ -173,177 +215,133 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 20px;
         }
 
-        .upload-box {
-            border: 2px dashed var(--border-color);
-            padding: 20px;
-            border-radius: 6px;
+        .upload-field {
+            border: 1px dashed #cbd5e0;
+            padding: 15px;
+            border-radius: 4px;
             background: #fafafa;
         }
-
-        .upload-box p {
+        .upload-field p {
+            font-size: 0.85rem;
             font-weight: 600;
             margin-bottom: 10px;
-            font-size: 0.9rem;
         }
 
-        .file-input-container {
-            margin-bottom: 15px;
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        /* Login Modal */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
-
-        .modal.active {
-            display: flex;
-        }
-
+        .modal.active { display: flex; }
         .modal-content {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 25px;
+            border-radius: 6px;
+            width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-
-        .modal-content h3 {
-            margin-bottom: 20px;
-            color: var(--primary-color);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .error-msg {
-            color: var(--danger-color);
-            font-size: 0.85rem;
-            margin-top: 10px;
-            display: none;
-        }
+        .modal-content h3 { margin-bottom: 15px; color: var(--primary-color); font-size: 1.1rem; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="container">
+        <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <div id="header-nav" style="display:none;">
-                <button class="btn" onclick="showView('home-view')">Zurück zur Übersicht</button>
-            </div>
+            <p>Zentrale Transport- und Dispositionssoftware</p>
         </div>
+        <div class="time-display" id="live-clock">27.9.2026, 17:17:00</div>
     </header>
 
-    <div class="container">
+    <div class="main-container">
 
-        <!-- STARTSEITE -->
+        <!-- STARTSEITE (4 Kacheln) -->
         <div id="home-view" class="view active">
-            <h2>Portal-Auswahl</h2>
-            <div class="grid">
-                <div class="card" onclick="openLogin('admin')">
-                    <h3>Inhaber / Admin</h3>
-                    <p>Leitstand, Disposition & Verwaltung</p>
+            <h2 style="font-size: 1.2rem; margin-bottom: 5px;">Willkommen im Betriebssystem</h2>
+            <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 25px;">Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an und greifen Sie auf Ihre Funktionen zu:</p>
+            
+            <div class="portal-grid">
+                <!-- Inhaber -->
+                <div class="portal-card admin">
+                    <h3>Inhaber & Zentrale</h3>
+                    <p>Fahrerausfall, Smart Matching nach Standort & Pause.</p>
+                    <input type="text" class="portal-input" id="admin-user" value="Fred Rosebrock" placeholder="Benutzername">
+                    <input type="password" class="portal-input" id="admin-pass" value="R0sebr0ck" placeholder="Passwort">
+                    <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
                 </div>
-                <div class="card" onclick="switchView('driver-view')">
+
+                <!-- Fahrer -->
+                <div class="portal-card driver">
                     <h3>Fahrer-Portal</h3>
-                    <p>Stempeluhr, Touren & Urlaubsantrag</p>
+                    <p>Dienststatus melden & Pausenzeiten verwalten.</p>
+                    <input type="text" class="portal-input" placeholder="Benutzername">
+                    <input type="password" class="portal-input" placeholder="Passwort">
+                    <button class="portal-btn" onclick="showView('driver-view')">Fahrer-Login</button>
                 </div>
-                <div class="card" onclick="switchView('parent-view')">
+
+                <!-- Eltern -->
+                <div class="portal-card parent">
                     <h3>Eltern-Portal</h3>
-                    <p>Fahrten & Krankmeldungen</p>
+                    <p>Kind krankmelden & Beförderungsstatus einsehen.</p>
+                    <input type="text" class="portal-input" placeholder="Benutzername">
+                    <input type="password" class="portal-input" placeholder="Passwort">
+                    <button class="portal-btn" onclick="showView('parent-view')">Eltern-Login</button>
                 </div>
-                <div class="card" onclick="switchView('school-view')">
+
+                <!-- Schule -->
+                <div class="portal-card school">
                     <h3>Schul-Portal</h3>
-                    <p>Übersicht & Schüler-Status</p>
+                    <p>Übersicht Schulkinder & Krankmeldungen für die Schule.</p>
+                    <input type="text" class="portal-input" placeholder="Benutzername">
+                    <input type="password" class="portal-input" placeholder="Passwort">
+                    <button class="portal-btn" onclick="showView('school-view')">Schul-Login</button>
                 </div>
             </div>
         </div>
 
         <!-- ADMIN LEITSTAND -->
         <div id="admin-view" class="view">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="color: var(--primary-color); font-size: 1.5rem;">Mietwagenverkehr Rosebrock – Admin Leitstand</h2>
-                <button class="btn" onclick="showView('home-view')">Zurück zur Übersicht</button>
-            </div>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
+            <h2 class="section-title">Mietwagenverkehr Rosebrock – Admin Leitstand</h2>
 
-            <!-- NEU: Krankmeldungen & Schulstatus (Heute) -->
-            <div class="admin-section">
-                <h2>Aktuelle Abwesenheiten & Schulstatus (Heute)</h2>
+            <!-- NEU HINZUGEFÜGT: Live-Übersicht Krankmeldungen & Schulschließungen (Oben im Leitstand) -->
+            <div class="admin-box" style="border-left: 4px solid var(--danger-color);">
+                <h3>Live-Übersicht: Krankmeldungen & Schulschließungen</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
-                        <h3 style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px;">Krankgemeldete Kinder / Nicht dabei</h3>
+                        <p style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Krankgemeldete Kinder / Nicht dabei</p>
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Kind</th>
-                                    <th>Schule</th>
-                                    <th>Grund</th>
-                                </tr>
+                                <tr><th>Kind</th><th>Schule</th><th>Grund</th></tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Leon Weber</td>
-                                    <td>Grundschule Tostedt</td>
-                                    <td><span style="color: var(--danger-color); font-weight: 600;">Krank</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Mia Schmidt</td>
-                                    <td>Oberschule Welle</td>
-                                    <td><span style="color: var(--warning-color); font-weight: 600;">Privat / Arzt</span></td>
-                                /></td>
-                                </tr>
+                                <tr><td>Leon Weber</td><td>Grundschule Tostedt</td><td><span style="color: #e53e3e; font-weight: 600;">Krank gemeldet</span></td></tr>
+                                <tr><td>Mia Schmidt</td><td>Oberschule Welle</td><td><span style="color: #d69e2e; font-weight: 600;">Arzttermin / Fällt aus</span></td></tr>
                             </tbody>
                         </table>
                     </div>
                     <div>
-                        <h3 style="font-size: 1rem; color: var(--secondary-color); margin-bottom: 10px;">Geschlossene Schulen / Schulausfälle</h3>
+                        <p style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Geschlossene Schulen / Schulausfälle</p>
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Schule</th>
-                                    <th>Grund</th>
-                                    <th>Aktion</th>
-                                </tr>
+                                <tr><th>Schule</th><th>Grund</th><th>Aktion</th></tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td>Gymnasium Hollenstedt</td>
-                                    <td><span style="color: var(--danger-color); font-weight: 600;">Starker Schneefall / Winterdienst</span></td>
-                                    <td><button class="btn btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Aufheben</button></td>
+                                    <td><span style="color: #e53e3e; font-weight: 600;">Unwetter / Winterdienst</span></td>
+                                    <td><button class="btn btn-danger" style="padding: 3px 6px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Entfernen</button></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -352,88 +350,71 @@
             </div>
 
             <!-- 1. Fahrer-Anträge -->
-            <div class="admin-section">
-                <h2>Fahrer-Anträge (Urlaub & Anliegen)</h2>
+            <div class="admin-box">
+                <h3>Fahrer-Anträge (Urlaub & Anliegen)</h3>
                 <table>
                     <thead>
-                        <tr>
-                            <th>Fahrer</th>
-                            <th>Art</th>
-                            <th>Nachricht</th>
-                            <th>Zeit</th>
-                        </tr>
+                        <tr><th>Fahrer</th><th>Art</th><th>Nachricht</th><th>Zeit</th></tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td colspan="4" style="color: #666; text-align: center;">Keine Anträge vorhanden.</td>
-                        </tr>
+                        <tr><td colspan="4" style="color: #718096; text-align: center;">Keine Anträge vorhanden.</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- 2. Rechnungsstellung -->
-            <div class="admin-section">
-                <h2>Rechnungsstellung (Excel & Word Vorlagen)</h2>
+            <div class="admin-box">
+                <h3>Rechnungsstellung (Excel & Word Vorlagen)</h3>
                 <div class="upload-grid">
-                    <div class="upload-box">
+                    <div class="upload-field">
                         <p>1. Excel-Tabelle hochladen</p>
-                        <div class="file-input-container">
-                            <input type="file" id="excelFile">
-                        </div>
-                        <button class="btn" onclick="alert('Excel eingelesen!')">Excel einlesen</button>
+                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block;">
+                        <button class="btn btn-primary" onclick="alert('Excel eingelesen!')">Excel einlesen</button>
                     </div>
-                    <div class="upload-box">
+                    <div class="upload-field">
                         <p>2. Word-Vorlage hochladen (.docx)</p>
-                        <div class="file-input-container">
-                            <input type="file" id="wordFile">
-                        </div>
+                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block;">
                         <button class="btn btn-success" onclick="alert('Word-Vorlage gespeichert!')">Word-Vorlage speichern</button>
                     </div>
                 </div>
-                <button class="btn btn-success" onclick="alert('Monats-Rechnungen generiert!')">Monats-Rechnungen generieren</button>
+                <button class="btn btn-success" style="margin-top: 15px;" onclick="alert('Monats-Rechnungen generiert!')">Monats-Rechnungen generieren</button>
             </div>
 
             <!-- 3. Fahrer-Disposition -->
-            <div class="admin-section">
-                <h2>Fahrer-Disposition & Tourenplan-PDF Zuweisung</h2>
+            <div class="admin-box">
+                <h3>Fahrer-Disposition & Tourenplan-PDF Zuweisung</h3>
                 <table>
                     <thead>
-                        <tr>
-                            <th>Fahrer</th>
-                            <th>Fahrzeug</th>
-                            <th>Status</th>
-                            <th>Tourenplan hochladen</th>
-                            <th>Aktion</th>
-                        </tr>
+                        <tr><th>Fahrer</th><th>Fahrzeug</th><th>Status</th><th>Tourenplan hochladen</th><th>Aktion</th></tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>Michael Rosebrock</td>
                             <td>VW Caddy (Rollstuhl)</td>
-                            <td><span style="color: var(--success-color); font-weight: 600;">Im Dienst / Bereit</span></td>
-                            <td><input type="file" style="font-size: 0.8rem;"> <button class="btn btn-info" onclick="alert('Tourenplan hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-danger" style="padding: 4px 10px; font-size: 0.8rem;" onclick="toggleStatus(this)">Pause</button></td>
+                            <td><span style="color: #38a169; font-weight: 600;">Im Dienst / Bereit</span></td>
+                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                            <td><button class="btn btn-danger" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatus(this)">Pause</button></td>
                         </tr>
                         <tr>
                             <td>Stefan Meyer</td>
                             <td>Ford Tourneo</td>
-                            <td><span style="color: var(--danger-color); font-weight: 600;">Krank</span></td>
-                            <td><input type="file" style="font-size: 0.8rem;"> <button class="btn btn-info" onclick="alert('Tourenplan hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-success" style="padding: 4px 10px; font-size: 0.8rem;" onclick="toggleStatus(this)">Bereit</button></td>
+                            <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
+                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                            <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatus(this)">Bereit</button></td>
                         </tr>
                         <tr>
                             <td>Andreas Schmidt</td>
                             <td>Mercedes Sprinter</td>
-                            <td><span style="color: var(--danger-color); font-weight: 600;">Krank</span></td>
-                            <td><input type="file" style="font-size: 0.8rem;"> <button class="btn btn-info" onclick="alert('Tourenplan hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-success" style="padding: 4px 10px; font-size: 0.8rem;" onclick="toggleStatus(this)">Bereit</button></td>
+                            <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
+                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                            <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatus(this)">Bereit</button></td>
                         </tr>
                         <tr>
                             <td>Thomas Weber</td>
                             <td>VW Caravelle</td>
-                            <td><span style="color: var(--warning-color); font-weight: 600;">In Pause</span></td>
-                            <td><input type="file" style="font-size: 0.8rem;"> <button class="btn btn-info" onclick="alert('Tourenplan hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-success" style="padding: 4px 10px; font-size: 0.8rem;" onclick="toggleStatus(this)">Bereit</button></td>
+                            <td><span style="color: #d69e2e; font-weight: 600;">In Pause</span></td>
+                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                            <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatus(this)">Bereit</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -442,128 +423,107 @@
 
         <!-- FAHRER PORTAL -->
         <div id="driver-view" class="view">
-            <h2>Fahrer-Portal</h2>
-            <p>Willkommen im Fahrer-Bereich. Hier kannst du deine Touren einsehen und stempeln.</p>
-            <br>
-            <button class="btn" onclick="showView('home-view')">Zurück zur Übersicht</button>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
+            <h2 class="section-title">Fahrer-Portal</h2>
+            <p style="font-size: 0.9rem; color: #4a5568;">Dienststatus melden & Pausenzeiten verwalten.</p>
         </div>
 
         <!-- ELTERN PORTAL -->
         <div id="parent-view" class="view">
-            <h2>Eltern-Portal</h2>
-            <p>Hier finden Sie die Fahrtdetails und können Krankmeldungen durchführen.</p>
-            <br>
-            <button class="btn" onclick="showView('home-view')">Zurück zur Übersicht</button>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
+            <h2 class="section-title">Eltern-Portal (Familie Müller (Kind: Timmy))</h2>
+            <div class="admin-box">
+                <h3>Kind krankmelden / Beförderungsstatus</h3>
+                <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 12px;">Hier können Sie für Ihr Kind unkompliziert eine Krankmeldung für den heutigen Schultransport abschicken:</p>
+                <div class="form-group">
+                    <label>Grund für Abwesenheit:</label>
+                    <select>
+                        <option>Krankheit (Fahrt heute aussetzen)</option>
+                        <option>Arzttermin / Sonstiges</option>
+                    </select>
+                </div>
+                <button class="btn btn-danger" style="margin-top: 5px;" onclick="alert('Krankmeldung erfolgreich abgeschickt!')">Krankmeldung absenden</button>
+            </div>
         </div>
 
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>Schul-Portal – Übersicht der Schüler-Transporte</h2>
+                <h2 class="section-title" style="margin-bottom: 0;">Schul-Portal</h2>
                 <div>
-                    <button class="btn btn-danger" onclick="openSchoolClosureModal()">Schulausfall / Schließung melden</button>
-                    <button class="btn" onclick="showView('home-view')" style="margin-left: 10px;">Zurück zur Übersicht</button>
+                    <!-- NEU HINZUGEFÜGT: Meldebutton auf der Schul-Startseite -->
+                    <button class="btn btn-danger" onclick="openClosureModal()">🚨 Schulausfall / Schließung melden</button>
+                    <button class="back-btn" style="margin-bottom: 0; margin-left: 10px;" onclick="showView('home-view')">← Zurück</button>
                 </div>
             </div>
-            <p>Hier sehen Sie den aktuellen Status der Transportfahrten für Ihre Schule.</p>
+            <p style="font-size: 0.9rem; color: #4a5568;">Übersicht Schulkinder & Krankmeldungen für die Schule.</p>
         </div>
 
     </div>
 
-    <!-- LOGIN MODAL -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <h3>Admin-Login</h3>
-            <div class="form-group">
-                <label for="admin-password">Passwort</label>
-                <input type="password" id="admin-password" autocomplete="new-password" spellcheck="false" placeholder="Passwort eingeben">
-            </div>
-            <div id="login-error" class="error-msg">Falsches Passwort!</div>
-            <div class="modal-buttons">
-                <button class="btn" style="background-color: #cbd5e0; color: #2d3748;" onclick="closeLogin()">Abbrechen</button>
-                <button class="btn" onclick="checkLogin()">Einloggen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SCHULAUSFALL MELDEN MODAL -->
-    <div id="school-closure-modal" class="modal">
+    <!-- NEU HINZUGEFÜGT: Modal für Schulausfall-Meldung -->
+    <div id="closure-modal" class="modal">
         <div class="modal-content">
             <h3>Schulausfall / Schließung melden</h3>
             <div class="form-group">
-                <label for="school-name">Schulname</label>
-                <input type="text" id="school-name" placeholder="z. B. Gymnasium Hollenstedt">
+                <label for="closure-school">Schulname</label>
+                <input type="text" id="closure-school" placeholder="z. B. Grundschule Tostedt">
             </div>
             <div class="form-group">
-                <label for="closure-reason">Grund für den Ausfall</label>
+                <label for="closure-reason">Grund des Ausfalls</label>
                 <select id="closure-reason">
-                    <option value="Unwetter / Sturm / Schnee">Unwetter / Sturm / Schnee</option>
+                    <option value="Unwetter / Sturm / Schnee / Winter">Unwetter / Sturm / Schnee / Winter</option>
                     <option value="Extreme Hitze">Extreme Hitze</option>
-                    <option value="Heizungsdefekt / Technischer Defekt">Heizungsdefekt / Technischer Defekt</option>
+                    <option value="Technischer Defekt / Heizung">Technischer Defekt / Heizung</option>
                     <option value="Sonstige Gründe">Sonstige Gründe</option>
                 </select>
             </div>
             <div class="modal-buttons">
-                <button class="btn" style="background-color: #cbd5e0; color: #2d3748;" onclick="closeSchoolClosureModal()">Abbrechen</button>
-                <button class="btn btn-danger" onclick="submitSchoolClosure()">Meldung abschicken</button>
+                <button class="btn" style="background-color: #cbd5e0; color: #1a202c;" onclick="closeClosureModal()">Abbrechen</button>
+                <button class="btn btn-danger" onclick="submitClosure()">Meldung abschicken</button>
             </div>
         </div>
     </div>
 
     <script>
-        let currentTargetView = '';
+        // Live Uhrzeit aktualisieren
+        function updateClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('de-DE');
+            const timeStr = now.toLocaleTimeString('de-DE');
+            document.getElementById('live-clock').textContent = `${dateStr}, ${timeStr}`;
+        }
+        setInterval(updateClock, 1000);
 
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            
-            const headerNav = document.getElementById('header-nav');
-            if (viewId === 'home-view') {
-                headerNav.style.display = 'none';
-            } else {
-                headerNav.style.display = 'block';
-            }
         }
 
-        function switchView(viewId) {
-            showView(viewId);
-        }
-
-        function openLogin(type) {
-            currentTargetView = type;
-            const passwordInput = document.getElementById('admin-password');
-            passwordInput.value = '';
-            document.getElementById('login-error').style.display = 'none';
-            document.getElementById('login-modal').classList.add('active');
-        }
-
-        function closeLogin() {
-            document.getElementById('login-modal').classList.remove('active');
-        }
-
-        function checkLogin() {
-            const pass = document.getElementById('admin-password').value;
-            if (currentTargetView === 'admin' && pass === 'R0sebr0ck') {
-                closeLogin();
+        function loginAdmin() {
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+            if (user === 'Fred Rosebrock' && pass === 'R0sebr0ck') {
                 showView('admin-view');
             } else {
-                document.getElementById('login-error').style.display = 'block';
+                alert('Falscher Benutzername oder Passwort!');
             }
         }
 
-        function openSchoolClosureModal() {
-            document.getElementById('school-closure-modal').classList.add('active');
+        function openClosureModal() {
+            document.getElementById('closure-school').value = '';
+            document.getElementById('closure-modal').classList.add('active');
         }
 
-        function closeSchoolClosureModal() {
-            document.getElementById('school-closure-modal').classList.remove('active');
+        function closeClosureModal() {
+            document.getElementById('closure-modal').classList.remove('active');
         }
 
-        function submitSchoolClosure() {
-            const schoolName = document.getElementById('school-name').value || 'Schule';
+        function submitClosure() {
+            const school = document.getElementById('closure-school').value || 'Schule';
             const reason = document.getElementById('closure-reason').value;
-            alert('Schulausfall für "' + schoolName + '" (' + reason + ') wurde erfolgreich an das Admin-Portal übermittelt!');
-            closeSchoolClosureModal();
+            alert('Die Meldung für "' + school + '" ("' + reason + '") wurde erfolgreich an die Zentrale übermittelt!');
+            closeClosureModal();
         }
 
         function toggleStatus(btn) {
@@ -573,12 +533,12 @@
                 btn.classList.remove('btn-danger');
                 btn.classList.add('btn-success');
                 btn.textContent = 'Bereit';
-                statusCell.innerHTML = '<span style="color: var(--warning-color); font-weight: 600;">In Pause</span>';
+                statusCell.innerHTML = '<span style="color: #d69e2e; font-weight: 600;">In Pause</span>';
             } else {
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-danger');
                 btn.textContent = 'Pause';
-                statusCell.innerHTML = '<span style="color: var(--success-color); font-weight: 600;">Im Dienst / Bereit</span>';
+                statusCell.innerHTML = '<span style="color: #38a169; font-weight: 600;">Im Dienst / Bereit</span>';
             }
         }
     </script>

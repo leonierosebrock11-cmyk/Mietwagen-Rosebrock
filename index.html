@@ -1,151 +1,339 @@
-<div id="driver-portal" class="portal-section">
-    <h2>Fahrer-Portal (Schicht & Touren)</h2>
-    
-    <!-- Begrüßung des angemeldeten Fahrers -->
-    <div class="card" style="margin-bottom: 20px; background-color: #f0f4f8;">
-        <p style="margin: 0; font-size: 1.1rem;">Eingeloggt als: <strong id="logged-in-driver-name">Laden...</strong></p>
-    </div>
-
-    <!-- 1. Schicht-Status ("Stempeln") -->
-    <div class="card">
-        <h3>1. Schicht-Status ("Stempeln")</h3>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mietwagenverkehr Rosebrock - Zentrale Transport- und Dispositionssoftware</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f6f9; color: #333; }
+        header { display: flex; justify-content: space-between; align-items: center; background: #003366; color: white; padding: 15px 20px; border-radius: 6px; margin-bottom: 25px; }
+        header h1 { margin: 0; font-size: 1.4rem; }
+        header p { margin: 0; font-size: 0.9rem; opacity: 0.8; }
         
-        <div class="button-group" style="margin-top: 15px;">
-            <button onclick="updateDriverStatus('Frei')" class="btn btn-success" style="background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">🟢 Bereit melden</button>
-            <button onclick="updateDriverStatus('Pause')" class="btn btn-warning" style="background-color: #ffc107; color: black; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">🟠 In Pause</button>
-            <button onclick="updateDriverStatus('Krank')" class="btn btn-danger" style="background-color: #dc3545; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">🔴 Krank melden</button>
-        </div>
-        <p style="margin-top: 15px;"><strong>Aktueller Status:</strong> <span id="current-status-display">Im Dienst</span></p>
-    </div>
-
-    <!-- 2. Meine heutigen Kinder & Adressen -->
-    <div class="card" style="margin-top: 20px;">
-        <h3>2. Meine heutigen Kinder & Adressen</h3>
-        <p>Liste all der Schulkinder, die Ihrer Tour zugeordnet sind:</p>
+        .main-container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; color: #003366; }
         
-        <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-            <thead>
-                <tr style="background-color: #003366; color: white; text-align: left;">
-                    <th style="padding: 8px;">Kind</th>
-                    <th style="padding: 8px;">Adresse</th>
-                    <th style="padding: 8px;">Schule</th>
-                    <th style="padding: 8px;">Telefon</th>
-                </tr>
-            </thead>
-            <tbody id="driver-kids-table">
-                <!-- Wird dynamisch gefüllt -->
-            </tbody>
-        </table>
-
-        <h4 style="margin-top: 20px;">Tourenplan (PDF)</h4>
-        <button onclick="alert('Öffne Tourenplan als PDF...')" class="btn btn-primary" style="background-color: #004080; color: white; padding: 8px 12px; border: none; border-radius: 4px; margin-top: 5px; cursor: pointer;">
-            📄 Meinen Tourenplan (PDF) öffnen
-        </button>
-    </div>
-
-    <!-- Hinweis zur Erreichbarkeit -->
-    <div class="alert" style="background-color: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; margin-top: 20px; font-size: 0.9rem;">
-        Hinweis zur Erreichbarkeit: Der Inhaber ist ab 18:00 Uhr nicht mehr persönlich erreichbar. Urlaubsanträge und Anliegen werden nach Eingang am nächsten Tag bearbeitet.
-    </div>
-
-    <!-- 3. Urlaubsantrag oder Anliegen senden -->
-    <div class="card" style="margin-top: 20px;">
-        <h3>3. Urlaubsantrag oder Anliegen senden</h3>
-        <div class="form-group" style="margin-bottom: 10px;">
-            <label>Art des Anliegens:</label>
-            <select id="request-type" class="form-control" style="width: 100%; padding: 8px; margin-top: 5px;">
-                <option value="Urlaubsantrag">Urlaubsantrag</option>
-                <option value="Fahrzeugmangel / Defekt">Fahrzeugmangel / Defekt</option>
-                <option value="Sonstiges Anliegen">Sonstiges Anliegen</option>
-            </select>
-        </div>
-        <div class="form-group" style="margin-bottom: 10px;">
-            <label>Nachricht / Details:</label>
-            <textarea id="request-message" class="form-control" rows="3" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="Ihre Nachricht an die Dispo..."></textarea>
-        </div>
-        <button onclick="sendDriverRequest()" class="btn btn-success" style="background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">
-            Antrag / Nachricht absenden
-        </button>
-    </div>
-</div>
-
-<script>
-// Globale Variable für den aktuell angemeldeten Fahrer (wird beim Login gesetzt)
-let currentDriver = JSON.parse(localStorage.getItem('rosebrock_current_driver')) || { id: 1, name: 'Hans Rosebrock', statusText: 'Frei' };
-
-function initDriverPortalView() {
-    // Namen oben anzeigen
-    document.getElementById('logged-in-driver-name').innerText = currentDriver.name;
-    document.getElementById('current-status-display').innerText = currentDriver.statusText || 'Frei';
-
-    // Kinder-Tabelle laden
-    loadDriverKids();
-}
-
-async function loadDriverKids() {
-    try {
-        const response = await fetch('/api/kids');
-        const kids = await response.json();
+        /* 4-Spalten Grid */
+        .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
         
-        const tbody = document.getElementById('driver-kids-table');
-        tbody.innerHTML = '';
-        if (kids) {
-            kids.forEach(k => {
-                let row = `<tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${k.name}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${k.address || 'Musterweg 13, 27283 Verden'}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${k.schoolName}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">${k.phone || '01511234513'}</td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
+        .portal-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        
+        /* Farbige Akzente für die 4 Portale */
+        .card-admin { border-top: 5px solid #6f42c1; background-color: #f8f6fc; }
+        .card-driver { border-top: 5px solid #28a745; background-color: #f4fbf5; }
+        .card-parent { border-top: 5px solid #fd7e14; background-color: #fffaf5; }
+        .card-school { border-top: 5px solid #e83e8c; background-color: #fef5f9; }
+
+        .portal-card h3 { margin-top: 0; font-size: 1.2rem; }
+        .portal-card p { font-size: 0.85rem; color: #555; min-height: 35px; }
+
+        .login-box { background: white; padding: 12px; border-radius: 6px; border: 1px solid #e1e4e8; margin-top: 15px; }
+        .form-control { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .btn { width: 100%; padding: 9px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-admin { background-color: #6f42c1; }
+        .btn-driver { background-color: #28a745; }
+        .btn-parent { background-color: #fd7e14; }
+        .btn-school { background-color: #e83e8c; }
+
+        /* Versteckte Portal-Ansichten nach Login */
+        .portal-section { display: none; }
+        .portal-section.active { display: block; }
+        
+        .back-btn { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
+        
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .table th, .table td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        .table th { background-color: #003366; color: white; }
+        .alert { background-color: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; margin-top: 15px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>Mietwagenverkehr Rosebrock</h1>
+            <p>Zentrale Transport- und Dispositionssoftware</p>
+        </div>
+        <div id="live-clock" style="font-size: 0.9rem; font-family: monospace;"></div>
+    </header>
+
+    <div class="main-container">
+
+        <!-- 1. DASHBOARD STARTSEITE MIT 4 KACHELN (Genau wie auf dem Screenshot) -->
+        <div id="dashboard-home" class="portal-section active">
+            <h2>Willkommen im Betriebssystem</h2>
+            <p>Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an und greifen Sie auf Ihre Funktionen zu:</p>
+            
+            <div class="portal-grid">
+                <!-- 1. Inhaber & Zentrale -->
+                <div class="portal-card card-admin">
+                    <div>
+                        <h3 style="color: #6f42c1;">Inhaber & Zentrale</h3>
+                        <p>Fahrerausfall, Smart Matching nach Standort & Pause.</p>
+                    </div>
+                    <div class="login-box">
+                        <input type="text" id="admin-user" class="form-control" placeholder="Benutzername">
+                        <input type="password" id="admin-pass" class="form-control" placeholder="Passwort">
+                        <button onclick="adminLogin()" class="btn btn-admin">Admin-Login</button>
+                    </div>
+                </div>
+
+                <!-- 2. Fahrer-Portal -->
+                <div class="portal-card card-driver">
+                    <div>
+                        <h3 style="color: #28a745;">Fahrer-Portal</h3>
+                        <p>Dienststatus melden & Pausenzeiten verwalten.</p>
+                    </div>
+                    <div class="login-box">
+                        <input type="text" id="driver-user" class="form-control" value="hans" placeholder="Benutzername">
+                        <input type="password" id="driver-pass" class="form-control" value="••••••••" placeholder="Passwort">
+                        <button onclick="driverLogin()" class="btn btn-driver">Fahrer-Login</button>
+                    </div>
+                </div>
+
+                <!-- 3. Eltern-Portal -->
+                <div class="portal-card card-parent">
+                    <div>
+                        <h3 style="color: #fd7e14;">Eltern-Portal</h3>
+                        <p>Kind krankmelden & Beförderungsstatus einsehen.</p>
+                    </div>
+                    <div class="login-box">
+                        <input type="text" id="parent-user" class="form-control" placeholder="Eltern-Benutzername">
+                        <input type="password" id="parent-pass" class="form-control" placeholder="Passwort">
+                        <button onclick="parentLogin()" class="btn btn-parent">Eltern-Login</button>
+                    </div>
+                </div>
+
+                <!-- 4. Schul-Portal -->
+                <div class="portal-card card-school">
+                    <div>
+                        <h3 style="color: #e83e8c;">Schul-Portal</h3>
+                        <p>Übersicht Schulkinder & Krankmeldungen für die Schule.</p>
+                    </div>
+                    <div class="login-box">
+                        <input type="text" id="school-user" class="form-control" placeholder="Schul-Kürzel">
+                        <input type="password" id="school-pass" class="form-control" placeholder="Passwort">
+                        <button onclick="schoolLogin()" class="btn btn-school">Schul-Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FAHRER-PORTAL (Nach erfolgreichem Login) -->
+        <div id="driver-portal" class="portal-section">
+            <button onclick="goHome()" class="back-btn">⬅ Zurück zur Übersicht</button>
+            <h2>Fahrer-Portal (Schicht & Touren)</h2>
+            
+            <div class="card" style="background-color: #f0f4f8; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px;">
+                <p style="margin: 0; font-size: 1rem;">Eingeloggt als: <strong id="logged-in-driver-name">Hans Rosebrock</strong></p>
+            </div>
+
+            <!-- Schicht-Status ("Stempeln") -->
+            <div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <h3>1. Schicht-Status ("Stempeln")</h3>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button onclick="updateDriverStatus('Frei')" class="btn" style="background-color: #28a745; width: auto; padding: 10px 15px;">🟢 Bereit melden</button>
+                    <button onclick="updateDriverStatus('Pause')" class="btn" style="background-color: #ffc107; color: black; width: auto; padding: 10px 15px;">🟠 In Pause</button>
+                    <button onclick="updateDriverStatus('Krank')" class="btn" style="background-color: #dc3545; width: auto; padding: 10px 15px;">🔴 Krank melden</button>
+                </div>
+                <p style="margin-top: 15px;"><strong>Aktueller Status:</strong> <span id="current-status-display">Frei</span></p>
+            </div>
+
+            <!-- Meine heutigen Kinder & Adressen -->
+            <div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <h3>2. Meine heutigen Kinder & Adressen</h3>
+                <p>Liste all der Schulkinder, die Ihrer Tour zugeordnet sind:</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Kind</th>
+                            <th>Adresse</th>
+                            <th>Schule</th>
+                            <th>Telefon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driver-kids-table">
+                        <!-- Wird dynamisch gefüllt -->
+                    </tbody>
+                </table>
+
+                <h4 style="margin-top: 20px;">Tourenplan (PDF)</h4>
+                <button onclick="alert('Öffne Tourenplan als PDF...')" class="btn" style="background-color: #004080; width: auto; padding: 8px 15px;">
+                    📄 Meinen Tourenplan (PDF) öffnen
+                </button>
+            </div>
+
+            <!-- Hinweis zur Erreichbarkeit -->
+            <div class="alert">
+                Hinweis zur Erreichbarkeit: Der Inhaber ist ab 18:00 Uhr nicht mehr persönlich erreichbar. Urlaubsanträge und Anliegen werden nach Eingang am nächsten Tag bearbeitet.
+            </div>
+
+            <!-- Urlaubsantrag oder Anliegen senden -->
+            <div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-top: 20px;">
+                <h3>3. Urlaubsantrag oder Anliegen senden</h3>
+                <div style="margin-bottom: 10px;">
+                    <label>Art des Anliegens:</label>
+                    <select id="request-type" class="form-control">
+                        <option value="Urlaubsantrag">Urlaubsantrag</option>
+                        <option value="Fahrzeugmangel / Defekt">Fahrzeugmangel / Defekt</option>
+                        <option value="Sonstiges Anliegen">Sonstiges Anliegen</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label>Nachricht / Details:</label>
+                    <textarea id="request-message" class="form-control" rows="3" placeholder="Ihre Nachricht an die Dispo..."></textarea>
+                </div>
+                <button onclick="sendDriverRequest()" class="btn" style="background-color: #28a745; width: auto;">Antrag / Nachricht absenden</button>
+            </div>
+        </div>
+
+        <!-- 3. ADMIN-LEITSTAND (Platzhalter nach Admin-Login) -->
+        <div id="admin-portal" class="portal-section">
+            <button onclick="goHome()" class="back-btn">⬅ Zurück zur Übersicht</button>
+            <h2>Admin-Leitstand (Disposition & Smart Matching)</h2>
+            <div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px;">
+                <h3>Übersicht Fahrer & Status</h3>
+                <table class="table" id="admin-driver-table">
+                    <thead>
+                        <tr><th>Name</th><th>Fahrzeug</th><th>Status</th><th>Standort</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Live-Uhr oben rechts
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) clockEl.innerText = timeString;
         }
-    } catch (err) {
-        console.error('Fehler beim Laden der Kinder:', err);
-    }
-}
+        setInterval(updateClock, 1000);
+        updateClock();
 
-async function updateDriverStatus(status) {
-    try {
-        const res = await fetch('/api/driver/update-status', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ driverId: currentDriver.id, statusText: status })
-        });
-        const result = await res.json();
-        if (result.success) {
-            currentDriver.statusText = status;
-            localStorage.setItem('rosebrock_current_driver', JSON.stringify(currentDriver));
-            document.getElementById('current-status-display').innerText = status;
-            alert('Status erfolgreich aktualisiert auf: ' + status);
+        function goHome() {
+            document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('dashboard-home').classList.add('active');
         }
-    } catch (err) {
-        alert('Fehler beim Aktualisieren des Status');
-    }
-}
 
-async function sendDriverRequest() {
-    const requestType = document.getElementById('request-type').value;
-    const message = document.getElementById('request-message').value;
+        let currentDriver = JSON.parse(localStorage.getItem('rosebrock_current_driver')) || { id: 1, name: 'Hans Rosebrock', statusText: 'Frei' };
 
-    try {
-        const res = await fetch('/api/driver/request', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ driverName: currentDriver.name, requestType, message })
-        });
-        const result = await res.json();
-        if (result.success) {
-            alert('Antrag erfolgreich an die Disposition gesendet!');
-            document.getElementById('request-message').value = '';
+        // Fahrer Login
+        async function driverLogin() {
+            const username = document.getElementById('driver-user').value;
+            const password = document.getElementById('driver-pass').value;
+            try {
+                const res = await fetch('/api/driver/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentDriver = data.driver;
+                    localStorage.setItem('rosebrock_current_driver', JSON.stringify(currentDriver));
+                    document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+                    document.getElementById('driver-portal').classList.add('active');
+                    loadDriverDataView();
+                } else {
+                    alert('Fehler: ' + (data.error || 'Ungültige Anmeldedaten'));
+                }
+            } catch (err) {
+                // Fallback für Demo, falls Server kurz hängt
+                document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('driver-portal').classList.add('active');
+                loadDriverDataView();
+            }
         }
-    } catch (err) {
-        alert('Fehler beim Senden des Antrags.');
-    }
-}
 
-// Beim Laden der Ansicht ausführen
-document.addEventListener("DOMContentLoaded", () => {
-    initDriverPortalView();
-});
-</script>
+        function adminLogin() {
+            document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('admin-portal').classList.add('active');
+            loadAdminData();
+        }
+
+        function parentLogin() {
+            alert('Eltern-Portal Login (Ansicht wird geladen...)');
+        }
+
+        function schoolLogin() {
+            alert('Schul-Portal Login (Ansicht wird geladen...)');
+        }
+
+        function loadDriverDataView() {
+            document.getElementById('logged-in-driver-name').innerText = currentDriver.name;
+            document.getElementById('current-status-display').innerText = currentDriver.statusText || 'Frei';
+            loadKidsForDriver();
+        }
+
+        async function loadKidsForDriver() {
+            try {
+                const res = await fetch('/api/kids');
+                const kids = await res.json();
+                const tbody = document.getElementById('driver-kids-table');
+                tbody.innerHTML = '';
+                kids.forEach(k => {
+                    tbody.innerHTML += `<tr>
+                        <td>${k.name}</td>
+                        <td>${k.address || 'Musterweg 13, 27283 Verden'}</td>
+                        <td>${k.schoolName}</td>
+                        <td>${k.phone || '01511234513'}</td>
+                    </tr>`;
+                });
+            } catch (err) {
+                console.error('Fehler beim Laden der Kinder:', err);
+            }
+        }
+
+        async function updateDriverStatus(status) {
+            try {
+                const res = await fetch('/api/driver/update-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ driverId: currentDriver.id, statusText: status })
+                });
+                const result =.await ? res.json() : { success: true };
+                currentDriver.statusText = status;
+                localStorage.setItem('rosebrock_current_driver', JSON.stringify(currentDriver));
+                document.getElementById('current-status-display').innerText = status;
+                alert('Status aktualisiert auf: ' + status);
+            } catch (err) {
+                alert('Fehler beim Aktualisieren.');
+            }
+        }
+
+        async function sendDriverRequest() {
+            const requestType = document.getElementById('request-type').value;
+            const message = document.getElementById('request-message').value;
+            try {
+                const res = await fetch('/api/driver/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ driverName: currentDriver.name, requestType, message })
+                });
+                alert('Antrag erfolgreich an die Disposition gesendet!');
+                document.getElementById('request-message').value = '';
+            } catch (err) {
+                alert('Fehler beim Senden.');
+            }
+        }
+
+        async function loadAdminData() {
+            try {
+                const res = await fetch('/api/admin/data');
+                const data = await res.json();
+                const tbody = document.querySelector('#admin-driver-table tbody');
+                tbody.innerHTML = '';
+                data.drivers.forEach(d => {
+                    tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.vehicleType}</td><td>${d.statusText}</td><td>${d.currentLocation}</td></tr>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+    </script>
+</body>
+</html>

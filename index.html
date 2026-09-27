@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Mietwagenverkehr Rosebrock - Dispatch Portal</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eef2f7 0%, #f8fafc 100%);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #003b73, #0056b3);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 25px;
+        }
+
+        .card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            color: #003b73;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #0056b3;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .btn {
+            background: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(0.92);
+        }
+
+        .btn-alert {
+            background: #dc3545;
+        }
+
+        .btn-alert:hover {
+            background: #b02a37;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .badge-green {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-red {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* =====================================================
+           PORTAL-BEREICH
+           ===================================================== */
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 30px;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .portal-card {
+            min-width: 0;
+            min-height: 360px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Jede Portal-Karte bekommt eine eigene Farbe */
+
+        .portal-card.admin-card {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+        }
+
+        .portal-card.driver-card {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+        }
+
+        .portal-card.parent-card {
+            background: #fff7ed;
+            border-color: #fed7aa;
+        }
+
+        .portal-card.school-card {
+            background: #fdf2f8;
+            border-color: #fbcfe8;
+        }
+
+        .portal-card h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 21px;
+        }
+
+        .portal-card.admin-card h3 {
+            color: #4338ca;
+        }
+
+        .portal-card.driver-card h3 {
+            color: #047857;
+        }
+
+        .portal-card.parent-card h3 {
+            color: #c2410c;
+        }
+
+        .portal-card.school-card h3 {
+            color: #be185d;
+        }
+
+        .portal-card > p {
+            min-height: 38px;
+            margin: 0 0 20px 0;
+            line-height: 1.5;
+        }
+
+        /* Einheitliche Login-Kästen */
+
+        .login-box {
+            width: 100%;
+            margin-top: auto;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 16px;
+            border-radius: 10px;
+            text-align: left;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .login-box input {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: white;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.12);
+        }
+
+        /* Unterschiedliche Login-Button-Farben */
+
+        .login-admin {
+            background: #4338ca !important;
+        }
+
+        .login-admin:hover {
+            background: #3730a3 !important;
+        }
+
+        .login-driver {
+            background: #047857 !important;
+        }
+
+        .login-driver:hover {
+            background: #065f46 !important;
+        }
+
+        .login-parent {
+            background: #ea580c !important;
+        }
+
+        .login-parent:hover {
+            background: #c2410c !important;
+        }
+
+        .login-school {
+            background: #be185d !important;
+        }
+
+        .login-school:hover {
+            background: #9d174d !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .suggestion-box {
+            background: #e2f0d9;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        /* Responsive Darstellung */
+
+        @media (max-width: 1100px) {
+            .portal-grid {
+                grid-template-columns: repeat(2, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 650px) {
+            .header {
+                padding: 18px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .container {
+                padding: 0 15px;
+                margin-top: 20px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .portal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portal-card {
+                min-height: 340px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <div>
+        <h1 style="margin:0; font-size: 22px;">Mietwagenverkehr Rosebrock</h1>
+        <p style="margin:0; font-size: 13px; opacity: 0.8;">
+            Zentrale Transport- und Dispositionssoftware
+        </p>
+    </div>
+
+    <div>
+        <span id="currentTime"
+              style="font-size: 14px; background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 4px;">
+        </span>
+    </div>
+</div>
+
+
+<div class="container">
+
+    <!-- ========================================== -->
+    <!-- ANSICHT 1: STARTSEITE / HAUPTHUB           -->
+    <!-- ========================================== -->
+
+    <div id="viewHome" class="card">
+
+        <h2>Willkommen im Betriebssystem</h2>
+
+        <p>
+            Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an
+            und greifen Sie auf Ihre Funktionen zu:
+        </p>
+
+        <div class="portal-grid">
+
+            <!-- 1. Inhaber / Admin Portal -->
+
+            <div class="portal-card admin-card">
+
+                <div>
+                    <h3>Inhaber & Zentrale</h3>
+
+                    <p style="font-size: 12px; color: #666;">
+                        Fahrerausfall, Smart Matching nach Standort & Pause.
+                    </p>
+                </div>
+
+                <div class="login-box">
+
+                    <input type="text"
+                           id="adminUser"
+                           placeholder="Benutzername"
+                           style="width:100%; padding:8px; margin-bottom:8px;">
+
+                    <input type="password"
+                           id="adminPass"
+                           placeholder="Passwort"
+                           style="width:100%; padding:8px; margin-bottom:10px;">
+
+                    <button class="btn login-admin"
+                            style="width:100%;"
+                            onclick="loginPortal('admin')">
+                        Admin-Login
+                    </button>
+
+                    <p id="adminErr"
+                       style="color:red; font-size:11px; margin:4px 0 0 0;">
+                    </p>
+
+                </div>
+            </div>
+
+
+            <!-- 2. Fahrer Portal -->
+
+            <div class="portal-card driver-card">
+
+                <div>
+                    <h3>Fahrer-Portal</h3>
+
+                    <p style="font-size: 12px; color: #666;">
+                        Dienststatus melden & Pausenzeiten verwalten.
+                    </p>
+                </div>
+
+                <div class="login-box">
+
+                    <input type="text"
+                           id="driverUser"
+                           placeholder="Fahrer-Name"
+                           style="width:100%; padding:8px; margin-bottom:8px;">
+
+                    <input type="password"
+                           id="driverPass"
+                           placeholder="Passwort"
+                           style="width:100%; padding:8px; margin-bottom:10px;">
+
+                    <button class="btn login-driver"
+                            style="width:100%;"
+                            onclick="loginPortal('driver')">
+                        Fahrer-Login
+                    </button>
+
+                    <p id="driverErr"
+                       style="color:red; font-size:11px; margin:4px 0 0 0;">
+                    </p>
+
+                </div>
+            </div>
+
+
+            <!-- 3. Eltern Portal -->
+
+            <div class="portal-card parent-card">
+
+                <div>
+                    <h3>Eltern-Portal</h3>
+
+                    <p style="font-size: 12px; color: #666;">
+                        Kind krankmelden & Beförderungsstatus einsehen.
+                    </p>
+                </div>
+
+                <div class="login-box">
+
+                    <input type="text"
+                           id="parentUser"
+                           placeholder="Eltern-Benutzername"
+                           style="width:100%; padding:8px; margin-bottom:8px;">
+
+                    <input type="password"
+                           id="parentPass"
+                           placeholder="Passwort"
+                           style="width:100%; padding:8px; margin-bottom:10px;">
+
+                    <button class="btn login-parent"
+                            style="width:100%;"
+                            onclick="loginPortal('parent')">
+                        Eltern-Login
+                    </button>
+
+                    <p id="parentErr"
+                       style="color:red; font-size:11px; margin:4px 0 0 0;">
+                    </p>
+
+                </div>
+            </div>
+
+
+            <!-- 4. Schul Portal -->
+
+            <div class="portal-card school-card">
+
+                <div>
+                    <h3>Schul-Portal</h3>
+
+                    <p style="font-size: 12px; color: #666;">
+                        Übersicht Schulkinder & Krankmeldungen für die Schule.
+                    </p>
+                </div>
+
+                <div class="login-box">
+
+                    <input type="text"
+                           id="schoolUser"
+                           placeholder="Schul-Kürzel"
+                           style="width:100%; padding:8px; margin-bottom:8px;">
+
+                    <input type="password"
+                           id="schoolPass"
+                           placeholder="Passwort"
+                           style="width:100%; padding:8px; margin-bottom:10px;">
+
+                    <button class="btn login-school"
+                            style="width:100%;"
+                            onclick="loginPortal('school')">
+                        Schul-Login
+                    </button>
+
+                    <p id="schoolErr"
+                       style="color:red; font-size:11px; margin:4px 0 0 0;">
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- ANSICHT 2: ADMIN / INHABER DASHBOARD       -->
+    <!-- ========================================== -->
+
+    <div id="viewAdmin" class="card hidden">
+
+        <button class="btn btn-back" onclick="logout()">
+            ← Zurück zur Startseite
+        </button>
+
+        <h2>Inhaber-Zentrale: Fahrer-Ausfall & Smart Matching</h2>
+
+        <div id="suggestionArea"></div>
+
+        <div style="max-height: 500px; overflow-y: auto;">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Fahrer-Name</th>
+                        <th>Fahrzeugtyp</th>
+                        <th>Status / Pause</th>
+                        <th>Standort</th>
+                        <th>Ersatz-Management</th>
+                    </tr>
+                </thead>
+
+                <tbody id="adminDriversBody"></tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- ANSICHT 3: FAHRER DASHBOARD                -->
+    <!-- ========================================== -->
+
+    <div id="viewDriver" class="card hidden">
+
+        <button class="btn btn-back" onclick="logout()">
+            ← Zurück zur Startseite
+        </button>
+
+        <h2 id="driverDashboardTitle">
+            Fahrer-Portal
+        </h2>
+
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+
+            <h3>Mein Status & Pause aktualisieren</h3>
+
+            <p>
+                Aktualisieren Sie Ihren Status (Frei / Pause / Im Dienst)
+                und Ihre verfügbare Pausenzeit.
+            </p>
+
+            <label>Status:</label>
+
+            <select id="myStatus"
+                    style="padding: 6px; margin-right: 10px;">
+
+                <option value="Frei">Frei</option>
+                <option value="Pause">Pause</option>
+                <option value="Im Dienst">Im Dienst</option>
+
+            </select>
+
+            <label>Freie Pausenzeit (Std.):</label>
+
+            <input type="number"
+                   id="myBreak"
+                   value="2.0"
+                   step="0.5"
+                   style="width: 60px; padding: 6px; margin-right: 10px;">
+
+            <button class="btn"
+                    onclick="updateMyStatus()">
+                Status speichern
+            </button>
+
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- ANSICHT 4: ELTERN DASHBOARD                -->
+    <!-- ========================================== -->
+
+    <div id="viewParentDashboard" class="card hidden">
+
+        <button class="btn btn-back" onclick="logout()">
+            ← Zurück zur Startseite
+        </button>
+
+        <h2 id="parentTitle">
+            Eltern-Portal
+        </h2>
+
+        <p>
+            Hier sehen Sie die Beförderungsdaten Ihres Kindes
+            und können eine Krankmeldung erfassen.
+        </p>
+
+        <div style="max-height: 400px; overflow-y: auto;">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Kind Name</th>
+                        <th>Schule</th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+
+                <tbody id="parentKidsBody"></tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- ANSICHT 5: SCHUL DASHBOARD                 -->
+    <!-- ========================================== -->
+
+    <div id="viewSchoolDashboard" class="card hidden">
+
+        <button class="btn btn-back" onclick="logout()">
+            ← Zurück zur Startseite
+        </button>
+
+        <h2 id="schoolTitle">
+            Schul-Portal
+        </h2>
+
+        <p>
+            Tagesübersicht aller angemeldeten und krankgemeldeten Schüler
+            für Ihre Einrichtung.
+        </p>
+
+        <div style="max-height: 400px; overflow-y: auto;">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Schüler/in</th>
+                        <th>Status</th>
+                        <th>Schule</th>
+                    </tr>
+                </thead>
+
+                <tbody id="schoolKidsBody"></tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+    // Uhrzeit anzeigen
+
+    setInterval(() => {
+        document.getElementById('currentTime').innerText =
+            new Date().toLocaleString('de-DE');
+    }, 1000);
+
+
+    let loggedInDriverId = null;
+
+
+    // Ansichten umschalten
+
+    function switchView(viewId) {
+
+        document.getElementById('viewHome').classList.add('hidden');
+        document.getElementById('viewAdmin').classList.add('hidden');
+        document.getElementById('viewDriver').classList.add('hidden');
+        document.getElementById('viewParentDashboard').classList.add('hidden');
+        document.getElementById('viewSchoolDashboard').classList.add('hidden');
+
+        document.getElementById(viewId).classList.remove('hidden');
+
+        if (viewId === 'viewAdmin') loadAdminData();
+        if (viewId === 'viewParentDashboard') loadParentData();
+        if (viewId === 'viewSchoolDashboard') loadSchoolData();
+    }
+
+
+    function logout() {
+        loggedInDriverId = null;
+        switchView('viewHome');
+    }
+
+
+    // Portal Login für alle 4 Bereiche
+
+    async function loginPortal(type) {
+
+        if (type === 'admin') {
+
+            const user = document.getElementById('adminUser').value;
+            const pass = document.getElementById('adminPass').value;
+
+            if (user === 'admin' && pass === 'rosebrock2026') {
+                switchView('viewAdmin');
+            } else {
+                document.getElementById('adminErr').innerText =
+                    'Falsche Zugangsdaten!';
+            }
+        }
+
+        else if (type === 'driver') {
+
+            const name = document.getElementById('driverUser').value;
+
+            try {
+
+                const res = await fetch('/api/admin/data');
+                const data = await res.json();
+
+                const found = data.drivers.find(d =>
+                    d.name.toLowerCase().includes(name.toLowerCase())
+                );
+
+                if (found) {
+
+                    loggedInDriverId = found.id;
+
+                    document.getElementById('driverDashboardTitle').innerText =
+                        `Fahrer-Portal: ${found.name}`;
+
+                    switchView('viewDriver');
+
+                } else {
+
+                    document.getElementById('driverErr').innerText =
+                        'Fahrer nicht gefunden!';
+                }
+
+            } catch (err) {
+
+                document.getElementById('driverErr').innerText =
+                    'Serverfehler.';
+            }
+        }
+
+        else if (type === 'parent') {
+
+            const user = document.getElementById('parentUser').value;
+            const pass = document.getElementById('parentPass').value;
+
+            if (user.length > 0) {
+
+                document.getElementById('parentTitle').innerText =
+                    `Eltern-Portal (${user})`;
+
+                switchView('viewParentDashboard');
+
+            } else {
+
+                document.getElementById('parentErr').innerText =
+                    'Bitte Benutzernamen eingeben.';
+            }
+        }
+
+        else if (type === 'school') {
+
+            const user = document.getElementById('schoolUser').value;
+            const pass = document.getElementById('schoolPass').value;
+
+            if (user.length > 0) {
+
+                document.getElementById('schoolTitle').innerText =
+                    `Schul-Portal: ${user}`;
+
+                switchView('viewSchoolDashboard');
+
+            } else {
+
+                document.getElementById('schoolErr').innerText =
+                    'Bitte Schul-Kürzel eingeben.';
+            }
+        }
+    }
+
+
+    // Admin Daten laden
+
+    async function loadAdminData() {
+
+        const res = await fetch('/api/admin/data');
+        const data = await res.json();
+
+        const tbody =
+            document.getElementById('adminDriversBody');
+
+        tbody.innerHTML = '';
+
+        data.drivers.forEach(d => {
+
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td>${d.id}</td>
+
+                <td>
+                    <b>${d.name}</b>
+                </td>
+
+                <td>
+                    ${d.vehicleType}
+                </td>
+
+                <td>
+                    <span class="badge ${
+                        d.statusText === 'Frei' ||
+                        d.statusText === 'Pause'
+                            ? 'badge-green'
+                            : 'badge-red'
+                    }">
+                        ${d.statusText} (${d.breakHours}h Pause)
+                    </span>
+                </td>
+
+                <td>
+                    ${d.currentLocation}
+                </td>
+
+                <td>
+                    <button class="btn btn-alert"
+                            onclick="suggestDriverReplacement(${d.id}, '${d.name}')">
+                        🚨 Als krank melden & Ersatz finden
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+
+    // Smart Matching ausführen
+
+    async function suggestDriverReplacement(driverId, driverName) {
+
+        const suggestionArea =
+            document.getElementById('suggestionArea');
+
+        suggestionArea.innerHTML = `
+            <div class="suggestion-box"
+                 style="background:#fff3cd;">
+                <p>
+                    <b>
+                        Ermittle Ersatz für ${driverName}...
+                    </b>
+                </p>
+            </div>
+        `;
+
+        const res =
+            await fetch('/api/admin/suggest-driver-replacement', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ driverId })
+            });
+
+        const data = await res.json();
+
+        if (
+            data.success &&
+            data.suggestions &&
+            data.suggestions.length > 0
+        ) {
+
+            let html = `
+                <div class="suggestion-box">
+
+                    <h3>
+                        💡 Smarte Ersatzfahrer-Empfehlung
+                        für Tour von ${data.sickDriver.name}
+                    </h3>
+
+                    <p>
+                        Betroffene Tour-Kinder:
+                        <b>${data.affectedKidsCount}</b>
+                        |
+                        Standort:
+                        ${data.sickDriver.currentLocation}
+                    </p>
+
+                    <ul>
+            `;
+
+            data.suggestions.forEach((item, index) => {
+
+                html += `
+                    <li>
+                        <b>
+                            ${index + 1}. ${item.driver.name}
+                        </b>
+
+                        (${item.driver.vehicleType})
+
+                        -
+                        Status:
+                        ${item.driver.statusText}
+
+                        |
+                        Standort:
+                        ${item.driver.currentLocation}
+
+                        <br>
+
+                        <small style="color:#555;">
+                            Gründe:
+                            ${item.reasons.join(' • ')}
+                        </small>
+                    </li>
+                `;
+            });
+
+            html += `
+                    </ul>
+                </div>
+            `;
+
+            suggestionArea.innerHTML = html;
+
+        } else {
+
+            suggestionArea.innerHTML = `
+                <div class="suggestion-box"
+                     style="background:#f8d7da;">
+
+                    <p>
+                        <b>
+                            Kein passender Ersatzfahrer verfügbar!
+                        </b>
+
+                        (Entweder Pausenzeit zu kurz,
+                        falscher Standort oder Fahrzeug unpassend).
+                    </p>
+
+                </div>
+            `;
+        }
+    }
+
+
+    // Eltern-Daten laden
+
+    async function loadParentData() {
+
+        const res = await fetch('/api/kids');
+        const kids = await res.json();
+
+        const tbody =
+            document.getElementById('parentKidsBody');
+
+        tbody.innerHTML = '';
+
+        kids.forEach(k => {
+
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td>
+                    <b>${k.name}</b>
+                </td>
+
+                <td>
+                    ${k.schoolName}
+                </td>
+
+                <td>
+                    ${
+                        k.isAbsent === 1
+                            ? '<span class="badge badge-red">Bereits krankgemeldet</span>'
+                            : `<button class="btn btn-alert"
+                                       onclick="reportAbsence(${k.id})">
+                                    Krankmelden
+                               </button>`
+                    }
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+
+    async function reportAbsence(kidId) {
+
+        await fetch('/api/parent/report-absence', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ kidId })
+        });
+
+        loadParentData();
+    }
+
+
+    // Schul-Daten laden
+
+    async function loadSchoolData() {
+
+        const res = await fetch('/api/kids');
+        const kids = await res.json();
+
+        const tbody =
+            document.getElementById('schoolKidsBody');
+
+        tbody.innerHTML = '';
+
+        kids.forEach(k => {
+
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td>
+                    <b>${k.name}</b>
+                </td>
+
+                <td>
+                    ${
+                        k.isAbsent === 1
+                            ? '<span class="badge badge-red">Krankgemeldet / Abwesend</span>'
+                            : '<span class="badge badge-green">Anwesend / Fahrt geplant</span>'
+                    }
+                </td>
+
+                <td>
+                    ${k.schoolName}
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+
+    // Fahrer Status aktualisieren
+
+    async function updateMyStatus() {
+
+        if (!loggedInDriverId) return;
+
+        const statusText =
+            document.getElementById('myStatus').value;
+
+        const breakHours =
+            parseFloat(
+                document.getElementById('myBreak').value
+            );
+
+        await fetch('/api/admin/update-driver-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                driverId: loggedInDriverId,
+                statusText,
+                breakHours
+            })
+        });
+
+        alert('Status erfolgreich aktualisiert!');
+    }
+
+</script>
+
+</body>
+</html>

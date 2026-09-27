@@ -24,15 +24,18 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.5;
+            padding: 0;
         }
 
         header {
             background-color: var(--primary-color);
             color: white;
-            padding: 15px 30px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
@@ -47,17 +50,17 @@
         }
 
         .time-display {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 500;
         }
 
         .main-container {
             max-width: 1100px;
-            margin: 30px auto;
+            margin: 15px auto;
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 30px;
+            padding: 20px;
             border: 1px solid #e2e8f0;
         }
 
@@ -69,18 +72,18 @@
             display: block;
         }
 
-        /* 4 Kacheln Startseite */
+        /* 4 Kacheln Startseite (Responsive Grid) */
         .portal-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            gap: 15px;
             margin-top: 20px;
         }
 
         .portal-card {
             background: #fff;
             border-radius: 6px;
-            padding: 20px;
+            padding: 15px;
             border-top: 4px solid #ccc;
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
             border-left: 1px solid #edf2f7;
@@ -105,8 +108,8 @@
         .portal-card p {
             font-size: 0.8rem;
             color: #4a5568;
-            margin-bottom: 15px;
-            min-height: 35px;
+            margin-bottom: 12px;
+            min-height: auto;
         }
 
         .portal-input {
@@ -183,16 +186,24 @@
         .admin-box {
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 25px;
+            padding: 15px;
+            margin-bottom: 20px;
             background: #fff;
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            overflow-x: auto;
         }
 
         .admin-box h3 {
             font-size: 1rem;
             color: #2d3748;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+        }
+
+        /* Tabellen-Responsivität mit Scroll-Container */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
@@ -200,6 +211,7 @@
             border-collapse: collapse;
             margin-top: 5px;
             margin-bottom: 15px;
+            min-width: 500px;
         }
 
         th, td {
@@ -207,6 +219,7 @@
             text-align: left;
             border-bottom: 1px solid #edf2f7;
             font-size: 0.9rem;
+            white-space: nowrap;
         }
 
         th {
@@ -218,7 +231,7 @@
         .upload-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 15px;
         }
 
         .upload-field {
@@ -242,13 +255,15 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            padding: 15px;
         }
         .modal.active { display: flex; }
         .modal-content {
             background: white;
-            padding: 25px;
+            padding: 20px;
             border-radius: 6px;
-            width: 400px;
+            width: 100%;
+            max-width: 400px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .modal-content h3 { margin-bottom: 15px; color: var(--primary-color); font-size: 1.1rem; }
@@ -256,6 +271,34 @@
         .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem; background-color: #fff; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
+
+        /* Media Queries für Handys & Tablets */
+        @media (max-width: 900px) {
+            .portal-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 12px 15px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .portal-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-container {
+                margin: 10px;
+                padding: 12px;
+            }
+            h2.section-title {
+                font-size: 1.15rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -321,47 +364,53 @@
 
             <div class="admin-box" style="border-left: 4px solid #e53e3e;">
                 <h3>Live-Übersicht: Krankmeldungen & Schulschließungen</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                     <div>
                         <p style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Krankgemeldete Kinder / Nicht dabei</p>
-                        <table>
-                            <thead>
-                                <tr><th>Kind</th><th>Schule</th><th>Grund</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>Leon Weber</td><td>Grundschule Tostedt</td><td><span style="color: #e53e3e; font-weight: 600;">Krank gemeldet</span></td></tr>
-                                <tr><td>Mia Schmidt</td><td>Oberschule Welle</td><td><span style="color: #d69e2e; font-weight: 600;">Arzttermin / Fällt aus</span></td></tr>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr><th>Kind</th><th>Schule</th><th>Grund</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Leon Weber</td><td>Grundschule Tostedt</td><td><span style="color: #e53e3e; font-weight: 600;">Krank gemeldet</span></td></tr>
+                                    <tr><td>Mia Schmidt</td><td>Oberschule Welle</td><td><span style="color: #d69e2e; font-weight: 600;">Arzttermin / Fällt aus</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div>
                         <p style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Geschlossene Schulen / Schulausfälle</p>
-                        <table>
-                            <thead>
-                                <tr><th>Schule</th><th>Grund</th><th>Aktion</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Gymnasium Hollenstedt</td>
-                                    <td><span style="color: #e53e3e; font-weight: 600;">Unwetter / Winterdienst</span></td>
-                                    <td><button class="btn btn-danger" style="padding: 3px 6px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Entfernen</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr><th>Schule</th><th>Grund</th><th>Aktion</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Gymnasium Hollenstedt</td>
+                                        <td><span style="color: #e53e3e; font-weight: 600;">Unwetter / Winterdienst</span></td>
+                                        <td><button class="btn btn-danger" style="padding: 3px 6px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Entfernen</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="admin-box">
                 <h3>Fahrer-Anträge (Urlaub & Anliegen)</h3>
-                <table>
-                    <thead>
-                        <tr><th>Fahrer</th><th>Art</th><th>Nachricht</th><th>Zeit</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="4" style="color: #718096; text-align: center;">Keine Anträge vorhanden.</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Fahrer</th><th>Art</th><th>Nachricht</th><th>Zeit</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="4" style="color: #718096; text-align: center;">Keine Anträge vorhanden.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="admin-box">
@@ -369,12 +418,12 @@
                 <div class="upload-grid">
                     <div class="upload-field">
                         <p>1. Excel-Tabelle hochladen</p>
-                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block;">
+                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block; width: 100%;">
                         <button class="btn btn-primary" onclick="alert('Excel eingelesen!')">Excel einlesen</button>
                     </div>
                     <div class="upload-field">
                         <p>2. Word-Vorlage hochladen (.docx)</p>
-                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block;">
+                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block; width: 100%;">
                         <button class="btn btn-success" onclick="alert('Word-Vorlage gespeichert!')">Word-Vorlage speichern</button>
                     </div>
                 </div>
@@ -383,41 +432,43 @@
 
             <div class="admin-box">
                 <h3>Fahrer-Disposition & Tourenplan-PDF Zuweisung</h3>
-                <table>
-                    <thead>
-                        <tr><th>Fahrer</th><th>Fahrzeug</th><th>Status</th><th>Tourenplan hochladen</th><th>Aktion</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Michael Rosebrock</td>
-                            <td>VW Caddy (Rollstuhl)</td>
-                            <td><span style="color: #38a169; font-weight: 600;">Im Dienst / Bereit</span></td>
-                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-danger" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Pause</button></td>
-                        </tr>
-                        <tr>
-                            <td>Stefan Meyer</td>
-                            <td>Ford Tourneo</td>
-                            <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
-                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
-                        </tr>
-                        <tr>
-                            <td>Andreas Schmidt</td>
-                            <td>Mercedes Sprinter</td>
-                            <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
-                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
-                        </tr>
-                        <tr>
-                            <td>Thomas Weber</td>
-                            <td>VW Caravelle</td>
-                            <td><span style="color: #d69e2e; font-weight: 600;">In Pause</span></td>
-                            <td><input type="file" style="font-size: 0.75rem;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                            <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Fahrer</th><th>Fahrzeug</th><th>Status</th><th>Tourenplan hochladen</th><th>Aktion</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Michael Rosebrock</td>
+                                <td>VW Caddy (Rollstuhl)</td>
+                                <td><span style="color: #38a169; font-weight: 600;">Im Dienst / Bereit</span></td>
+                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                                <td><button class="btn btn-danger" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Pause</button></td>
+                            </tr>
+                            <tr>
+                                <td>Stefan Meyer</td>
+                                <td>Ford Tourneo</td>
+                                <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
+                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                                <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Andreas Schmidt</td>
+                                <td>Mercedes Sprinter</td>
+                                <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
+                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                                <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
+                            </tr>
+                            <tr>
+                                <td>Thomas Weber</td>
+                                <td>VW Caravelle</td>
+                                <td><span style="color: #d69e2e; font-weight: 600;">In Pause</span></td>
+                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
+                                <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -431,7 +482,7 @@
             <!-- 1. Schicht-Status -->
             <div style="margin-bottom: 25px;">
                 <h3 style="font-size: 1rem; color: #1a202c; margin-bottom: 10px;">1. Schicht-Status ("Stempeln")</h3>
-                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
                     <button class="btn btn-success" style="background-color: #38a169; border-radius: 4px; padding: 6px 14px;" onclick="setDriverStatus('Bereit')">🟢 Bereit melden</button>
                     <button class="btn btn-warning" style="background-color: #ecc94b; color: #744210; border-radius: 4px; padding: 6px 14px;" onclick="setDriverStatus('In Pause')">🟡 In Pause</button>
                     <button class="btn btn-danger" style="background-color: #e53e3e; border-radius: 4px; padding: 6px 14px;" onclick="setDriverStatus('Krank')">🔴 Krank melden</button>
@@ -444,36 +495,38 @@
                 <h3 style="font-size: 1rem; color: #1a202c; margin-bottom: 5px;">2. Meine heutigen Kinder & Adressen</h3>
                 <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 12px;">Liste all der Schulkinder, die Ihrer Tour zugeordnet sind:</p>
                 
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">Kind</th>
-                            <th style="width: 35%;">Adresse</th>
-                            <th style="width: 25%;">Schule</th>
-                            <th style="width: 15%;">Telefon</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="font-weight: 500;">Timmy Müller</td>
-                            <td>Musterweg 13, 27283 Verden</td>
-                            <td>Grundschule Altenhagen</td>
-                            <td>01511234513</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500;">Sarah Connor</td>
-                            <td>Musterweg 13, 27283 Verden</td>
-                            <td>Oberschule Lachendorf</td>
-                            <td>01511234513</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500;">Leon Schmidt</td>
-                            <td>Musterweg 13, 27283 Verden</td>
-                            <td>IGS Celle</td>
-                            <td>01511234513</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 25%;">Kind</th>
+                                <th style="width: 35%;">Adresse</th>
+                                <th style="width: 25%;">Schule</th>
+                                <th style="width: 15%;">Telefon</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 500;">Timmy Müller</td>
+                                <td>Musterweg 13, 27283 Verden</td>
+                                <td>Grundschule Altenhagen</td>
+                                <td>01511234513</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 500;">Sarah Connor</td>
+                                <td>Musterweg 13, 27283 Verden</td>
+                                <td>Oberschule Lachendorf</td>
+                                <td>01511234513</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 500;">Leon Schmidt</td>
+                                <td>Musterweg 13, 27283 Verden</td>
+                                <td>IGS Celle</td>
+                                <td>01511234513</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <h3 style="font-size: 1rem; color: #1a202c; margin-top: 20px; margin-bottom: 8px;">Tourenplan (PDF)</h3>
                 <button class="btn btn-primary" style="background-color: #2b6cb0; margin-bottom: 15px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;" onclick="alert('Öffne Tourenplan-PDF...')">📄 Meinen Tourenplan (PDF) öffnen</button>
@@ -529,36 +582,38 @@
             <div class="admin-box">
                 <h3>Zu befördernde Kinder für unsere Schule</h3>
                 <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 15px;">Aktuelle Liste aller Schulkinder, die heute per Mietwagenverkehr zu unserer Schule transportiert werden:</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Kind</th>
-                            <th>Klasse / Stufe</th>
-                            <th>Abholadresse</th>
-                            <th>Status / Transport</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="font-weight: 500;">Timmy Müller</td>
-                            <td>Klasse 2b</td>
-                            <td>Musterweg 13, 27283 Verden</td>
-                            <td><span style="color: #38a169; font-weight: 600;">Wird befördert</span></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500;">Leon Weber</td>
-                            <td>Klasse 4a</td>
-                            <td>Hauptstraße 8, 27283 Verden</td>
-                            <td><span style="color: #e53e3e; font-weight: 600;">Krankgemeldet (Entfällt)</span></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 500;">Sarah Connor</td>
-                            <td>Klasse 3c</td>
-                            <td>Dorfstraße 4, 27283 Verden</td>
-                            <td><span style="color: #38a169; font-weight: 600;">Wird befördert</span></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Kind</th>
+                                <th>Klasse / Stufe</th>
+                                <th>Abholadresse</th>
+                                <th>Status / Transport</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 500;">Timmy Müller</td>
+                                <td>Klasse 2b</td>
+                                <td>Musterweg 13, 27283 Verden</td>
+                                <td><span style="color: #38a169; font-weight: 600;">Wird befördert</span></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 500;">Leon Weber</td>
+                                <td>Klasse 4a</td>
+                                <td>Hauptstraße 8, 27283 Verden</td>
+                                <td><span style="color: #e53e3e; font-weight: 600;">Krankgemeldet (Entfällt)</span></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 500;">Sarah Connor</td>
+                                <td>Klasse 3c</td>
+                                <td>Dorfstraße 4, 27283 Verden</td>
+                                <td><span style="color: #38a169; font-weight: 600;">Wird befördert</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Schulausfall melden Sektion (Größer & mit Begründung ausklappbar) -->

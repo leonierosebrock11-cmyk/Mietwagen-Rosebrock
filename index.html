@@ -47,6 +47,8 @@
         .table th { background-color: #003366; color: white; }
         .alert { background-color: #fff3cd; padding: 12px; border-left: 4px solid #ffc107; margin-top: 15px; font-size: 0.9rem; }
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        
+        .credentials-hint { font-size: 0.75rem; color: #666; background: #f8f9fa; padding: 6px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid #ccc; }
     </style>
 </head>
 <body>
@@ -61,7 +63,7 @@
 
     <div class="main-container">
 
-        <!-- 1. STARTSEITE (4 Kacheln wie auf Screenshot 2) -->
+        <!-- 1. STARTSEITE (4 Kacheln) -->
         <div id="dashboard-home" class="portal-section active">
             <h2>Willkommen im Betriebssystem</h2>
             <p>Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an und greifen Sie auf Ihre Funktionen zu:</p>
@@ -74,6 +76,7 @@
                         <p>Fahrerausfall, Smart Matching nach Standort & Pause.</p>
                     </div>
                     <div class="login-box">
+                        <div class="credentials-hint">Login: <strong>Fred Rosebrock</strong><br>PW: <strong>R0sebrock</strong></div>
                         <input type="text" id="admin-user" class="form-control" placeholder="Benutzername">
                         <input type="password" id="admin-pass" class="form-control" placeholder="Passwort">
                         <button onclick="adminLogin()" class="btn btn-admin">Admin-Login</button>
@@ -87,8 +90,9 @@
                         <p>Dienststatus melden & Pausenzeiten verwalten.</p>
                     </div>
                     <div class="login-box">
+                        <div class="credentials-hint">Login: <strong>hans</strong> / PW: <strong>geheim</strong></div>
                         <input type="text" id="driver-user" class="form-control" value="hans" placeholder="Benutzername">
-                        <input type="password" id="driver-pass" class="form-control" value="••••••••" placeholder="Passwort">
+                        <input type="password" id="driver-pass" class="form-control" value="geheim" placeholder="Passwort">
                         <button onclick="driverLogin()" class="btn btn-driver">Fahrer-Login</button>
                     </div>
                 </div>
@@ -100,6 +104,7 @@
                         <p>Kind krankmelden & Beförderungsstatus einsehen.</p>
                     </div>
                     <div class="login-box">
+                        <div class="credentials-hint">Beispiele:<br>• eltern.mueller / M9x!kP2<br>• eltern.schmidt / 7vL#qR4<br>• eltern.weber / K2w*zN9</div>
                         <input type="text" id="parent-user" class="form-control" placeholder="Eltern-Benutzername">
                         <input type="password" id="parent-pass" class="form-control" placeholder="Passwort">
                         <button onclick="parentLogin()" class="btn btn-parent">Eltern-Login</button>
@@ -113,6 +118,7 @@
                         <p>Übersicht Schulkinder & Krankmeldungen für die Schule.</p>
                     </div>
                     <div class="login-box">
+                        <div class="credentials-hint">Beispiele:<br>• SCHULE-ALT / A7m#Kp2<br>• SCHULE-OBE / X4n$vL8<br>• SCHULE-IGS / Z9p*Rt1</div>
                         <input type="text" id="school-user" class="form-control" placeholder="Schul-Kürzel">
                         <input type="password" id="school-pass" class="form-control" placeholder="Passwort">
                         <button onclick="schoolLogin()" class="btn btn-school">Schul-Login</button>
@@ -121,17 +127,15 @@
             </div>
         </div>
 
-        <!-- 2. FAHRER-PORTAL (Exakt wie auf Screenshot 1 nach Login) -->
+        <!-- 2. FAHRER-PORTAL -->
         <div id="driver-portal" class="portal-section">
             <button onclick="goHome()" class="back-btn">⬅ Zurück zur Übersicht</button>
-            
             <h2>Fahrer-Portal (Schicht & Touren)</h2>
             
             <div style="background-color: #f0f4f8; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px;">
                 <p style="margin: 0; font-size: 1rem;">Eingeloggt als: <strong id="logged-in-driver-name">Hans Rosebrock</strong></p>
             </div>
 
-            <!-- 1. Schicht-Status ("Stempeln") -->
             <div class="card">
                 <h3>1. Schicht-Status ("Stempeln")</h3>
                 <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
@@ -142,36 +146,26 @@
                 <p style="margin-top: 15px;"><strong>Aktueller Status:</strong> <span id="current-status-display">Frei</span></p>
             </div>
 
-            <!-- 2. Meine heutigen Kinder & Adressen -->
             <div class="card">
                 <h3>2. Meine heutigen Kinder & Adressen</h3>
-                <p>Liste all der Schulkinder, die Ihrer Tour zugeordnet sind:</p>
                 <table class="table">
                     <thead>
-                        <tr>
-                            <th>Kind</th>
-                            <th>Adresse</th>
-                            <th>Schule</th>
-                            <th>Telefon</th>
-                        </tr>
+                        <tr><th>Kind</th><th>Adresse</th><th>Schule</th><th>Telefon</th></tr>
                     </thead>
                     <tbody id="driver-kids-table">
-                        <!-- Wird dynamisch geladen -->
+                        <tr><td>Timmy Müller</td><td>Musterweg 13, 27283 Verden</td><td>Grundschule Altenhagen</td><td>01511234513</td></tr>
+                        <tr><td>Sarah Schmidt</td><td>Dorfstraße 4, 27283 Verden</td><td>Oberschule Lachendorf</td><td>01529876543</td></tr>
+                        <tr><td>Leon Weber</td><td>Feldweg 8, 27330 Asendorf</td><td>IGS Celle</td><td>01715554433</td></tr>
                     </tbody>
                 </table>
-
                 <h4 style="margin-top: 20px;">Tourenplan (PDF)</h4>
-                <button onclick="alert('Öffne Tourenplan als PDF...')" class="btn" style="background-color: #004080; width: auto; padding: 8px 15px;">
-                    📄 Meinen Tourenplan (PDF) öffnen
-                </button>
+                <button onclick="alert('Öffne Tourenplan als PDF...')" class="btn" style="background-color: #004080; width: auto; padding: 8px 15px;">📄 Meinen Tourenplan (PDF) öffnen</button>
             </div>
 
-            <!-- Hinweis zur Erreichbarkeit -->
             <div class="alert">
                 Hinweis zur Erreichbarkeit: Der Inhaber ist ab 18:00 Uhr nicht mehr persönlich erreichbar. Urlaubsanträge und Anliegen werden nach Eingang am nächsten Tag bearbeitet.
             </div>
 
-            <!-- 3. Urlaubsantrag oder Anliegen senden -->
             <div class="card" style="margin-top: 20px;">
                 <h3>3. Urlaubsantrag oder Anliegen senden</h3>
                 <div style="margin-bottom: 10px;">
@@ -193,14 +187,53 @@
         <!-- 3. ADMIN-PORTAL -->
         <div id="admin-portal" class="portal-section">
             <button onclick="goHome()" class="back-btn">⬅ Zurück zur Übersicht</button>
-            <h2>Admin-Leitstand (Disposition & Smart Matching)</h2>
+            <h2>Admin-Leitstand (Inhaber: Fred Rosebrock)</h2>
             <div class="card">
                 <h3>Übersicht Fahrer & Status</h3>
                 <table class="table" id="admin-driver-table">
                     <thead>
                         <tr><th>Name</th><th>Fahrzeug</th><th>Status</th><th>Standort</th></tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                        <tr><td>Hans Rosebrock</td><td>Mercedes Sprinter (Bus 1)</td><td>Frei</td><td>Zentrale Verden</td></tr>
+                        <tr><td>Karl Meyer</td><td>VW Caravelle (Bus 2)</td><td>In Tour</td><td>Grundschule Altenhagen</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. ELTERN-PORTAL -->
+        <div id="parent-portal" class="portal-section">
+            <button onclick="goHome()" class="back-btn">⬅ Zurück zur Übersicht</button>
+            <h2 id="parent-welcome-title">Eltern-Portal</h2>
+            <div class="card">
+                <h3>Kind krankmelden / Beförderungsstatus</h3>
+                <p>Hier können Sie für Ihr Kind unkompliziert eine Krankmeldung für den heutigen Schultransport abschicken:</p>
+                <div style="margin-bottom: 10px;">
+                    <label>Grund für Abwesenheit:</label>
+                    <select class="form-control">
+                        <option>Krankheit (Fahrt heute aussetzen)</option>
+                        <option>Privat verhindert</option>
+                    </select>
+                </div>
+                <button onclick="alert('Krankmeldung wurde erfolgreich an Dispo und Fahrer übermittelt!')" class="btn btn-parent" style="width: auto;">Krankmeldung absenden</button>
+            </div>
+        </div>
+
+        <!-- 5. SCHUL-PORTAL -->
+        <div id="school-portal" class="portal-section">
+            <button onclick="goHome()" class="back-btn">⬅ Zurück zur Übersicht</button>
+            <h2 id="school-welcome-title">Schul-Portal</h2>
+            <div class="card">
+                <h3>Übersicht Schulkinder & Krankmeldungen</h3>
+                <table class="table">
+                    <thead>
+                        <tr><th>Kind</th><th>Klasse</th><th>Transport-Status</th><th>Fahrzeug</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Timmy Müller</td><td>3b</td><td>Wird befördert</td><td>Bus 1 (Hans Rosebrock)</td></tr>
+                        <tr><td>Sarah Schmidt</td><td>4a</td><td>Krankgemeldet (heute Fahrtfrei)</td><td>-</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -222,81 +255,78 @@
             document.getElementById('dashboard-home').classList.add('active');
         }
 
-        let currentDriver = JSON.parse(localStorage.getItem('rosebrock_current_driver')) || { id: 1, name: 'Hans Rosebrock', statusText: 'Frei' };
-
-        async function driverLogin() {
-            document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById('driver-portal').classList.add('active');
-            loadDriverDataView();
-        }
+        // --- DATENBANK / LOGIN VALIDIERUNG ---
 
         function adminLogin() {
-            document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById('admin-portal').classList.add('active');
-            loadAdminData();
-        }
-
-        function parentLogin() {
-            alert('Eltern-Portal Login (Ansicht wird geladen...)');
-        }
-
-        function schoolLogin() {
-            alert('Schul-Portal Login (Ansicht wird geladen...)');
-        }
-
-        function loadDriverDataView() {
-            document.getElementById('logged-in-driver-name').innerText = currentDriver.name;
-            document.getElementById('current-status-display').innerText = currentDriver.statusText || 'Frei';
-            loadKidsForDriver();
-        }
-
-        async function loadKidsForDriver() {
-            try {
-                const res = await fetch('/api/kids');
-                const kids = await res.json();
-                const tbody = document.getElementById('driver-kids-table');
-                tbody.innerHTML = '';
-                kids.forEach(k => {
-                    tbody.innerHTML += `<tr>
-                        <td>${k.name}</td>
-                        <td>${k.address || 'Musterweg 13, 27283 Verden'}</td>
-                        <td>${k.schoolName}</td>
-                        <td>${k.phone || '01511234513'}</td>
-                    </tr>`;
-                });
-            } catch (err) {
-                // Fallback falls Server nicht erreichbar
-                const tbody = document.getElementById('driver-kids-table');
-                tbody.innerHTML = `
-                    <tr><td>Timmy Müller</td><td>Musterweg 13, 27283 Verden</td><td>Grundschule Altenhagen</td><td>01511234513</td></tr>
-                    <tr><td>Sarah Connor</td><td>Musterweg 13, 27283 Verden</td><td>Oberschule Lachendorf</td><td>01511234513</td></tr>
-                    <tr><td>Leon Schmidt</td><td>Musterweg 13, 27283 Verden</td><td>IGS Celle</td><td>01511234513</td></tr>
-                `;
+            const user = document.getElementById('admin-user').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
+            
+            if (user === 'Fred Rosebrock' && pass === 'R0sebrock') {
+                document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('admin-portal').classList.add('active');
+            } else {
+                alert('Falscher Benutzername oder Passwort!\nKorrekt: Fred Rosebrock / R0sebrock');
             }
         }
 
-        async function updateDriverStatus(status) {
-            currentDriver.statusText = status;
-            localStorage.setItem('rosebrock_current_driver', JSON.stringify(currentDriver));
+        function driverLogin() {
+            const user = document.getElementById('driver-user').value.trim();
+            const pass = document.getElementById('driver-pass').value.trim();
+            
+            if (user === 'hans' && pass === 'geheim') {
+                document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('driver-portal').classList.add('active');
+            } else {
+                alert('Falscher Fahrer-Login! (Standard: hans / geheim)');
+            }
+        }
+
+        const parentAccounts = {
+            'eltern.mueller': { pass: 'M9x!kP2', name: 'Familie Müller (Kind: Timmy)' },
+            'eltern.schmidt': { pass: '7vL#qR4', name: 'Familie Schmidt (Kind: Sarah)' },
+            'eltern.weber':   { pass: 'K2w*zN9', name: 'Familie Weber (Kind: Leon)' }
+        };
+
+        function parentLogin() {
+            const user = document.getElementById('parent-user').value.trim();
+            const pass = document.getElementById('parent-pass').value.trim();
+
+            if (parentAccounts[user] && parentAccounts[user].pass === pass) {
+                document.getElementById('parent-welcome-title').innerText = 'Eltern-Portal (' + parentAccounts[user].name + ')';
+                document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('parent-portal').classList.add('active');
+            } else {
+                alert('Ungültige Eltern-Zugangsdaten!\nBitte prüfen Sie die Benutzer (z.B. eltern.mueller).');
+            }
+        }
+
+        const schoolAccounts = {
+            'SCHULE-ALT': { pass: 'A7m#Kp2', name: 'Grundschule Altenhagen' },
+            'SCHULE-OBE': { pass: 'X4n$vL8', name: 'Oberschule Lachendorf' },
+            'SCHULE-IGS': { pass: 'Z9p*Rt1', name: 'IGS Celle' }
+        };
+
+        function schoolLogin() {
+            const user = document.getElementById('school-user').value.trim();
+            const pass = document.getElementById('school-pass').value.trim();
+
+            if (schoolAccounts[user] && schoolAccounts[user].pass === pass) {
+                document.getElementById('school-welcome-title').innerText = 'Schul-Portal (' + schoolAccounts[user].name + ')';
+                document.querySelectorAll('.portal-section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById('school-portal').classList.add('active');
+            } else {
+                alert('Ungültiges Schul-Kürzel oder Passwort!\nBeispiel: SCHULE-ALT / A7m#Kp2');
+            }
+        }
+
+        function updateDriverStatus(status) {
             document.getElementById('current-status-display').innerText = status;
             alert('Status aktualisiert auf: ' + status);
         }
 
-        async function sendDriverRequest() {
+        function sendDriverRequest() {
             alert('Antrag erfolgreich an die Disposition gesendet!');
             document.getElementById('request-message').value = '';
-        }
-
-        async function loadAdminData() {
-            try {
-                const res = await fetch('/api/admin/data');
-                const data = await res.json();
-                const tbody = document.querySelector('#admin-driver-table tbody');
-                tbody.innerHTML = '';
-                data.drivers.forEach(d => {
-                    tbody.innerHTML += `<tr><td>${d.name}</td><td>${d.vehicleType}</td><td>${d.statusText}</td><td>${d.currentLocation}</td></tr>`;
-                });
-            } catch (err) { console.error(err); }
         }
     </script>
 </body>

@@ -1,6 +1,7 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,13 +21,23 @@ const db = new sqlite3.Database(dbFile, (err) => {
     }
 });
 
+// Hilfsfunktion für zufällige Passwörter
+function generatePassword(length = 8) {
+    return crypto.randomBytes(Math.ceil(length / 2))
+        .toString('hex')
+        .slice(0, length);
+}
+
 // Tabellen initialisieren & Beispieldaten einfügen
 function initDatabase() {
     db.serialize(() => {
-        // Fahrer-Tabelle
+        // Fahrer-Tabelle mit Login-Daten und Adresse
         db.run(`CREATE TABLE IF NOT EXISTS drivers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
+            username TEXT,
+            password TEXT,
+            address TEXT,
             vehicleType TEXT,
             statusText TEXT,
             breakHours REAL,
@@ -42,22 +53,36 @@ function initDatabase() {
             location TEXT
         )`);
 
-        // Prüfen, ob Beispieldaten existieren, sonst einfügen
+        // Prüfen, ob Fahrer existieren, sonst echte Daten mit Zufallspasswörtern anlegen
         db.get("SELECT COUNT(*) as count FROM drivers", (err, row) => {
-            if (row.count === 0) {
-                db.run(`INSERT INTO drivers (name, vehicleType, statusText, breakHours, currentLocation) VALUES 
-                    ('Max Mustermann', 'Kleinbus', 'Frei', 2.0, 'Celle Zentrum'),
-                    ('Erika Musterfrau', 'Rollstuhlgerecht', 'Pause', 1.5, 'Peine Bahnhof'),
-                    ('Ahmed Yilmaz', 'PKW', 'Im Dienst', 0.5, 'Hannover Mitte')`);
+            if (row && row.count === 0) {
+                const pass1 = generatePassword(8);
+                const pass2 = generatePassword(8);
+                const pass3 = generatePassword(8);
+
+                db.run(`INSERT INTO drivers (name, username, password, address, vehicleType, statusText, breakHours, currentLocation) VALUES 
+                    ('Hans Rosebrock', 'hans', ?, 'Mühlenstraße 12, 29221 Celle', 'Kleinbus', 'Frei', 2.0, 'Celle'),
+                    ('Sabine Meier', 'sabine', ?, 'Hauptstraße 45, 29336 Nienhagen', 'Rollstuhlgerecht', 'Pause', 1.5, 'Nienhagen'),
+                    ('Michael Klein', 'michael', ?, 'Dammfeld 8, 29342 Wienhausen', 'PKW', 'Im Dienst', 0.5, 'Wienhausen')`,
+                    [pass1, pass2, pass3],
+                    () => {
+                        console.log('--- GENERIERTE FAHRER-PASSWÖRTER ---');
+                        console.log(`Benutzer 'hans': ${pass1}`);
+                        console.log(`Benutzer 'sabine': ${pass2}`);
+                        console.log(`Benutzer 'michael': ${pass3}`);
+                        console.log('------------------------------------');
+                    }
+                );
             }
         });
 
+        // Prüfen, ob Kinder existieren, sonst Beispieldaten einfügen
         db.get("SELECT COUNT(*) as count FROM kids", (err, row) => {
-            if (row.count === 0) {
+            if (row && row.count === 0) {
                 db.run(`INSERT INTO kids (name, schoolName, isAbsent, location) VALUES 
-                    ('Timmy Müller', 'Grundschule Celle', 0, 'Celle Zentrum'),
-                    ('Sarah Connor', 'Realschule Peine', 0, 'Peine Bahnhof'),
-                    ('Leon Schmidt', 'IGS Hannover', 0, 'Hannover Mitte')`);
+                    ('Timmy Müller', 'Grundschule Altenhagen', 0, 'Celle'),
+                    ('Sarah Connor', 'Oberschule Lachendorf', 0, 'Lachendorf'),
+                    ('Leon Schmidt', 'IGS Celle', 0, 'Celle')`);
             }
         });
     });
@@ -80,6 +105,33 @@ app.get('/api/kids', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
+});
+
+// API: Fahrer-Login (Prüfung von Benutzername & Passwort)
+app.post('/api/driver/login', (req, res) => {
+    const { username, password } = req.body;
+    db.get("SELECT * FROM drivers WHERE username = ? AND password = ?", [username, password], (err, driver) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        if (!driver) {
+            return res.status(401).json({ success: false, error: 'Ungültige Anmeldedaten' });
+        }
+        res.json({ success: true, driver });
+    });
+});
+
+// API: Neuen Fahrer dynamisch anlegen (Generiert automatisch ein Passwort)
+app.post('/api/admin/add-driver', (req, res) => {
+    const { name, username, address, vehicleType, currentLocation } = req.body;
+    const password = generatePassword(8);
+
+    db.run(
+        `INSERT INTO drivers (name, username, password, address, vehicleType, statusText, breakHours, currentLocation) VALUES (?, ?, ?, ?, ?, 'Frei', 2.0, ?)`,
+        [name, username, password, address, vehicleType, currentLocation],
+        function(err) {
+            if (err) return res.status(500).json({ success: false, error: err.message });
+            res.json({ success: true, driverId: this.lastID, generatedPassword: password });
+        }
+    );
 });
 
 // API: Krankmeldung durch Eltern
@@ -107,7 +159,7 @@ app.post('/api/admin/suggest-driver-replacement', (req, res) => {
     db.get("SELECT * FROM drivers WHERE id = ?", [driverId], (err, sickDriver) => {
         if (err || !sickDriver) return res.status(404).json({ success: false, error: 'Fahrer nicht gefunden' });
 
-        db.all("SELECT * FROM drivers WHERE id != ? AND (statusText = 'Frei' || statusText = 'Pause')", [driverId], (err, availableDrivers) => {
+        db.all("SELECT * FROM drivers WHERE id != ? AND (statusText = 'Frei' OR statusText = 'Pause')", [driverId], (err, availableDrivers) => {
             if (err) return res.status(500).json({ error: err.message });
 
             let suggestions = availableDrivers.map(d => {

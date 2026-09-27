@@ -44,13 +44,24 @@ function initDatabase() {
             currentLocation TEXT
         )`);
 
-        // Kinder-Tabelle
+        // Kinder-Tabelle mit Adressen, Schulen und Telefonnummern (wie im Screenshot)
         db.run(`CREATE TABLE IF NOT EXISTS kids (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             schoolName TEXT,
+            address TEXT,
+            phone TEXT,
             isAbsent INTEGER DEFAULT 0,
             location TEXT
+        )`);
+
+        // Urlaubsanträge / Anliegen Tabelle
+        db.run(`CREATE TABLE IF NOT EXISTS requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            driverName TEXT,
+            requestType TEXT,
+            message TEXT,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
 
         // Prüfen, ob Fahrer existieren, sonst echte Daten mit Zufallspasswörtern anlegen
@@ -76,13 +87,13 @@ function initDatabase() {
             }
         });
 
-        // Prüfen, ob Kinder existieren, sonst Beispieldaten einfügen
+        // Prüfen, ob Kinder existieren, sonst Daten aus dem Screenshot einfügen
         db.get("SELECT COUNT(*) as count FROM kids", (err, row) => {
             if (row && row.count === 0) {
-                db.run(`INSERT INTO kids (name, schoolName, isAbsent, location) VALUES 
-                    ('Timmy Müller', 'Grundschule Altenhagen', 0, 'Celle'),
-                    ('Sarah Connor', 'Oberschule Lachendorf', 0, 'Lachendorf'),
-                    ('Leon Schmidt', 'IGS Celle', 0, 'Celle')`);
+                db.run(`INSERT INTO kids (name, schoolName, address, phone, isAbsent, location) VALUES 
+                    ('Schulkind 13 Mustermann', 'Gesamtschule Süd', 'Musterweg 13, 27283 Verden', '01511234513', 0, 'Verden'),
+                    ('Schulkind 33 Mustermann', 'Grundschule Nord', 'Musterweg 33, 27283 Verden', '01511234533', 0, 'Verden'),
+                    ('Schulkind 53 Mustermann', 'Förderschule Ost', 'Musterweg 53, 27283 Verden', '01511234553', 0, 'Verden')`);
             }
         });
     });
@@ -99,7 +110,7 @@ app.get('/api/admin/data', (req, res) => {
     });
 });
 
-// API: Alle Kinder für Eltern/Schule laden
+// API: Alle Kinder für Fahrer/Eltern/Schule laden
 app.get('/api/kids', (req, res) => {
     db.all("SELECT * FROM kids", [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -119,34 +130,28 @@ app.post('/api/driver/login', (req, res) => {
     });
 });
 
-// API: Neuen Fahrer dynamisch anlegen (Generiert automatisch ein Passwort)
-app.post('/api/admin/add-driver', (req, res) => {
-    const { name, username, address, vehicleType, currentLocation } = req.body;
-    const password = generatePassword(8);
+// API: Fahrer-Status aktualisieren (Stempeln: Bereit, Pause, Krank)[cite: 1]
+app.post('/api/driver/update-status', (req, res) => {
+    const { driverId, statusText } = req.body;
+    db.run("UPDATE drivers SET statusText = ? WHERE id = ?", [statusText, driverId], function(err) {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        res.json({ success: true });
+    });
+});
 
-    db.run(
-        `INSERT INTO drivers (name, username, password, address, vehicleType, statusText, breakHours, currentLocation) VALUES (?, ?, ?, ?, ?, 'Frei', 2.0, ?)`,
-        [name, username, password, address, vehicleType, currentLocation],
-        function(err) {
-            if (err) return res.status(500).json({ success: false, error: err.message });
-            res.json({ success: true, driverId: this.lastID, generatedPassword: password });
-        }
-    );
+// API: Urlaubsantrag oder Anliegen senden[cite: 1]
+app.post('/api/driver/request', (req, res) => {
+    const { driverName, requestType, message } = req.body;
+    db.run("INSERT INTO requests (driverName, requestType, message) VALUES (?, ?, ?)", [driverName, requestType, message], function(err) {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        res.json({ success: true });
+    });
 });
 
 // API: Krankmeldung durch Eltern
 app.post('/api/parent/report-absence', (req, res) => {
     const { kidId } = req.body;
     db.run("UPDATE kids SET isAbsent = 1 WHERE id = ?", [kidId], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true });
-    });
-});
-
-// API: Fahrer-Status aktualisieren
-app.post('/api/admin/update-driver-status', (req, res) => {
-    const { driverId, statusText, breakHours } = req.body;
-    db.run("UPDATE drivers SET statusText = ?, breakHours = ? WHERE id = ?", [statusText, breakHours, driverId], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
     });

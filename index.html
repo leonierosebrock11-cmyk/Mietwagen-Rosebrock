@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mietwagenverkehr Rosebrock</title>
     <style>
         :root {
@@ -25,43 +25,47 @@
             color: var(--text-color);
             line-height: 1.5;
             padding: 0;
+            -webkit-text-size-adjust: 100%;
         }
 
         header {
             background-color: var(--primary-color);
             color: white;
-            padding: 15px 20px;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         header h1 {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 600;
         }
 
         header p {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             opacity: 0.85;
         }
 
         .time-display {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
+            align-self: flex-end;
+            margin-top: -22px;
         }
 
         .main-container {
+            width: 100%;
             max-width: 1100px;
-            margin: 15px auto;
+            margin: 0 auto;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 20px;
-            border: 1px solid #e2e8f0;
+            border-radius: 0;
+            box-shadow: none;
+            padding: 12px;
+            min-height: calc(100vh - 70px);
         }
 
         .view {
@@ -72,12 +76,12 @@
             display: block;
         }
 
-        /* 4 Kacheln Startseite (Responsive Grid) */
+        /* 4 Kacheln Startseite - Mobil optimiert */
         .portal-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
         }
 
         .portal-card {
@@ -85,10 +89,8 @@
             border-radius: 6px;
             padding: 15px;
             border-top: 4px solid #ccc;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            border-left: 1px solid #edf2f7;
-            border-right: 1px solid #edf2f7;
-            border-bottom: 1px solid #edf2f7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #edf2f7;
         }
 
         .portal-card.admin { border-top-color: #805ad5; }
@@ -97,8 +99,8 @@
         .portal-card.school { border-top-color: #d53f8c; }
 
         .portal-card h3 {
-            font-size: 1.05rem;
-            margin-bottom: 8px;
+            font-size: 1rem;
+            margin-bottom: 6px;
         }
         .portal-card.admin h3 { color: #6b46c1; }
         .portal-card.driver h3 { color: #2f855a; }
@@ -108,95 +110,81 @@
         .portal-card p {
             font-size: 0.8rem;
             color: #4a5568;
-            margin-bottom: 12px;
-            min-height: auto;
+            margin-bottom: 10px;
         }
 
         .portal-input {
             width: 100%;
-            padding: 8px 10px;
+            padding: 10px;
             margin-bottom: 8px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            font-size: 0.85rem;
+            font-size: 16px; /* Verhindert Auto-Zoom auf iOS */
         }
 
         .portal-btn {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             color: white;
             border: none;
             border-radius: 4px;
             font-weight: 600;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         .portal-card.admin .portal-btn { background-color: #805ad5; }
-        .portal-card.admin .portal-btn:hover { background-color: #6b46c1; }
         .portal-card.driver .portal-btn { background-color: #38a169; }
-        .portal-card.driver .portal-btn:hover { background-color: #2f855a; }
         .portal-card.parent .portal-btn { background-color: #dd6b20; }
-        .portal-card.parent .portal-btn:hover { background-color: #c05621; }
         .portal-card.school .portal-btn { background-color: #d53f8c; }
-        .portal-card.school .portal-btn:hover { background-color: #b83280; }
 
         /* Allgemeine Buttons & Elemente */
         .btn {
             background-color: #4a5568;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.85rem;
             font-weight: 500;
         }
-        .btn:hover { background-color: #2d3748; }
         
         .btn-danger { background-color: #e53e3e; color: white; }
-        .btn-danger:hover { background-color: #c53030; }
-
         .btn-success { background-color: #38a169; color: white; }
-        .btn-success:hover { background-color: #2f855a; }
-
         .btn-warning { background-color: #d69e2e; color: white; }
-        .btn-warning:hover { background-color: #b7791f; }
-
         .btn-primary { background-color: #2b6cb0; color: white; }
-        .btn-primary:hover { background-color: #1a4971; }
 
         .back-btn {
             background-color: #718096;
             color: white;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 4px;
             border: none;
             cursor: pointer;
             font-size: 0.85rem;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            display: inline-block;
         }
 
         h2.section-title {
-            font-size: 1.3rem;
+            font-size: 1.15rem;
             color: var(--primary-color);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         /* Admin & Allgemein Boxen */
         .admin-box {
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 20px;
+            padding: 12px;
+            margin-bottom: 15px;
             background: #fff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            overflow-x: auto;
         }
 
         .admin-box h3 {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: #2d3748;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         /* Tabellen-Responsivität mit Scroll-Container */
@@ -204,21 +192,20 @@
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            margin-bottom: 10px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            min-width: 500px;
+            min-width: 480px;
         }
 
         th, td {
-            padding: 10px 12px;
+            padding: 8px 10px;
             text-align: left;
             border-bottom: 1px solid #edf2f7;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             white-space: nowrap;
         }
 
@@ -229,21 +216,21 @@
         }
 
         .upload-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .upload-field {
             border: 1px dashed #cbd5e0;
-            padding: 15px;
+            padding: 12px;
             border-radius: 4px;
             background: #fafafa;
         }
         .upload-field p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         /* Modal */
@@ -251,11 +238,11 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            padding: 15px;
+            padding: 10px;
         }
         .modal.active { display: flex; }
         .modal-content {
@@ -266,37 +253,42 @@
             max-width: 400px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .modal-content h3 { margin-bottom: 15px; color: var(--primary-color); font-size: 1.1rem; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem; background-color: #fff; }
+        .modal-content h3 { margin-bottom: 12px; color: var(--primary-color); font-size: 1rem; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; background-color: #fff; }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
 
-        /* Media Queries für Handys & Tablets */
-        @media (max-width: 900px) {
-            .portal-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .upload-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 600px) {
+        /* Ab Tablet/PC wieder Grid-Ansichten aktivieren */
+        @media (min-width: 768px) {
             header {
-                padding: 12px 15px;
-                flex-direction: column;
-                align-items: flex-start;
+                flex-direction: row;
+                align-items: center;
+                padding: 15px 30px;
             }
-            .portal-grid {
-                grid-template-columns: 1fr;
+            .time-display {
+                align-self: auto;
+                margin-top: 0;
             }
             .main-container {
-                margin: 10px;
-                padding: 12px;
+                margin: 20px auto;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                padding: 25px;
+                width: 95%;
             }
-            h2.section-title {
-                font-size: 1.15rem;
+            .portal-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+            }
+            .upload-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+            .admin-box {
+                padding: 20px;
             }
         }
     </style>
@@ -315,8 +307,8 @@
 
         <!-- STARTSEITE (4 Kacheln) -->
         <div id="home-view" class="view active">
-            <h2 style="font-size: 1.2rem; margin-bottom: 5px;">Willkommen im Betriebssystem</h2>
-            <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 25px;">Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an und greifen Sie auf Ihre Funktionen zu:</p>
+            <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Willkommen im Betriebssystem</h2>
+            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an:</p>
             
             <div class="portal-grid">
                 <!-- Inhaber -->
@@ -360,13 +352,13 @@
         <!-- ADMIN LEITSTAND -->
         <div id="admin-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Mietwagenverkehr Rosebrock – Admin Leitstand</h2>
+            <h2 class="section-title">Admin Leitstand</h2>
 
             <div class="admin-box" style="border-left: 4px solid #e53e3e;">
-                <h3>Live-Übersicht: Krankmeldungen & Schulschließungen</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <h3>Live-Übersicht: Krankmeldungen & Schulausfälle</h3>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
                     <div>
-                        <p style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Krankgemeldete Kinder / Nicht dabei</p>
+                        <p style="font-size: 0.8rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Krankgemeldete Kinder</p>
                         <div class="table-responsive">
                             <table>
                                 <thead>
@@ -374,13 +366,13 @@
                                 </thead>
                                 <tbody>
                                     <tr><td>Leon Weber</td><td>Grundschule Tostedt</td><td><span style="color: #e53e3e; font-weight: 600;">Krank gemeldet</span></td></tr>
-                                    <tr><td>Mia Schmidt</td><td>Oberschule Welle</td><td><span style="color: #d69e2e; font-weight: 600;">Arzttermin / Fällt aus</span></td></tr>
+                                    <tr><td>Mia Schmidt</td><td>Oberschule Welle</td><td><span style="color: #d69e2e; font-weight: 600;">Arzttermin</span></td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                     <div>
-                        <p style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Geschlossene Schulen / Schulausfälle</p>
+                        <p style="font-size: 0.8rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Geschlossene Schulen</p>
                         <div class="table-responsive">
                             <table>
                                 <thead>
@@ -389,7 +381,7 @@
                                 <tbody>
                                     <tr>
                                         <td>Gymnasium Hollenstedt</td>
-                                        <td><span style="color: #e53e3e; font-weight: 600;">Unwetter / Winterdienst</span></td>
+                                        <td><span style="color: #e53e3e; font-weight: 600;">Unwetter</span></td>
                                         <td><button class="btn btn-danger" style="padding: 3px 6px; font-size: 0.75rem;" onclick="this.closest('tr').remove()">Entfernen</button></td>
                                     </tr>
                                 </tbody>
@@ -414,7 +406,7 @@
             </div>
 
             <div class="admin-box">
-                <h3>Rechnungsstellung (Excel & Word Vorlagen)</h3>
+                <h3>Rechnungsstellung (Excel & Word)</h3>
                 <div class="upload-grid">
                     <div class="upload-field">
                         <p>1. Excel-Tabelle hochladen</p>
@@ -427,44 +419,30 @@
                         <button class="btn btn-success" onclick="alert('Word-Vorlage gespeichert!')">Word-Vorlage speichern</button>
                     </div>
                 </div>
-                <button class="btn btn-success" style="margin-top: 15px;" onclick="alert('Monats-Rechnungen generiert!')">Monats-Rechnungen generieren</button>
+                <button class="btn btn-success" style="margin-top: 12px; width: 100%;" onclick="alert('Monats-Rechnungen generiert!')">Monats-Rechnungen generieren</button>
             </div>
 
             <div class="admin-box">
-                <h3>Fahrer-Disposition & Tourenplan-PDF Zuweisung</h3>
+                <h3>Fahrer-Disposition & Tourenplan-PDF</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Fahrer</th><th>Fahrzeug</th><th>Status</th><th>Tourenplan hochladen</th><th>Aktion</th></tr>
+                            <tr><th>Fahrer</th><th>Fahrzeug</th><th>Status</th><th>Tourenplan</th><th>Aktion</th></tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>Michael Rosebrock</td>
-                                <td>VW Caddy (Rollstuhl)</td>
-                                <td><span style="color: #38a169; font-weight: 600;">Im Dienst / Bereit</span></td>
-                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                                <td><button class="btn btn-danger" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Pause</button></td>
+                                <td>VW Caddy</td>
+                                <td><span style="color: #38a169; font-weight: 600;">Bereit</span></td>
+                                <td><input type="file" style="font-size: 0.7rem; width: 110px;"> <button class="btn btn-primary" style="padding: 3px 6px; font-size: 0.7rem;" onclick="alert('Hochgeladen!')">Upload</button></td>
+                                <td><button class="btn btn-danger" style="padding: 3px 6px; font-size: 0.7rem;" onclick="toggleStatusAdmin(this)">Pause</button></td>
                             </tr>
                             <tr>
                                 <td>Stefan Meyer</td>
                                 <td>Ford Tourneo</td>
                                 <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
-                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                                <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
-                            </tr>
-                            <tr>
-                                <td>Andreas Schmidt</td>
-                                <td>Mercedes Sprinter</td>
-                                <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
-                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                                <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
-                            </tr>
-                            <tr>
-                                <td>Thomas Weber</td>
-                                <td>VW Caravelle</td>
-                                <td><span style="color: #d69e2e; font-weight: 600;">In Pause</span></td>
-                                <td><input type="file" style="font-size: 0.75rem; width: 140px; display: inline-block;"> <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.75rem;" onclick="alert('Hochgeladen!')">Hochladen</button></td>
-                                <td><button class="btn btn-success" style="padding: 3px 8px; font-size: 0.75rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
+                                <td><input type="file" style="font-size: 0.7rem; width: 110px;"> <button class="btn btn-primary" style="padding: 3px 6px; font-size: 0.7rem;" onclick="alert('Hochgeladen!')">Upload</button></td>
+                                <td><button class="btn btn-success" style="padding: 3px 6px; font-size: 0.7rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -476,159 +454,146 @@
         <div id="driver-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
             
-            <h2 style="font-size: 1.25rem; font-weight: 700; color: #1a202c; margin-bottom: 10px;">Fahrer-Portal (Schicht & Touren)</h2>
-            <p style="font-size: 0.9rem; color: #2d3748; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Eingeloggt als: <strong>Hans Rosebrock</strong></p>
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Fahrer-Portal</h2>
+            <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Eingeloggt als: <strong>Hans Rosebrock</strong></p>
 
             <!-- 1. Schicht-Status -->
-            <div style="margin-bottom: 25px;">
-                <h3 style="font-size: 1rem; color: #1a202c; margin-bottom: 10px;">1. Schicht-Status ("Stempeln")</h3>
-                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
-                    <button class="btn btn-success" style="background-color: #38a169; border-radius: 4px; padding: 6px 14px;" onclick="setDriverStatus('Bereit')">🟢 Bereit melden</button>
-                    <button class="btn btn-warning" style="background-color: #ecc94b; color: #744210; border-radius: 4px; padding: 6px 14px;" onclick="setDriverStatus('In Pause')">🟡 In Pause</button>
-                    <button class="btn btn-danger" style="background-color: #e53e3e; border-radius: 4px; padding: 6px 14px;" onclick="setDriverStatus('Krank')">🔴 Krank melden</button>
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 8px;">1. Schicht-Status</h3>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-success" style="flex: 1; min-width: 100px; padding: 10px;" onclick="setDriverStatus('Bereit')">🟢 Bereit</button>
+                    <button class="btn btn-warning" style="flex: 1; min-width: 100px; padding: 10px; color: #744210;" onclick="setDriverStatus('In Pause')">🟡 Pause</button>
+                    <button class="btn btn-danger" style="flex: 1; min-width: 100px; padding: 10px;" onclick="setDriverStatus('Krank')">🔴 Krank</button>
                 </div>
-                <p style="font-size: 0.95rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Aktueller Status: Frei</p>
+                <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Aktueller Status: Frei</p>
             </div>
 
             <!-- 2. Meine heutigen Kinder & Adressen -->
-            <div style="margin-bottom: 25px;">
-                <h3 style="font-size: 1rem; color: #1a202c; margin-bottom: 5px;">2. Meine heutigen Kinder & Adressen</h3>
-                <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 12px;">Liste all der Schulkinder, die Ihrer Tour zugeordnet sind:</p>
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">2. Meine heutigen Kinder & Adressen</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Ihre zugeordneten Schulkinder:</p>
                 
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 25%;">Kind</th>
-                                <th style="width: 35%;">Adresse</th>
-                                <th style="width: 25%;">Schule</th>
-                                <th style="width: 15%;">Telefon</th>
+                                <th>Kind</th>
+                                <th>Adresse</th>
+                                <th>Schule</th>
+                                <th>Telefon</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="font-weight: 500;">Timmy Müller</td>
-                                <td>Musterweg 13, 27283 Verden</td>
+                                <td>Musterweg 13, Verden</td>
                                 <td>Grundschule Altenhagen</td>
                                 <td>01511234513</td>
                             </tr>
                             <tr>
                                 <td style="font-weight: 500;">Sarah Connor</td>
-                                <td>Musterweg 13, 27283 Verden</td>
+                                <td>Musterweg 13, Verden</td>
                                 <td>Oberschule Lachendorf</td>
-                                <td>01511234513</td>
-                            </tr>
-                            <tr>
-                                <td style="font-weight: 500;">Leon Schmidt</td>
-                                <td>Musterweg 13, 27283 Verden</td>
-                                <td>IGS Celle</td>
                                 <td>01511234513</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <h3 style="font-size: 1rem; color: #1a202c; margin-top: 20px; margin-bottom: 8px;">Tourenplan (PDF)</h3>
-                <button class="btn btn-primary" style="background-color: #2b6cb0; margin-bottom: 15px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;" onclick="alert('Öffne Tourenplan-PDF...')">📄 Meinen Tourenplan (PDF) öffnen</button>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-top: 15px; margin-bottom: 8px;">Tourenplan (PDF)</h3>
+                <button class="btn btn-primary" style="background-color: #2b6cb0; margin-bottom: 12px; width: 100%;" onclick="alert('Öffne Tourenplan-PDF...')">📄 Tourenplan (PDF) öffnen</button>
 
-                <!-- Gelber Hinweis im Screenshot -->
-                <div style="background-color: #fefcbf; border: 1px solid #f6e05e; padding: 12px 15px; border-radius: 4px; font-size: 0.85rem; color: #744210;">
-                    <strong>Hinweis zur Erreichbarkeit:</strong> Der Inhaber ist ab 18:00 Uhr nicht mehr persönlich erreichbar. Urlaubsanträge und Anliegen werden nach Eingang am nächsten Tag bearbeitet.
+                <div style="background-color: #fefcbf; border: 1px solid #f6e05e; padding: 10px; border-radius: 4px; font-size: 0.8rem; color: #744210;">
+                    <strong>Hinweis:</strong> Der Inhaber ist ab 18:00 Uhr nicht mehr persönlich erreichbar.
                 </div>
             </div>
 
             <!-- 3. Urlaubsantrag oder Anliegen senden -->
             <div>
-                <h3 style="font-size: 1rem; color: #1a202c; margin-bottom: 12px;">3. Urlaubsantrag oder Anliegen senden</h3>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 4px; display: block;">Art des Anliegens:</label>
-                    <select style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem;">
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 10px;">3. Urlaubsantrag oder Anliegen senden</h3>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label>Art des Anliegens:</label>
+                    <select style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px;">
                         <option>Urlaubsantrag</option>
                         <option>Fahrzeugwechsel / Technisches Problem</option>
                         <option>Sonstiges Anliegen</option>
                     </select>
                 </div>
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 0.85rem; font-weight: 600; color: #2d3748; margin-bottom: 4px; display: block;">Nachricht / Details:</label>
-                    <textarea rows="3" placeholder="Ihre Nachricht an die Dispo..." style="width: 100%; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem; resize: vertical;"></textarea>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label>Nachricht / Details:</label>
+                    <textarea rows="3" placeholder="Ihre Nachricht an die Dispo..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; resize: vertical;"></textarea>
                 </div>
-                <button class="btn btn-success" style="background-color: #38a169; padding: 6px 14px; border-radius: 4px; font-weight: 600;" onclick="alert('Antrag / Nachricht erfolgreich abgesendet!')">Antrag / Nachricht absenden</button>
+                <button class="btn btn-success" style="background-color: #38a169; width: 100%; padding: 10px; font-weight: 600;" onclick="alert('Nachricht abgesendet!')">Nachricht absenden</button>
             </div>
         </div>
 
         <!-- ELTERN PORTAL -->
         <div id="parent-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Eltern-Portal (Familie Müller (Kind: Timmy))</h2>
+            <h2 class="section-title">Eltern-Portal (Kind: Timmy)</h2>
             <div class="admin-box">
-                <h3>Kind krankmelden / Beförderungsstatus</h3>
-                <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 12px;">Hier können Sie für Ihr Kind unkompliziert eine Krankmeldung für den heutigen Schultransport abschicken:</p>
+                <h3>Kind krankmelden / Status</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Krankmeldung für den heutigen Schultransport:</p>
                 <div class="form-group">
                     <label>Grund für Abwesenheit:</label>
-                    <select>
+                    <select style="font-size: 16px;">
                         <option>Krankheit (Fahrt heute aussetzen)</option>
                         <option>Arzttermin / Sonstiges</option>
                     </select>
                 </div>
-                <button class="btn btn-danger" style="margin-top: 5px;" onclick="alert('Krankmeldung erfolgreich abgeschickt!')">Krankmeldung absenden</button>
+                <button class="btn btn-danger" style="margin-top: 5px; width: 100%; padding: 10px;" onclick="alert('Krankmeldung abgeschickt!')">Krankmeldung absenden</button>
             </div>
         </div>
 
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Schul-Portal (Übersicht & Schulausfall)</h2>
+            <h2 class="section-title">Schul-Portal</h2>
             
             <div class="admin-box">
                 <h3>Zu befördernde Kinder für unsere Schule</h3>
-                <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 15px;">Aktuelle Liste aller Schulkinder, die heute per Mietwagenverkehr zu unserer Schule transportiert werden:</p>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Liste aller heutigen Schulkinder:</p>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr>
                                 <th>Kind</th>
-                                <th>Klasse / Stufe</th>
+                                <th>Klasse</th>
                                 <th>Abholadresse</th>
-                                <th>Status / Transport</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td style="font-weight: 500;">Timmy Müller</td>
                                 <td>Klasse 2b</td>
-                                <td>Musterweg 13, 27283 Verden</td>
+                                <td>Musterweg 13, Verden</td>
                                 <td><span style="color: #38a169; font-weight: 600;">Wird befördert</span></td>
                             </tr>
                             <tr>
                                 <td style="font-weight: 500;">Leon Weber</td>
                                 <td>Klasse 4a</td>
-                                <td>Hauptstraße 8, 27283 Verden</td>
-                                <td><span style="color: #e53e3e; font-weight: 600;">Krankgemeldet (Entfällt)</span></td>
-                            </tr>
-                            <tr>
-                                <td style="font-weight: 500;">Sarah Connor</td>
-                                <td>Klasse 3c</td>
-                                <td>Dorfstraße 4, 27283 Verden</td>
-                                <td><span style="color: #38a169; font-weight: 600;">Wird befördert</span></td>
+                                <td>Hauptstraße 8, Verden</td>
+                                <td><span style="color: #e53e3e; font-weight: 600;">Krankgemeldet</span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Schulausfall melden Sektion (Größer & mit Begründung ausklappbar) -->
+            <!-- Schulausfall melden Sektion -->
             <div class="admin-box" style="border-left: 4px solid #e53e3e; background-color: #fffaf0;">
-                <h3 style="color: #c53030; font-size: 1.1rem; margin-bottom: 10px;">🚨 Schulausfall oder Schließung melden</h3>
-                <p style="font-size: 0.85rem; color: #4a5568; margin-bottom: 15px;">Falls die Schule aufgrund von unvorhergesehenen Ereignissen (z. B. Unwetter, Heizungsausfall) schließen muss, informieren Sie hier die Zentrale direkt:</p>
+                <h3 style="color: #c53030; font-size: 1rem; margin-bottom: 8px;">🚨 Schulausfall oder Schließung melden</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 12px;">Informieren Sie hier die Zentrale direkt:</p>
                 
                 <div class="form-group">
                     <label for="school-name-input" style="font-weight: 600;">Schulname:</label>
-                    <input type="text" id="school-name-input" value="Grundschule Altenhagen" style="font-size: 0.95rem; padding: 10px;">
+                    <input type="text" id="school-name-input" value="Grundschule Altenhagen" style="font-size: 16px; padding: 10px;">
                 </div>
 
                 <div class="form-group">
                     <label for="school-reason-select" style="font-weight: 600;">Grund des Ausfalls:</label>
-                    <select id="school-reason-select" style="font-size: 0.95rem; padding: 10px;" onchange="toggleReasonDetail(this)">
+                    <select id="school-reason-select" style="font-size: 16px; padding: 10px;" onchange="toggleReasonDetail(this)">
                         <option value="Unwetter / Sturm / Schnee / Winterdienst">Unwetter / Sturm / Schnee / Winterdienst</option>
                         <option value="Heizungsausfall / Technischer Defekt">Heizungsausfall / Technischer Defekt</option>
                         <option value="Wasserschaden / Höhere Gewalt">Wasserschaden / Höhere Gewalt</option>
@@ -639,37 +604,13 @@
                 <!-- Ausklappbares Begründungsfeld -->
                 <div class="form-group" id="custom-reason-container" style="display: none; margin-top: 10px;">
                     <label for="custom-reason-text" style="font-weight: 600; color: #2d3748;">Genaue Begründung / Details:</label>
-                    <textarea id="custom-reason-text" rows="3" placeholder="Geben Sie hier nähere Details zum Schulausfall ein..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.9rem; background: #fff;"></textarea>
+                    <textarea id="custom-reason-text" rows="3" placeholder="Geben Sie hier nähere Details ein..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; background: #fff;"></textarea>
                 </div>
 
-                <button class="btn btn-danger" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: 600; margin-top: 15px;" onclick="submitSchoolClosureForm()">Ausfall an Dispo & Fahrer übertragen</button>
+                <button class="btn btn-danger" style="width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 600; margin-top: 12px;" onclick="submitSchoolClosureForm()">Ausfall an Dispo & Fahrer übertragen</button>
             </div>
         </div>
 
-    </div>
-
-    <!-- Modal für Schulausfall-Meldung (Allgemein) -->
-    <div id="closure-modal" class="modal">
-        <div class="modal-content">
-            <h3>Schulausfall / Schließung melden</h3>
-            <div class="form-group">
-                <label for="closure-school">Schulname</label>
-                <input type="text" id="closure-school" placeholder="z. B. Grundschule Tostedt">
-            </div>
-            <div class="form-group">
-                <label for="closure-reason">Grund des Ausfalls</label>
-                <select id="closure-reason">
-                    <option value="Unwetter / Sturm / Schnee / Winter">Unwetter / Sturm / Schnee / Winter</option>
-                    <option value="Extreme Hitze">Extreme Hitze</option>
-                    <option value="Technischer Defekt / Heizung">Technischer Defekt / Heizung</option>
-                    <option value="Sonstige Gründe">Sonstige Gründe</option>
-                </select>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn" style="background-color: #cbd5e0; color: #1a202c;" onclick="closeClosureModal()">Abbrechen</button>
-                <button class="btn btn-danger" onclick="submitClosure()">Meldung abschicken</button>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -685,6 +626,7 @@
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0);
         }
 
         function loginAdmin() {
@@ -705,23 +647,7 @@
             else if (status === 'Krank') color = '#e53e3e';
             
             statusText.innerHTML = `Aktueller Status: <span style="font-weight: 600; color: ${color};">${status}</span>`;
-            alert('Schicht-Status erfolgreich auf "' + status + '" gesetzt!');
-        }
-
-        function openClosureModal() {
-            document.getElementById('closure-school').value = '';
-            document.getElementById('closure-modal').classList.add('active');
-        }
-
-        function closeClosureModal() {
-            document.getElementById('closure-modal').classList.remove('active');
-        }
-
-        function submitClosure() {
-            const school = document.getElementById('closure-school').value || 'Schule';
-            const reason = document.getElementById('closure-reason').value;
-            alert('Die Meldung für "' + school + '" ("' + reason + '") wurde erfolgreich an die Zentrale übermittelt!');
-            closeClosureModal();
+            alert('Status erfolgreich auf "' + status + '" gesetzt!');
         }
 
         // Ein- und Ausblenden der detaillierten Begründung im Schul-Portal
@@ -761,7 +687,7 @@
                 btn.classList.remove('btn-success');
                 btn.classList.add('btn-danger');
                 btn.textContent = 'Pause';
-                statusCell.innerHTML = '<span style="color: #38a169; font-weight: 600;">Im Dienst / Bereit</span>';
+                statusCell.innerHTML = '<span style="color: #38a169; font-weight: 600;">Bereit</span>';
             }
         }
     </script>

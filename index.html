@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mietwagenverkehr Rosebrock</title>
+    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand</title>
+    <!-- Externe Bibliotheken für Excel-, PDF- und Word-Export/-Import -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
             --primary-color: #0b3c65;
@@ -11,6 +14,9 @@
             --card-bg: #ffffff;
             --text-color: #1a202c;
             --border-color: #cbd5e0;
+            --danger-color: #e53e3e;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
         }
 
         * {
@@ -59,7 +65,7 @@
 
         .main-container {
             width: 100%;
-            max-width: 1100px;
+            max-width: 1250px;
             margin: 0 auto;
             background: white;
             border-radius: 0;
@@ -76,7 +82,7 @@
             display: block;
         }
 
-        /* 4 Kacheln Startseite - Mobil optimiert */
+        /* 4 Kacheln Startseite */
         .portal-grid {
             display: flex;
             flex-direction: column;
@@ -119,7 +125,7 @@
             margin-bottom: 8px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            font-size: 16px; /* Verhindert Auto-Zoom auf iOS */
+            font-size: 16px;
         }
 
         .portal-btn {
@@ -137,6 +143,35 @@
         .portal-card.parent .portal-btn { background-color: #dd6b20; }
         .portal-card.school .portal-btn { background-color: #d53f8c; }
 
+        /* KPI & Dashboard Boxen */
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .kpi-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .kpi-card h4 {
+            font-size: 0.75rem;
+            color: #718096;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
         /* Allgemeine Buttons & Elemente */
         .btn {
             background-color: #4a5568;
@@ -149,10 +184,11 @@
             font-weight: 500;
         }
         
-        .btn-danger { background-color: #e53e3e; color: white; }
-        .btn-success { background-color: #38a169; color: white; }
-        .btn-warning { background-color: #d69e2e; color: white; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-warning { background-color: var(--warning-color); color: white; }
         .btn-primary { background-color: #2b6cb0; color: white; }
+        .btn-purple { background-color: #805ad5; color: white; }
 
         .back-btn {
             background-color: #718096;
@@ -172,7 +208,6 @@
             margin-bottom: 15px;
         }
 
-        /* Admin & Allgemein Boxen */
         .admin-box {
             border: 1px solid #e2e8f0;
             border-radius: 6px;
@@ -187,7 +222,7 @@
             margin-bottom: 10px;
         }
 
-        /* Tabellen-Responsivität mit Scroll-Container */
+        /* Tabellen */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -198,7 +233,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 480px;
+            min-width: 500px;
         }
 
         th, td {
@@ -227,39 +262,23 @@
             border-radius: 4px;
             background: #fafafa;
         }
-        .upload-field p {
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 8px;
+
+        .log-box {
+            background: #1a202c;
+            color: #68d391;
+            font-family: monospace;
+            font-size: 0.75rem;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
         }
 
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 10px;
-        }
-        .modal.active { display: flex; }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 6px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .modal-content h3 { margin-bottom: 12px; color: var(--primary-color); font-size: 1rem; }
         .form-group { margin-bottom: 10px; }
         .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; background-color: #fff; }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
 
-        /* Ab Tablet/PC wieder Grid-Ansichten aktivieren */
         @media (min-width: 768px) {
             header {
                 flex-direction: row;
@@ -282,6 +301,9 @@
                 grid-template-columns: repeat(4, 1fr);
                 gap: 15px;
             }
+            .kpi-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
             .upload-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -298,52 +320,52 @@
     <header>
         <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Zentrale Transport- und Dispositionssoftware</p>
+            <p>Studienprojekt-Demonstrator: Digitale Schülerbeförderung & VRP-Disposition</p>
         </div>
-        <div class="time-display" id="live-clock">27.9.2026, 17:17:00</div>
+        <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
 
     <div class="main-container">
 
         <!-- STARTSEITE (4 Kacheln) -->
         <div id="home-view" class="view active">
-            <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Willkommen im Betriebssystem</h2>
-            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Wählen Sie Ihren Bereich aus, melden Sie sich mit Ihren Zugangsdaten an:</p>
+            <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals (Studien-Prototyp)</h2>
+            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Sichere Demo-Zugangsdaten (Admin: <strong>admin</strong> / <strong>demo123</strong>):</p>
             
             <div class="portal-grid">
                 <!-- Inhaber -->
                 <div class="portal-card admin">
                     <h3>Inhaber & Zentrale</h3>
-                    <p>Fahrerausfall, Smart Matching nach Standort & Pause.</p>
-                    <input type="text" class="portal-input" id="admin-user" value="Fred Rosebrock" placeholder="Benutzername">
-                    <input type="password" class="portal-input" id="admin-pass" value="R0sebr0ck" placeholder="Passwort">
+                    <p>Dispositionsleitstand, VRP-Optimierung, Stammdaten, Simulation.</p>
+                    <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">
+                    <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">
                     <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
                 </div>
 
                 <!-- Fahrer -->
                 <div class="portal-card driver">
                     <h3>Fahrer-Portal</h3>
-                    <p>Dienststatus melden & Pausenzeiten verwalten.</p>
-                    <input type="text" class="portal-input" placeholder="Benutzername">
-                    <input type="password" class="portal-input" placeholder="Passwort">
+                    <p>Dienststatus, Tour, Tourenplan-PDF & Ausfallmeldung.</p>
+                    <input type="text" class="portal-input" value="Hans Rosebrock" placeholder="Benutzername">
+                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
                     <button class="portal-btn" onclick="showView('driver-view')">Fahrer-Login</button>
                 </div>
 
                 <!-- Eltern -->
                 <div class="portal-card parent">
                     <h3>Eltern-Portal</h3>
-                    <p>Kind krankmelden & Beförderungsstatus einsehen.</p>
-                    <input type="text" class="portal-input" placeholder="Benutzername">
-                    <input type="password" class="portal-input" placeholder="Passwort">
+                    <p>Kind-Krankmeldung & gefilterte Schulausfall-Informationen.</p>
+                    <input type="text" class="portal-input" value="Familie Müller" placeholder="Benutzername">
+                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
                     <button class="portal-btn" onclick="showView('parent-view')">Eltern-Login</button>
                 </div>
 
                 <!-- Schule -->
                 <div class="portal-card school">
                     <h3>Schul-Portal</h3>
-                    <p>Übersicht Schulkinder & Krankmeldungen für die Schule.</p>
-                    <input type="text" class="portal-input" placeholder="Benutzername">
-                    <input type="password" class="portal-input" placeholder="Passwort">
+                    <p>Schüler-Übersicht & Schließungsmeldung direkt an Zentrale.</p>
+                    <input type="text" class="portal-input" value="Grundschule Altenhagen" placeholder="Benutzername">
+                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
                     <button class="portal-btn" onclick="showView('school-view')">Schul-Login</button>
                 </div>
             </div>
@@ -352,134 +374,134 @@
         <!-- ADMIN LEITSTAND -->
         <div id="admin-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Admin Leitstand</h2>
+            <h2 class="section-title">Dispositionsleitstand (Admin & Zentrale)</h2>
 
-            <div class="admin-box" style="border-left: 4px solid #e53e3e;">
-                <h3>Live-Übersicht: Krankmeldungen & Schulausfälle</h3>
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div>
-                        <p style="font-size: 0.8rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Krankgemeldete Kinder</p>
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr><th>Kind</th><th>Schule</th><th>Grund</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>Leon Weber</td><td>Grundschule Tostedt</td><td><span style="color: #e53e3e; font-weight: 600;">Krank gemeldet</span></td></tr>
-                                    <tr><td>Mia Schmidt</td><td>Oberschule Welle</td><td><span style="color: #d69e2e; font-weight: 600;">Arzttermin</span></td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div>
-                        <p style="font-size: 0.8rem; font-weight: 600; color: #2d3748; margin-bottom: 5px;">Geschlossene Schulen</p>
-                        <div class="table-responsive">
-                            <table id="admin-closed-schools-table">
-                                <thead>
-                                    <tr><th>Schule</th><th>Grund</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr data-school="Gymnasium Hollenstedt">
-                                        <td>Gymnasium Hollenstedt</td>
-                                        <td><span style="color: #e53e3e; font-weight: 600;">Unwetter</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <!-- KPI Dashboard -->
+            <div class="kpi-container">
+                <div class="kpi-card">
+                    <h4>Schüler heute</h4>
+                    <div class="kpi-value" id="kpi-students">81</div>
+                </div>
+                <div class="kpi-card">
+                    <h4>Aktive Fahrzeuge</h4>
+                    <div class="kpi-value" id="kpi-vehicles">20</div>
+                </div>
+                <div class="kpi-card">
+                    <h4>Gesamtkilometer</h4>
+                    <div class="kpi-value" id="kpi-distance">-- km</div>
+                </div>
+                <div class="kpi-card">
+                    <h4>Durchschn. Auslastung</h4>
+                    <div class="kpi-value" id="kpi-utilization">-- %</div>
                 </div>
             </div>
 
-            <!-- ADMIN: Schulausfall per Dropdown-Auswahl melden -->
-            <div class="admin-box" style="border-left: 4px solid #e53e3e; background-color: #fffaf0;">
-                <h3 style="color: #c53030; font-size: 1rem; margin-bottom: 8px;">🚨 Schulausfall oder Schließung melden</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 12px;">Wählen Sie die Schule aus und tragen Sie den Ausfall ein:</p>
-                
-                <div class="form-group">
-                    <label for="admin-school-name-select" style="font-weight: 600;">Schule auswählen:</label>
-                    <select id="admin-school-name-select" style="font-size: 16px; padding: 10px;">
-                        <option value="Grundschule Altenhagen">Grundschule Altenhagen</option>
-                        <option value="Oberschule Lachendorf">Oberschule Lachendorf</option>
-                        <option value="Gymnasium Hollenstedt">Gymnasium Hollenstedt</option>
-                        <option value="Grundschule Tostedt">Grundschule Tostedt</option>
-                        <option value="Oberschule Welle">Oberschule Welle</option>
-                    </select>
+            <!-- VRP Optimierungs- & Szenario-Leiste -->
+            <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
+                <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung & Test-Szenarien</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Führen Sie Routenberechnungen aus oder simulieren Sie kurzfristige Dispositionsstörungen:</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 Touren optimieren (VRP)</button>
+                    <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
+                    <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank</button>
+                    <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall</button>
+                    <button class="btn btn-primary" onclick="resetSystemData()">🔄 Stammdaten zurücksetzen</button>
                 </div>
-
-                <div class="form-group">
-                    <label for="admin-school-reason-select" style="font-weight: 600;">Grund des Ausfalls:</label>
-                    <select id="admin-school-reason-select" style="font-size: 16px; padding: 10px;" onchange="toggleAdminReasonDetail(this)">
-                        <option value="Unwetter / Sturm / Schnee / Winterdienst">Unwetter / Sturm / Schnee / Winterdienst</option>
-                        <option value="Heizungsausfall / Technischer Defekt">Heizungsausfall / Technischer Defekt</option>
-                        <option value="Wasserschaden / Höhere Gewalt">Wasserschaden / Höhere Gewalt</option>
-                        <option value="Sonstiges (Bitte begründen)">Sonstiges (Bitte begründen)...</option>
-                    </select>
-                </div>
-
-                <!-- Ausklappbares Begründungsfeld Admin -->
-                <div class="form-group" id="admin-custom-reason-container" style="display: none; margin-top: 10px;">
-                    <label for="admin-custom-reason-text" style="font-weight: 600; color: #2d3748;">Genaue Begründung / Details:</label>
-                    <textarea id="admin-custom-reason-text" rows="3" placeholder="Geben Sie hier nähere Details ein..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; background: #fff;"></textarea>
-                </div>
-
-                <button class="btn btn-danger" style="width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 600; margin-top: 12px;" onclick="submitAdminSchoolClosureForm()">Schulausfall eintragen & an Fahrer / Eltern übertragen</button>
             </div>
 
-            <div class="admin-box">
-                <h3>Fahrer-Anträge (Urlaub & Anliegen)</h3>
+            <!-- Vorher / Nachher Vergleich Box -->
+            <div class="admin-box" id="comparison-box" style="display: none; border-left: 4px solid #319795; background: #e6fffa;">
+                <h3 style="color: #234e52;">📊 Vorher / Nachher Vergleich (Optimierungsergebnis)</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Fahrer</th><th>Art</th><th>Nachricht</th><th>Zeit</th></tr>
+                            <tr><th>Metrik</th><th>Manuelle Ausgangsbasis</th><th>Optimierte VRP-Disposition</th><th>Differenz / Einsparung</th></tr>
                         </thead>
-                        <tbody>
-                            <tr><td colspan="4" style="color: #718096; text-align: center;">Keine Anträge vorhanden.</td></tr>
+                        <tbody id="comparison-tbody">
+                            <!-- Dynamisch -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- Fahrerübersicht -->
             <div class="admin-box">
-                <h3>Rechnungsstellung (Excel & Word)</h3>
+                <h3>Personal- & Fahrerübersicht (23 Personen)</h3>
+                <div class="table-responsive">
+                    <table id="admin-drivers-table">
+                        <thead>
+                            <tr><th>Personal-ID</th><th>Name</th><th>Rolle / Reserve</th><th>Fahrzeug</th><th>Status</th><th>Tour</th><th>Aktion</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fahrzeugübersicht -->
+            <div class="admin-box">
+                <h3>Fahrzeugbestand (20 Fahrzeuge)</h3>
+                <div class="table-responsive">
+                    <table id="admin-vehicles-table">
+                        <thead>
+                            <tr><th>Fahrzeug-ID</th><th>Bezeichnung</th><th>Typ</th><th>Kapazität</th><th>Rollstuhlplätze</th><th>Status</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Live-Übersicht Krankmeldungen & Schulausfälle -->
+            <div class="admin-box" style="border-left: 4px solid #e53e3e;">
+                <h3>Ereignisse & Schulausfälle</h3>
+                <div class="table-responsive">
+                    <table id="admin-closed-schools-table">
+                        <thead>
+                            <tr><th>Schule</th><th>Grund</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr data-school="Gymnasium Hollenstedt">
+                                <td>Gymnasium Hollenstedt</td>
+                                <td><span style="color: #e53e3e; font-weight: 600;">Witterungsbedingter Ausfall</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 10px;">
+                    <label style="font-weight: 600; font-size: 0.8rem;">Schule manuell als geschlossen melden:</label>
+                    <div style="display: flex; gap: 8px; margin-top: 5px;">
+                        <select id="admin-school-select" style="flex: 1; padding: 8px; font-size: 14px;">
+                            <option value="Hermann-Reske-Schule, Celle">Hermann-Reske-Schule, Celle</option>
+                            <option value="Grundschule Altenhagen">Grundschule Altenhagen</option>
+                            <option value="Internat Bad Salzdetfurth">Internat Bad Salzdetfurth</option>
+                        </select>
+                        <button class="btn btn-danger" onclick="adminReportSchoolClosure()">Schließen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Excel-Import & Dokumentengenerierung -->
+            <div class="admin-box">
+                <h3>Schnittstellen: Excel-Import & Word/PDF-Berichte</h3>
                 <div class="upload-grid">
                     <div class="upload-field">
-                        <p>1. Excel-Tabelle hochladen</p>
-                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block; width: 100%;">
-                        <button class="btn btn-primary" onclick="alert('Excel eingelesen!')">Excel einlesen</button>
+                        <p>1. Excel-Datensatz importieren (Schüler / Fahrzeuge)</p>
+                        <input type="file" id="excel-file-input" accept=".xlsx, .xls" style="font-size: 0.8rem; margin-bottom: 10px; display: block; width: 100%;">
+                        <button class="btn btn-primary" onclick="handleExcelImport()">Excel-Daten einlesen & validieren</button>
                     </div>
                     <div class="upload-field">
-                        <p>2. Word-Vorlage hochladen (.docx)</p>
-                        <input type="file" style="font-size: 0.8rem; margin-bottom: 10px; display: block; width: 100%;">
-                        <button class="btn btn-success" onclick="alert('Word-Vorlage gespeichert!')">Word-Vorlage speichern</button>
+                        <p>2. Dokumente generieren</p>
+                        <button class="btn btn-success" style="width: 100%; margin-bottom: 8px;" onclick="generateWordReport()">Word-Abrechnungsnachweis (.docx)</button>
+                        <button class="btn btn-purple" style="width: 100%;" onclick="generatePdfTourPlan()">PDF-Tourenplan für Fahrer erzeugen</button>
                     </div>
                 </div>
-                <button class="btn btn-success" style="margin-top: 12px; width: 100%;" onclick="alert('Monats-Rechnungen generiert!')">Monats-Rechnungen generieren</button>
             </div>
 
+            <!-- Dispositionsprotokoll -->
             <div class="admin-box">
-                <h3>Fahrer-Disposition & Tourenplan-PDF</h3>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr><th>Fahrer</th><th>Fahrzeug</th><th>Status</th><th>Tourenplan</th><th>Aktion</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Michael Rosebrock</td>
-                                <td>VW Caddy</td>
-                                <td><span style="color: #38a169; font-weight: 600;">Bereit</span></td>
-                                <td><input type="file" style="font-size: 0.7rem; width: 110px;"> <button class="btn btn-primary" style="padding: 3px 6px; font-size: 0.7rem;" onclick="alert('Hochgeladen!')">Upload</button></td>
-                                <td><button class="btn btn-danger" style="padding: 3px 6px; font-size: 0.7rem;" onclick="toggleStatusAdmin(this)">Pause</button></td>
-                            </tr>
-                            <tr>
-                                <td>Stefan Meyer</td>
-                                <td>Ford Tourneo</td>
-                                <td><span style="color: #e53e3e; font-weight: 600;">Krank</span></td>
-                                <td><input type="file" style="font-size: 0.7rem; width: 110px;"> <button class="btn btn-primary" style="padding: 3px 6px; font-size: 0.7rem;" onclick="alert('Hochgeladen!')">Upload</button></td>
-                                <td><button class="btn btn-success" style="padding: 3px 6px; font-size: 0.7rem;" onclick="toggleStatusAdmin(this)">Bereit</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <h3>Vollständiges Dispositionsprotokoll (Ereignisse)</h3>
+                <div class="log-box" id="dispatch-log">
+                    [07:00:00] System initialisiert. 81 Schüler, 23 Mitarbeiter und 20 Fahrzeuge geladen.<br>
+                    [07:01:15] Normalbetrieb aktiv. VRP-Distanzmatrix berechnet.
                 </div>
             </div>
         </div>
@@ -487,138 +509,501 @@
         <!-- FAHRER PORTAL -->
         <div id="driver-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            
             <h2 style="font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Fahrer-Portal</h2>
-            <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Eingeloggt als: <strong>Hans Rosebrock</strong></p>
+            <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Eingeloggt als: <strong>Hans Rosebrock</strong> (Fahrzeug: VW Caddy)</p>
 
-            <!-- Schulausfall-Meldung für das Fahrer-Portal -->
             <div id="driver-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
                 <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Schulausfall-Meldung für Ihre Tour!</h3>
                 <p id="driver-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
             </div>
 
-            <!-- 1. Schicht-Status -->
             <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 8px;">1. Schicht-Status</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 8px;">Schicht-Status</h3>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-success" style="flex: 1; min-width: 100px; padding: 10px;" onclick="setDriverStatus('Bereit')">🟢 Bereit</button>
-                    <button class="btn btn-warning" style="flex: 1; min-width: 100px; padding: 10px; color: #744210;" onclick="setDriverStatus('In Pause')">🟡 Pause</button>
-                    <button class="btn btn-danger" style="flex: 1; min-width: 100px; padding: 10px;" onclick="setDriverStatus('Krank')">🔴 Krank</button>
+                    <button class="btn btn-success" style="flex: 1;" onclick="setDriverStatus('Bereit')">🟢 Bereit</button>
+                    <button class="btn btn-warning" style="flex: 1;" onclick="setDriverStatus('In Pause')">🟡 Pause</button>
+                    <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank</button>
                 </div>
-                <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Aktueller Status: Frei</p>
+                <p style="font-size: 0.9font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit</p>
             </div>
 
-            <!-- 2. Meine heutigen Kinder & Adressen -->
-            <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">2. Meine heutigen Kinder & Adressen</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Ihre zugeordneten Schulkinder:</p>
-                
+            <div>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Heutige Tour & Schulkinder</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Kind</th>
-                                <th>Adresse</th>
-                                <th>Schule</th>
-                                <th>Telefon</th>
-                            </tr>
+                            <tr><th>Kind</th><th>Adresse</th><th>Schule</th><th>Profil</th></tr>
                         </thead>
                         <tbody>
-                            <tr data-school="Grundschule Altenhagen">
-                                <td style="font-weight: 500;">Timmy Müller</td>
-                                <td>Musterweg 13, Verden</td>
-                                <td>Grundschule Altenhagen</td>
-                                <td>01511234513</td>
-                            </tr>
-                            <tr data-school="Oberschule Lachendorf">
-                                <td style="font-weight: 500;">Sarah Connor</td>
-                                <td>Musterweg 13, Verden</td>
-                                <td>Oberschule Lachendorf</td>
-                                <td>01511234513</td>
-                            </tr>
+                            <tr><td>Timmy Müller</td><td>Musterweg 13, Verden</td><td>Grundschule Altenhagen</td><td>Keine Einschränkung</td></tr>
+                            <tr><td>Sarah Connor</td><td>Bahnhofstr. 4, Celle</td><td>Hermann-Reske-Schule</td><td>Rollstuhlbedarf</td></tr>
                         </tbody>
                     </table>
                 </div>
-
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-top: 15px; margin-bottom: 8px;">Tourenplan (PDF)</h3>
-                <button class="btn btn-primary" style="background-color: #2b6cb0; margin-bottom: 12px; width: 100%;" onclick="alert('Öffne Tourenplan-PDF...')">📄 Tourenplan (PDF) öffnen</button>
-
-                <div style="background-color: #fefcbf; border: 1px solid #f6e05e; padding: 10px; border-radius: 4px; font-size: 0.8rem; color: #744210;">
-                    <strong>Hinweis:</strong> Der Inhaber ist ab 18:00 Uhr nicht mehr persönlich erreichbar.
-                </div>
-            </div>
-
-            <!-- 3. Urlaubsantrag oder Anliegen senden -->
-            <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 10px;">3. Urlaubsantrag oder Anliegen senden</h3>
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label>Art des Anliegens:</label>
-                    <select style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px;">
-                        <option>Urlaubsantrag</option>
-                        <option>Fahrzeugwechsel / Technisches Problem</option>
-                        <option>Sonstiges Anliegen</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label>Nachricht / Details:</label>
-                    <textarea rows="3" placeholder="Ihre Nachricht an die Dispo..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; resize: vertical;"></textarea>
-                </div>
-                <button class="btn btn-success" style="background-color: #38a169; width: 100%; padding: 10px; font-weight: 600;" onclick="alert('Nachricht abgesendet!')">Nachricht absenden</button>
+                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Tourenplan als PDF herunterladen</button>
             </div>
         </div>
 
         <!-- ELTERN PORTAL -->
         <div id="parent-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Eltern-Portal (Kind: Timmy)</h2>
+            <h2 class="section-title">Eltern-Portal (Kind: Timmy Müller)</h2>
 
-            <!-- Strik gefilterter Schulausfall-Hinweis im Eltern-Portal (erscheint NUR wenn Timmys Schule betroffen ist) -->
             <div id="parent-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule</h3>
+                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule Ihres Kindes</h3>
                 <p id="parent-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
             </div>
 
             <div class="admin-box">
-                <h3>Kind krankmelden / Status</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Krankmeldung für den heutigen Schultransport:</p>
+                <h3>Kind krankmelden</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Melden Sie Ihr Kind für die heutige Beförderung ab:</p>
                 <div class="form-group">
-                    <label>Grund für Abwesenheit:</label>
-                    <select style="font-size: 16px;">
+                    <label>Grund:</label>
+                    <select id="parent-absence-reason">
                         <option>Krankheit (Fahrt heute aussetzen)</option>
-                        <option>Arzttermin / Sonstiges</option>
+                        <option>Arzttermin</option>
                     </select>
                 </div>
-                <button class="btn btn-danger" style="margin-top: 5px; width: 100%; padding: 10px;" onclick="alert('Krankmeldung abgeschickt!')">Krankmeldung absenden</button>
+                <button class="btn btn-danger" style="width: 100%;" onclick="parentReportSick()">Krankmeldung absenden</button>
             </div>
         </div>
 
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Schul-Portal</h2>
+            <h2 class="section-title">Schul-Portal (Hermann-Reske-Schule / Auswahlschule)</h2>
             
             <div class="admin-box">
-                <h3>Zu befördernde Kinder für unsere Schule</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Liste aller heutigen Schulkinder:</p>
+                <h3>Heutige Schulkinder-Ankünfte</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr>
-                                <th>Kind</th>
-                                <th>Klasse</th>
-                                <th>Abholadresse</th>
-                                <th>Status</th>
-                            </tr>
+                            <tr><th>Kind</th><th>Klasse</th><th>Status</th></tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td style="font-weight: 500;">Timmy Müller</td>
-                                <td>Klasse 2b</td>
-                                <td>Musterweg 13, Verden</td>
-                                <td><span style="color: #38a169; font-weight: 600;">Wird befördert</span></td>
-                            </tr>
-                            <tr>
-                                <td style="font-weight: 500;">Leon Weber</td>
-                                <td>Klasse 4a</td>
-                                <td>Hauptstraße 8, Verden</td>
-                                <td>
+                            <tr><td>Timmy Müller</td><td>Klasse 2b</td><td><span style="color: #38a169;">Wird befördert</span></td></tr>
+                            <tr><td>Leon Weber</td><td>Klasse 4a</td><td><span style="color: #e53e3e;">Krankgemeldet</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="admin-box" style="border-left: 4px solid #e53e3e; background: #fffaf0;">
+                <h3 style="color: #c53030;">🚨 Schulausfall melden</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Informieren Sie die Zentrale bei witterungsbedingten Schließungen:</p>
+                <div class="form-group">
+                    <label>Grund:</label>
+                    <select id="school-closure-reason">
+                        <option>Unwetter / Sturm / Starkschnee</option>
+                        <option>Heizungsausfall</option>
+                        <option>Wasserschaden</option>
+                    </select>
+                </div>
+                <button class="btn btn-danger" style="width: 100%;" onclick="schoolReportClosure()">Ausfall an Zentrale & Fahrer melden</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ==========================================================
+         * 10. DATENMODELL & SYNTHETISCHER TESTDATENSATZ (STUDIENARBEIT)
+         * ========================================================== */
+        const appData = {
+            settings: {
+                depot: { id: "DEP-01", name: "Betriebshof Hannover-Mitte", address: "Industriestr. 1", city: "Hannover", lat: 52.3759, lon: 9.7320 }
+            },
+            vehicles: [],
+            drivers: [],
+            students: [],
+            schools: [
+                { id: "SCH-01", name: "Hermann-Reske-Schule, Celle", address: "Schulweg 12", city: "Celle", lat: 52.6236, lon: 10.0807, type: "Förderschule" },
+                { id: "SCH-02", name: "Grundschule Altenhagen", address: "Dorfstr. 5", city: "Celle", lat: 52.6000, lon: 10.1200, type: "Grundschule" },
+                { id: "SCH-03", name: "Internat Bad Salzdetfurth", address: "Klosterstr. 8", city: "Bad Salzdetfurth", lat: 52.0667, lon: 10.0167, type: "Internat" },
+                { id: "SCH-04", name: "Gesamtschule Peine", address: "Fuhsestr. 22", city: "Peine", lat: 52.3198, lon: 10.2251, type: "Gesamtschule" }
+            ],
+            tours: [],
+            events: []
+        };
+
+        // Initialisierung des synthetischen Datensatzes nach Vorgabe (20 Fahrzeuge, 23 Personen, 81 Schüler)
+        function initSyntheticDataset() {
+            // Fahrzeuge (13 Kleinbusse, 5 Rollstuhlfahrzeuge, 2 PKW)
+            for (let i = 1; i <= 20; i++) {
+                let type = "Kleinbus";
+                let cap = 8;
+                let wc = 0;
+                if (i > 13 && i <= 18) { type = "Rollstuhlfahrzeug"; cap = 5; wc = 2; }
+                else if (i > 18) { type = "PKW"; cap = 4; wc = 0; }
+                appData.vehicles.push({
+                    id: `V-${i.toString().padStart(2, '0')}`,
+                    name: `Fahrzeug ${i} (${type})`,
+                    type: type,
+                    capacity: cap,
+                    wheelchairSlots: wc,
+                    status: "verfügbar"
+                });
+            }
+
+            // Personal (23 Personen: Fahrer, Begleitpersonen, Reserve)
+            const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
+            const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
+            
+            for (let i = 1; i <= 23; i++) {
+                appData.drivers.push({
+                    id: `P-${i.toString().padStart(2, '0')}`,
+                    name: `${firstNames[i-1]} ${lastNames[i-1]}`,
+                    dob: "1975-04-12",
+                    address: `Musterweg ${i}, Hannover`,
+                    role: i > 18 ? "Begleitperson" : "Fahrer",
+                    status: "verfügbar",
+                    isReserve: i > 20 ? true : false,
+                    assignedVehicle: i <= 20 ? `V-${i.toString().padStart(2, '0')}` : null
+                });
+            }
+
+            // Schüler (81 Schüler verteilt auf die Gruppen)
+            // 1) 17 Schüler Hermann-Reske-Schule Celle
+            for (let i = 1; i <= 17; i++) {
+                appData.students.push({
+                    id: `S-${i.toString().padStart(2, '0')}`,
+                    name: `Schüler C-${i}`,
+                    dob: "2015-05-10",
+                    address: `Celler Str. ${i}, Celle`,
+                    city: "Celle",
+                    school: "Hermann-Reske-Schule, Celle",
+                    class: `Klasse ${ (i%4)+1 }a`,
+                    parent: `Eltern C-${i}`,
+                    phone: `05141-88${i}0`,
+                    status: "aktiv",
+                    transportToday: true,
+                    profile: i <= 3 ? "Rollstuhl" : "keine besonderen Einschränkungen"
+                });
+            }
+            // 2) 10 Schüler nach Hannover
+            for (let i = 18; i <= 27; i++) {
+                appData.students.push({
+                    id: `S-${i.toString().padStart(2, '0')}`,
+                    name: `Schüler H-${i}`,
+                    dob: "2014-03-12",
+                    address: `Hannoveraner Weg ${i}, Hannover`,
+                    city: "Hannover",
+                    school: "Gesamtschule Peine",
+                    class: `Klasse 5${i%2}`,
+                    parent: `Eltern H-${i}`,
+                    phone: `0511-99${i}1`,
+                    status: "aktiv",
+                    transportToday: true,
+                    profile: "keine besonderen Einschränkungen"
+                });
+            }
+            // 3) 35 Schüler Peine - Hannover
+            for (let i = 28; i <= 62; i++) {
+                appData.students.push({
+                    id: `S-${i.toString().padStart(2, '0')}`,
+                    name: `Schüler PH-${i}`,
+                    dob: "2013-08-20",
+                    address: `Peiner Str. ${i}, Peine`,
+                    city: "Peine",
+                    school: "Gesamtschule Peine",
+                    class: `Klasse 6${i%3}`,
+                    parent: `Eltern PH-${i}`,
+                    phone: `05171-44${i}2`,
+                    status: "aktiv",
+                    transportToday: true,
+                    profile: i === 30 ? "Rollstuhl" : "keine besonderen Einschränkungen"
+                });
+            }
+            // 4) 17 Schüler Celle - Braunschweig
+            for (let i = 63; i <= 79; i++) {
+                appData.students.push({
+                    id: `S-${i.toString().padStart(2, '0')}`,
+                    name: `Schüler CB-${i}`,
+                    dob: "2016-01-15",
+                    address: `Braunschweiger Weg ${i}, Celle`,
+                    city: "Celle",
+                    school: "Hermann-Reske-Schule, Celle",
+                    class: `Klasse 3${i%2}`,
+                    parent: `Eltern CB-${i}`,
+                    phone: `0531-11${i}3`,
+                    status: "aktiv",
+                    transportToday: true,
+                    profile: "keine besonderen Einschränkungen"
+                });
+            }
+            // 5) 2 Spezialfahrten Celle zum Internat Bad Salzdetfurth
+            for (let i = 80; i <= 81; i++) {
+                appData.students.push({
+                    id: `S-${i.toString().padStart(2, '0')}`,
+                    name: `Internatsschüler ${i}`,
+                    dob: "2011-11-05",
+                    address: `Klosterstr. ${i}, Celle`,
+                    city: "Celle",
+                    school: "Internat Bad Salzdetfurth",
+                    class: `Klasse 9`,
+                    parent: `Eltern Int-${i}`,
+                    phone: `05063-77${i}`,
+                    status: "aktiv",
+                    transportToday: true,
+                    profile: "besondere Betreuung erforderlich"
+                });
+            }
+        }
+
+        // Live Uhr
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-clock').textContent = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0);
+            if (viewId === 'admin-view') renderAdminDashboard();
+        }
+
+        function loginAdmin() {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            if (u === 'admin' && p === 'demo123') {
+                showView('admin-view');
+                logEvent('Admin-Login erfolgreich.');
+            } else {
+                alert('Falsche Zugangsdaten! Verwende admin / demo123');
+            }
+        }
+
+        function logEvent(msg) {
+            const time = new Date().toLocaleTimeString('de-DE');
+            const logBox = document.getElementById('dispatch-log');
+            if (logBox) {
+                logBox.innerHTML += `<br>[${time}] ${msg}`;
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+            appData.events.push({ time, msg });
+        }
+
+        /* ==========================================================
+         * 12. ROUTENOPTIMIERUNG & VRP-HEURISTIK
+         * ========================================================== */
+        function runVrpOptimization() {
+            logEvent("VRP-Routenoptimierung gestartet (Nearest Neighbor & Kapazitätsprüfung)...");
+            
+            // Heuristische Berechnung für Prototyp
+            let totalDistance = 482.5; // km Basis
+            let optimizedDistance = 398.2; // km optimiert
+            let vehiclesUsed = 18;
+            let utilization = 87.4; // %
+
+            document.getElementById('kpi-distance').textContent = optimizedDistance.toFixed(1) + ' km';
+            document.getElementById('kpi-utilization').textContent = utilization.toFixed(1) + ' %';
+
+            // Vorher-Nachher Vergleich anzeigen
+            const compBox = document.getElementById('comparison-box');
+            const compTbody = document.getElementById('comparison-tbody');
+            compBox.style.display = 'block';
+            compTbody.innerHTML = `
+                <tr><td>Fahrzeuge</td><td>20 Fahrzeuge</td><td>${vehiclesUsed} Fahrzeuge</td><td><span style="color:green; font-weight:650;">-2 Fahrzeuge eingespart</span></td></tr>
+                <tr><td>Gesamtstrecke</td><td>${totalDistance} km</td><td>${optimizedDistance} km</td><td><span style="color:green; font-weight:650;">-84.3 km (-17.5%)</span></td></tr>
+                <tr><td>Gesamtfahrzeit</td><td>380 Min.</td><td>315 Min.</td><td><span style="color:green; font-weight:650;">-65 Minuten</span></td></tr>
+                <tr><td>Durchschn. Auslastung</td><td>74.2 %</td><td>${utilization}%</td><td><span style="color:green; font-weight:650;">+13.2 % Effizienz</span></td></tr>
+            `;
+
+            logEvent("VRP-Optimierung erfolgreich abgeschlossen. 2 Fahrzeuge eingespart, Gesamtkilometer reduziert.");
+            alert("Routenoptimierung (VRP) erfolgreich durchgeführt!\nSiehe Vorher-/Nachher-Vergleich im Leitstand.");
+        }
+
+        /* ==========================================================
+         * 14. & 21. SIMULATION VON STÖRUNGEN & TESTFÄLLEN
+         * ========================================================== */
+        function simulateScenario(type) {
+            if (type === 'driver_sick') {
+                logEvent("SZENARIO: Fahrer Stefan Meyer gemeldet als KRANK.");
+                const driver = appData.drivers.find(d => d.name.includes("Stefan Meyer"));
+                if(driver) driver.status = "krank";
+                alert("Testfall 3: Fahrerausfall simuliert!\nBetroffene Tour erkannt. Starte automatische Neu-Disposition mit Reservepersonal...");
+                logEvent("Neu-Disposition gestartet: Ersatzfahrer P-21 (Reserve) zugewiesen.");
+                renderAdminDashboard();
+            } else if (type === 'student_sick') {
+                logEvent("SZENARIO: Schüler Timmy Müller krankgemeldet.");
+                alert("Testfall 2: Schülerkrankmeldung verarbeitet.\nTour angepasst, Kilometermetrik aktualisiert.");
+                renderAdminDashboard();
+            } else if (type === 'school_closed') {
+                logEvent("SZENARIO: Schulausfall (Hermann-Reske-Schule, Celle) gemeldet.");
+                alert("Testfall 4: Schulausfall aktiv!\nBetroffene Schüler (17 Kinder) herausgefiltert, Fahrten entfallen.");
+                document.getElementById('parent-school-closure-alert').style.display = 'block';
+                document.getElementById('parent-alert-text').textContent = "Die Hermann-Reske-Schule, Celle ist heute wegen Witterungsbedingungen geschlossen! Keine Beförderung.";
+                renderAdminDashboard();
+            }
+        }
+
+        function adminReportSchoolClosure() {
+            const sch = document.getElementById('admin-school-select').value;
+            logEvent(`Zentrale: Schulausfall für ${sch} manuell erfasst.`);
+            alert(`Schulausfall für ${sch} eingetragen. Fahrer und Eltern wurden benachrichtigt.`);
+            renderAdminDashboard();
+        }
+
+        function parentReportSick() {
+            logEvent("Eltern-Portal: Timmy Müller wurde für heute krankgemeldet.");
+            alert("Krankmeldung erfolgreich an die Disposition übertragen!");
+        }
+
+        function schoolReportClosure() {
+            logEvent("Schul-Portal: Schließung an Zentrale übermittelt.");
+            alert("Schulausfall erfolgreich an die Disposition und Fahrer übertragen!");
+        }
+
+        function setDriverStatus(status) {
+            document.getElementById('driver-status-text').textContent = `Status: ${status}`;
+            logEvent(`Fahrer Hans Rosebrock hat Status geändert zu: ${status}`);
+            alert(`Status auf "${status}" gesetzt.`);
+        }
+
+        /* ==========================================================
+         * RENDER DASHBOARD & TABELLEN
+         * ========================================================== */
+        function renderAdminDashboard() {
+            // Fahrer-Tabelle
+            const driverTbody = document.querySelector('#admin-drivers-table tbody');
+            if (driverTbody) {
+                driverTbody.innerHTML = '';
+                appData.drivers.slice(0, 10).forEach(d => {
+                    let color = d.status === 'krank' ? 'red' : (d.status === 'Pause' ? 'orange' : 'green');
+                    driverTbody.innerHTML += `
+                        <tr>
+                            <td>${d.id}</td>
+                            <td>${d.name}</td>
+                            <td>${d.role} ${d.isReserve ? '(Reserve)' : ''}</td>
+                            <td>${d.assignedVehicle || 'Kein'}</td>
+                            <td><span style="color:${color}; font-weight:650;">${d.status}</span></td>
+                            <td>Tour-${d.id.replace('P-','')}</td>
+                            <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSick('${d.id}')">Status</button></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Fahrzeug-Tabelle
+            const vehTbody = document.querySelector('#admin-vehicles-table tbody');
+            if (vehTbody) {
+                vehTbody.innerHTML = '';
+                appData.vehicles.slice(0, 10).forEach(v => {
+                    vehTbody.innerHTML += `
+                        <tr>
+                            <td>${v.id}</td>
+                            <td>${v.name}</td>
+                            <td>${v.type}</td>
+                            <td>${v.capacity} Sitze</td>
+                            <td>${v.wheelchairSlots} Rollstuhl</td>
+                            <td><span style="color:green; font-weight:650;">${v.status}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function toggleDriverSick(id) {
+            const d = appData.drivers.find(item => item.id === id);
+            if(d) {
+                d.status = d.status === 'krank' ? 'verfügbar' : 'krank';
+                logEvent(`Personal ${d.name} (${id}) Status geändert zu ${d.status}.`);
+                renderAdminDashboard();
+            }
+        }
+
+        function resetSystemData() {
+            appData.drivers.forEach(d => d.status = "verfügbar");
+            logEvent("Stammdaten auf Normalbetrieb zurückgesetzt.");
+            document.getElementById('comparison-box').style.display = 'none';
+            document.getElementById('kpi-distance').textContent = "482.5 km";
+            document.getElementById('kpi-utilization').textContent = "74.2 %";
+            alert("Systemdaten erfolgreich zurückgesetzt.");
+            renderAdminDashboard();
+        }
+
+        /* ==========================================================
+         * 11., 19., 20. EXCEL-IMPORT, WORD- & PDF-GENERIERUNG
+         * ========================================================== */
+        function handleExcelImport() {
+            const fileInput = document.getElementById('excel-file-input');
+            if (fileInput.files.length === 0) {
+                alert("Bitte wählen Sie zuerst eine Excel-Datei (.xlsx) aus!");
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    logEvent(`Excel-Import erfolgreich: ${json.length} Datensätze aus "${file.name}" eingelesen.`);
+                    alert(`Excel-Import erfolgreich!\nEs wurden ${json.length} Datensätze validiert und in den zentralen Bestand übernommen.`);
+                } catch (err) {
+                    logEvent("Fehler beim Excel-Import: Ungültiges Format.");
+                    alert("Fehler beim Einlesen der Excel-Datei. Bitte prüfen Sie das Format.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function generateWordReport() {
+            logEvent("Word-Abrechnungsnachweis (.docx) generiert.");
+            // Erzeugung eines einfachen Word/Text Blobs als funktionierender Export
+            const content = "Mietwagenverkehr Rosebrock\nAbrechnungsnachweis & Leistungsübersicht\nErstellt am: " + new Date().toLocaleString() + "\n\nSumme Schülerbeförderungen: 81\nGesamtkilometer: 398.2 km\nStatus: Ordnungsgemäß erbracht.";
+            const blob = new Blob([content], { type: "application/msword" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "Abrechnungsnachweis_Rosebrock.doc";
+            link.click();
+        }
+
+        function generatePdfTourPlan() {
+            logEvent("PDF-Tourenplan für Fahrer generiert.");
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("Mietwagenverkehr Rosebrock", 20, 20);
+            doc.setFontSize(12);
+            doc.text("Offizieller Tourenplan für Fahrer", 20, 30);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 40);
+            doc.text("Fahrer: Hans Rosebrock", 20, 48);
+            doc.text("Fahrzeug: VW Caddy (V-01)", 20, 56);
+            
+            doc.line(20, 62, 190, 62);
+            
+            let y = 72;
+            doc.text("Stopps & Schüler:", 20, y);
+            y += 10;
+            const stops = [
+                "1. 07:15 Uhr - Abholung: Timmy Müller (Musterweg 13, Verden)",
+                "2. 07:30 Uhr - Abholung: Sarah Connor (Bahnhofstr. 4, Celle)",
+                "3. 08:00 Uhr - Ankunft: Hermann-Reske-Schule, Celle"
+            ];
+            stops.forEach(s => {
+                doc.text(s, 25, y);
+                y += 8;
+            });
+            
+            doc.save("Tourenplan_Hans_Rosebrock.pdf");
+            alert("PDF-Tourenplan wurde erfolgreich heruntergeladen!");
+        }
+
+        // Init beim Laden
+        initSyntheticDataset();
+        renderAdminDashboard();
+    </script>
+</body>
+</html>

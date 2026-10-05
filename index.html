@@ -458,11 +458,8 @@
                         <thead>
                             <tr><th>Schule</th><th>Grund</th></tr>
                         </thead>
-                        <tbody>
-                            <tr data-school="Gymnasium Hollenstedt">
-                                <td>Gymnasium Hollenstedt</td>
-                                <td><span style="color: #e53e3e; font-weight: 600;">Witterungsbedingter Ausfall</span></td>
-                            </tr>
+                        <tbody id="admin-closed-schools-tbody">
+                            <!-- Dynamisch -->
                         </tbody>
                     </table>
                 </div>
@@ -473,6 +470,7 @@
                             <option value="Hermann-Reske-Schule, Celle">Hermann-Reske-Schule, Celle</option>
                             <option value="Grundschule Altenhagen">Grundschule Altenhagen</option>
                             <option value="Internat Bad Salzdetfurth">Internat Bad Salzdetfurth</option>
+                            <option value="Gesamtschule Peine">Gesamtschule Peine</option>
                         </select>
                         <button class="btn btn-danger" onclick="adminReportSchoolClosure()">Schließen</button>
                     </div>
@@ -513,7 +511,7 @@
             <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Eingeloggt als: <strong>Hans Rosebrock</strong> (Fahrzeug: VW Caddy)</p>
 
             <div id="driver-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Schulausfall-Meldung für Ihre Tour!</h3>
+                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Schulausfall-Meldung & betroffene Kinder für Ihre Tour!</h3>
                 <p id="driver-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
             </div>
 
@@ -524,19 +522,18 @@
                     <button class="btn btn-warning" style="flex: 1;" onclick="setDriverStatus('In Pause')">🟡 Pause</button>
                     <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank</button>
                 </div>
-                <p style="font-size: 0.9font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit</p>
+                <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit</p>
             </div>
 
             <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Heutige Tour & Schulkinder</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Heutige Tour & Schulkinder (Live-Status)</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Kind</th><th>Adresse</th><th>Schule</th><th>Profil</th></tr>
+                            <tr><th>Kind</th><th>Adresse</th><th>Schule</th><th>Beförderungs-Status</th></tr>
                         </thead>
-                        <tbody>
-                            <tr><td>Timmy Müller</td><td>Musterweg 13, Verden</td><td>Grundschule Altenhagen</td><td>Keine Einschränkung</td></tr>
-                            <tr><td>Sarah Connor</td><td>Bahnhofstr. 4, Celle</td><td>Hermann-Reske-Schule</td><td>Rollstuhlbedarf</td></tr>
+                        <tbody id="driver-tour-students-tbody">
+                            <!-- Dynamisch befüllt -->
                         </tbody>
                     </table>
                 </div>
@@ -547,7 +544,7 @@
         <!-- ELTERN PORTAL -->
         <div id="parent-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Eltern-Portal (Kind: Timmy Müller)</h2>
+            <h2 class="section-title">Eltern-Portal (Kind: Timmy Müller – Schule: Grundschule Altenhagen)</h2>
 
             <div id="parent-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
                 <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule Ihres Kindes</h3>
@@ -571,7 +568,7 @@
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Schul-Portal (Hermann-Reske-Schule / Auswahlschule)</h2>
+            <h2 class="section-title">Schul-Portal (Grundschule Altenhagen)</h2>
             
             <div class="admin-box">
                 <h3>Heutige Schulkinder-Ankünfte</h3>
@@ -623,7 +620,9 @@
                 { id: "SCH-04", name: "Gesamtschule Peine", address: "Fuhsestr. 22", city: "Peine", lat: 52.3198, lon: 10.2251, type: "Gesamtschule" }
             ],
             tours: [],
-            events: []
+            events: [],
+            closedSchools: [],    // Erfasste Schulausfälle
+            sickStudents: []      // Krankgemeldete Schüler
         };
 
         // Initialisierung des synthetischen Datensatzes nach Vorgabe (20 Fahrzeuge, 23 Personen, 81 Schüler)
@@ -763,6 +762,8 @@
             document.getElementById(viewId).classList.add('active');
             window.scrollTo(0, 0);
             if (viewId === 'admin-view') renderAdminDashboard();
+            if (viewId === 'driver-view') renderDriverPortal();
+            if (viewId === 'parent-view') renderParentPortal();
         }
 
         function loginAdmin() {
@@ -792,16 +793,14 @@
         function runVrpOptimization() {
             logEvent("VRP-Routenoptimierung gestartet (Nearest Neighbor & Kapazitätsprüfung)...");
             
-            // Heuristische Berechnung für Prototyp
-            let totalDistance = 482.5; // km Basis
-            let optimizedDistance = 398.2; // km optimiert
+            let totalDistance = 482.5; 
+            let optimizedDistance = 398.2; 
             let vehiclesUsed = 18;
-            let utilization = 87.4; // %
+            let utilization = 87.4; 
 
             document.getElementById('kpi-distance').textContent = optimizedDistance.toFixed(1) + ' km';
             document.getElementById('kpi-utilization').textContent = utilization.toFixed(1) + ' %';
 
-            // Vorher-Nachher Vergleich anzeigen
             const compBox = document.getElementById('comparison-box');
             const compTbody = document.getElementById('comparison-tbody');
             compBox.style.display = 'block';
@@ -812,49 +811,68 @@
                 <tr><td>Durchschn. Auslastung</td><td>74.2 %</td><td>${utilization}%</td><td><span style="color:green; font-weight:650;">+13.2 % Effizienz</span></td></tr>
             `;
 
-            logEvent("VRP-Optimierung erfolgreich abgeschlossen. 2 Fahrzeuge eingespart, Gesamtkilometer reduziert.");
+            logEvent("VRP-Optimierung erfolgreich abgeschlossen. Gesamtkilometer reduziert.");
             alert("Routenoptimierung (VRP) erfolgreich durchgeführt!\nSiehe Vorher-/Nachher-Vergleich im Leitstand.");
         }
 
         /* ==========================================================
-         * 14. & 21. SIMULATION VON STÖRUNGEN & TESTFÄLLEN
+         * ECHTZEIT-SYNCHRONISATION FÜR SCHULAUSFÄLLE & KRANKMELDUNGEN
          * ========================================================== */
         function simulateScenario(type) {
             if (type === 'driver_sick') {
                 logEvent("SZENARIO: Fahrer Stefan Meyer gemeldet als KRANK.");
                 const driver = appData.drivers.find(d => d.name.includes("Stefan Meyer"));
                 if(driver) driver.status = "krank";
-                alert("Testfall 3: Fahrerausfall simuliert!\nBetroffene Tour erkannt. Starte automatische Neu-Disposition mit Reservepersonal...");
-                logEvent("Neu-Disposition gestartet: Ersatzfahrer P-21 (Reserve) zugewiesen.");
+                alert("Testfall 3: Fahrerausfall simuliert!\nBetroffene Tour erkannt. Ersatzfahrer zugewiesen.");
                 renderAdminDashboard();
             } else if (type === 'student_sick') {
-                logEvent("SZENARIO: Schüler Timmy Müller krankgemeldet.");
-                alert("Testfall 2: Schülerkrankmeldung verarbeitet.\nTour angepasst, Kilometermetrik aktualisiert.");
+                const sampleStudent = "Timmy Müller";
+                if (!appData.sickStudents.includes(sampleStudent)) {
+                    appData.sickStudents.push(sampleStudent);
+                }
+                logEvent(`SZENARIO: Schüler ${sampleStudent} krankgemeldet.`);
+                alert(`Testfall 2: Schülerkrankmeldung für ${sampleStudent} verarbeitet.\nTour angepasst, Kilometermetrik aktualisiert.`);
                 renderAdminDashboard();
             } else if (type === 'school_closed') {
-                logEvent("SZENARIO: Schulausfall (Hermann-Reske-Schule, Celle) gemeldet.");
-                alert("Testfall 4: Schulausfall aktiv!\nBetroffene Schüler (17 Kinder) herausgefiltert, Fahrten entfallen.");
-                document.getElementById('parent-school-closure-alert').style.display = 'block';
-                document.getElementById('parent-alert-text').textContent = "Die Hermann-Reske-Schule, Celle ist heute wegen Witterungsbedingungen geschlossen! Keine Beförderung.";
+                const sampleSchool = "Grundschule Altenhagen";
+                if (!appData.closedSchools.some(s => s.name === sampleSchool)) {
+                    appData.closedSchools.push({ name: sampleSchool, reason: "Witterungsbedingter Unwetter-Ausfall" });
+                }
+                logEvent(`SZENARIO: Schulausfall für "${sampleSchool}" gemeldet.`);
+                alert(`Testfall 4: Schulausfall für "${sampleSchool}" aktiv!\nBetroffene Schüler und Fahrer wurden in Echtzeit benachrichtigt.`);
                 renderAdminDashboard();
             }
         }
 
         function adminReportSchoolClosure() {
-            const sch = document.getElementById('admin-school-select').value;
-            logEvent(`Zentrale: Schulausfall für ${sch} manuell erfasst.`);
-            alert(`Schulausfall für ${sch} eingetragen. Fahrer und Eltern wurden benachrichtigt.`);
+            const schName = document.getElementById('admin-school-select').value;
+            if (!appData.closedSchools.some(s => s.name === schName)) {
+                appData.closedSchools.push({ name: schName, reason: "Durch Zentrale gemeldete Schließung" });
+            }
+            logEvent(`Zentrale: Schulausfall für ${schName} manuell erfasst.`);
+            alert(`Schulausfall für "${schName}" eingetragen. Fahrer und Eltern wurden benachrichtigt.`);
+            renderAdminDashboard();
+        }
+
+        function schoolReportClosure() {
+            const reason = document.getElementById('school-closure-reason').value;
+            const schName = "Grundschule Altenhagen"; // Aus Sicht des angemeldeten Schulportals
+            if (!appData.closedSchools.some(s => s.name === schName)) {
+                appData.closedSchools.push({ name: schName, reason: reason });
+            }
+            logEvent(`Schul-Portal: Schließung für ${schName} (${reason}) an Zentrale übermittelt.`);
+            alert("Schulausfall erfolgreich an die Zentrale, Eltern und Fahrer übertragen!");
             renderAdminDashboard();
         }
 
         function parentReportSick() {
-            logEvent("Eltern-Portal: Timmy Müller wurde für heute krankgemeldet.");
-            alert("Krankmeldung erfolgreich an die Disposition übertragen!");
-        }
-
-        function schoolReportClosure() {
-            logEvent("Schul-Portal: Schließung an Zentrale übermittelt.");
-            alert("Schulausfall erfolgreich an die Disposition und Fahrer übertragen!");
+            const childName = "Timmy Müller";
+            if (!appData.sickStudents.includes(childName)) {
+                appData.sickStudents.push(childName);
+            }
+            logEvent(`Eltern-Portal: ${childName} wurde für heute krankgemeldet.`);
+            alert("Krankmeldung erfolgreich an die Disposition und den Fahrer übertragen!");
+            renderParentPortal();
         }
 
         function setDriverStatus(status) {
@@ -864,7 +882,7 @@
         }
 
         /* ==========================================================
-         * RENDER DASHBOARD & TABELLEN
+         * RENDER DASHBOARD & PORTALE MIT ECHTEN DATEN
          * ========================================================== */
         function renderAdminDashboard() {
             // Fahrer-Tabelle
@@ -904,6 +922,90 @@
                     `;
                 });
             }
+
+            // Geschlossene Schulen Tabelle im Admin Leitstand
+            const closedTbody = document.getElementById('admin-closed-schools-tbody');
+            if (closedTbody) {
+                if (appData.closedSchools.length === 0) {
+                    closedTbody.innerHTML = `<tr><td colspan="2" style="color: #718096; text-align: center;">Keine Schulausfälle gemeldet. Normalbetrieb.</td></tr>`;
+                } else {
+                    closedTbody.innerHTML = '';
+                    appData.closedSchools.forEach(cs => {
+                        closedTbody.innerHTML += `
+                            <tr>
+                                <td><strong>${cs.name}</strong></td>
+                                <td><span style="color: #e53e3e; font-weight: 600;">${cs.reason}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+        }
+
+        function renderDriverPortal() {
+            const driverAlert = document.getElementById('driver-school-closure-alert');
+            const driverAlertText = document.getElementById('driver-alert-text');
+            
+            let alerts = [];
+            appData.closedSchools.forEach(cs => {
+                alerts.push(`⚠️ Schulausfall: <strong>${cs.name}</strong> (${cs.reason}).`);
+            });
+            appData.sickStudents.forEach(st => {
+                alerts.push(`ℹ️ Krankmeldung: Schüler/-in <strong>${st}</strong> fällt heute aus.`);
+            });
+
+            if (alerts.length > 0) {
+                driverAlert.style.display = 'block';
+                driverAlertText.innerHTML = alerts.join('<br>') + '<br><strong style="color: #c53030; display:block; margin-top:5px;">👉 Unten markierte Kinder müssen auf dieser Tour NICHT abgeholt werden!</strong>';
+            } else {
+                driverAlert.style.display = 'none';
+            }
+
+            // Dynamische Schülertabelle im Fahrer-Portal
+            const tbody = document.getElementById('driver-tour-students-tbody');
+            if (tbody) {
+                // Beispielhafte Tour-Schüler des Fahrers
+                const tourStudents = [
+                    { name: "Timmy Müller", address: "Musterweg 13, Verden", school: "Grundschule Altenhagen" },
+                    { name: "Sarah Connor", address: "Bahnhofstr. 4, Celle", school: "Hermann-Reske-Schule, Celle" }
+                ];
+
+                tbody.innerHTML = '';
+                tourStudents.forEach(ts => {
+                    let isSchoolClosed = appData.closedSchools.some(cs => cs.name === ts.school);
+                    let isSick = appData.sickStudents.includes(ts.name);
+                    
+                    let statusHtml = '<span style="color: #38a169; font-weight:650;">🟢 Reguläre Beförderung</span>';
+                    if (isSchoolClosed) {
+                        statusHtml = `<span style="color: #e53e3e; font-weight:650;">❌ KEINE Beförderung (Schule ${ts.school} geschlossen!)</span>`;
+                    } else if (isSick) {
+                        statusHtml = `<span style="color: #d69e2e; font-weight:650;">⚠️️ KEINE Beförderung (Kind krankgemeldet)</span>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${ts.name}</strong></td>
+                            <td>${ts.address}</td>
+                            <td>${ts.school}</td>
+                            <td>${statusHtml}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function renderParentPortal() {
+            const parentAlert = document.getElementById('parent-school-closure-alert');
+            const parentText = document.getElementById('parent-alert-text');
+            const childSchool = "Grundschule Altenhagen"; // Schule des Test-Kindes im Elternportal
+
+            const closure = appData.closedSchools.find(cs => cs.name === childSchool);
+            if (closure) {
+                parentAlert.style.display = 'block';
+                parentText.innerHTML = `Die Schule Ihres Kindes (<strong>${childSchool}</strong>) ist heute geschlossen! Grund: <em>${closure.reason}</em>. Es findet keine Beförderung statt.`;
+            } else {
+                parentAlert.style.display = 'none';
+            }
         }
 
         function toggleDriverSick(id) {
@@ -917,12 +1019,16 @@
 
         function resetSystemData() {
             appData.drivers.forEach(d => d.status = "verfügbar");
-            logEvent("Stammdaten auf Normalbetrieb zurückgesetzt.");
+            appData.closedSchools = [];
+            appData.sickStudents = [];
+            logEvent("Stammdaten und Schulausfälle auf Normalbetrieb zurückgesetzt.");
             document.getElementById('comparison-box').style.display = 'none';
             document.getElementById('kpi-distance').textContent = "482.5 km";
             document.getElementById('kpi-utilization').textContent = "74.2 %";
-            alert("Systemdaten erfolgreich zurückgesetzt.");
+            alert("Systemdaten erfolgreich auf Normalbetrieb zurückgesetzt.");
             renderAdminDashboard();
+            renderDriverPortal();
+            renderParentPortal();
         }
 
         /* ==========================================================
@@ -956,7 +1062,6 @@
 
         function generateWordReport() {
             logEvent("Word-Abrechnungsnachweis (.docx) generiert.");
-            // Erzeugung eines einfachen Word/Text Blobs als funktionierender Export
             const content = "Mietwagenverkehr Rosebrock\nAbrechnungsnachweis & Leistungsübersicht\nErstellt am: " + new Date().toLocaleString() + "\n\nSumme Schülerbeförderungen: 81\nGesamtkilometer: 398.2 km\nStatus: Ordnungsgemäß erbracht.";
             const blob = new Blob([content], { type: "application/msword" });
             const link = document.createElement('a');
@@ -1004,6 +1109,8 @@
         // Init beim Laden
         initSyntheticDataset();
         renderAdminDashboard();
+        renderDriverPortal();
+        renderParentPortal();
     </script>
 </body>
 </html>

@@ -330,15 +330,15 @@
         <!-- STARTSEITE (4 Kacheln) -->
         <div id="home-view" class="view active">
             <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals (Studien-Prototyp)</h2>
-            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Sichere Demo-Zugangsdaten (Admin: <strong>admin</strong> / <strong>demo123</strong>):</p>
+            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Sichere Demo-Zugangsdaten (Admin: <strong>admin</strong> / <strong>demo123</strong>):[cite: 2]</p>
             
             <div class="portal-grid">
                 <!-- Inhaber -->
                 <div class="portal-card admin">
                     <h3>Inhaber & Zentrale</h3>
                     <p>Dispositionsleitstand, VRP-Optimierung, Stammdaten, Simulation.</p>
-                    <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">
-                    <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">
+                    <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">[cite: 2]
+                    <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">[cite: 2]
                     <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
                 </div>
 
@@ -346,8 +346,8 @@
                 <div class="portal-card driver">
                     <h3>Fahrer-Portal</h3>
                     <p>Dienststatus, Tour, Tourenplan-PDF & Ausfallmeldung.</p>
-                    <input type="text" class="portal-input" value="Hans Rosebrock" placeholder="Benutzername">
-                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
+                    <input type="text" class="portal-input" value="Hans Rosebrock" placeholder="Benutzername">[cite: 2]
+                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">[cite: 2]
                     <button class="portal-btn" onclick="showView('driver-view')">Fahrer-Login</button>
                 </div>
 
@@ -355,8 +355,8 @@
                 <div class="portal-card parent">
                     <h3>Eltern-Portal</h3>
                     <p>Kind-Krankmeldung & gefilterte Schulausfall-Informationen.</p>
-                    <input type="text" class="portal-input" value="Familie Müller" placeholder="Benutzername">
-                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
+                    <input type="text" class="portal-input" value="Familie Müller" placeholder="Benutzername">[cite: 2]
+                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">[cite: 2]
                     <button class="portal-btn" onclick="showView('parent-view')">Eltern-Login</button>
                 </div>
 
@@ -364,8 +364,8 @@
                 <div class="portal-card school">
                     <h3>Schul-Portal</h3>
                     <p>Schüler-Übersicht & Schließungsmeldung direkt an Zentrale.</p>
-                    <input type="text" class="portal-input" value="Grundschule Altenhagen" placeholder="Benutzername">
-                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
+                    <input type="text" class="portal-input" value="Grundschule Altenhagen" placeholder="Benutzername">[cite: 2]
+                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">[cite: 2]
                     <button class="portal-btn" onclick="showView('school-view')">Schul-Login</button>
                 </div>
             </div>
@@ -604,6 +604,25 @@
 
     <script>
         /* ==========================================================
+         * TELEGRAM BOT INTEGRATION
+         * ========================================================== */
+        const TELEGRAM_BOT_TOKEN = "8819254996:AAGz62lvwmHF1PMs6yPx3IiNi_8waL84JGQ";
+        const TELEGRAM_CHAT_ID = "8864346585";
+
+        function sendTelegramAlert(text) {
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: "🚨 *Mietwagenverkehr Rosebrock - Alarm*\n\n" + text,
+                    parse_mode: 'Markdown'
+                })
+            }).catch(err => console.error("Telegram Fehler:", err));
+        }
+
+        /* ==========================================================
          * 10. DATENMODELL & SYNTHETISCHER TESTDATENSATZ (STUDIENARBEIT)
          * ========================================================== */
         const appData = {
@@ -769,11 +788,11 @@
         function loginAdmin() {
             const u = document.getElementById('admin-user').value;
             const p = document.getElementById('admin-pass').value;
-            if (u === 'admin' && p === 'demo123') {
+            if (u === 'admin' && p === 'demo123') {[cite: 2]
                 showView('admin-view');
                 logEvent('Admin-Login erfolgreich.');
             } else {
-                alert('Falsche Zugangsdaten! Verwende admin / demo123');
+                alert('Falsche Zugangsdaten! Verwende admin / demo123');[cite: 2]
             }
         }
 
@@ -823,6 +842,7 @@
                 logEvent("SZENARIO: Fahrer Stefan Meyer gemeldet als KRANK.");
                 const driver = appData.drivers.find(d => d.name.includes("Stefan Meyer"));
                 if(driver) driver.status = "krank";
+                sendTelegramAlert("⚠️ Fahrerausfall simuliert: Stefan Meyer ist krankgemeldet!");
                 alert("Testfall 3: Fahrerausfall simuliert!\nBetroffene Tour erkannt. Ersatzfahrer zugewiesen.");
                 renderAdminDashboard();
             } else if (type === 'student_sick') {
@@ -831,6 +851,7 @@
                     appData.sickStudents.push(sampleStudent);
                 }
                 logEvent(`SZENARIO: Schüler ${sampleStudent} krankgemeldet.`);
+                sendTelegramAlert(`ℹ️ Schülerkrankmeldung: ${sampleStudent} fällt heute aus.`);
                 alert(`Testfall 2: Schülerkrankmeldung für ${sampleStudent} verarbeitet.\nTour angepasst, Kilometermetrik aktualisiert.`);
                 renderAdminDashboard();
             } else if (type === 'school_closed') {
@@ -839,6 +860,7 @@
                     appData.closedSchools.push({ name: sampleSchool, reason: "Witterungsbedingter Unwetter-Ausfall" });
                 }
                 logEvent(`SZENARIO: Schulausfall für "${sampleSchool}" gemeldet.`);
+                sendTelegramAlert(`🚨 Schulausfall gemeldet für: ${sampleSchool} (Witterungsbedingter Ausfall)`);
                 alert(`Testfall 4: Schulausfall für "${sampleSchool}" aktiv!\nBetroffene Schüler und Fahrer wurden in Echtzeit benachrichtigt.`);
                 renderAdminDashboard();
             }
@@ -850,6 +872,7 @@
                 appData.closedSchools.push({ name: schName, reason: "Durch Zentrale gemeldete Schließung" });
             }
             logEvent(`Zentrale: Schulausfall für ${schName} manuell erfasst.`);
+            sendTelegramAlert(`🚨 Zentrale trägt Schulausfall ein: ${schName}`);
             alert(`Schulausfall für "${schName}" eingetragen. Fahrer und Eltern wurden benachrichtigt.`);
             renderAdminDashboard();
         }
@@ -861,6 +884,7 @@
                 appData.closedSchools.push({ name: schName, reason: reason });
             }
             logEvent(`Schul-Portal: Schließung für ${schName} (${reason}) an Zentrale übermittelt.`);
+            sendTelegramAlert(`🚨 Schließungsmeldung der Schule (${schName}): ${reason}`);
             alert("Schulausfall erfolgreich an die Zentrale, Eltern und Fahrer übertragen!");
             renderAdminDashboard();
         }
@@ -871,6 +895,7 @@
                 appData.sickStudents.push(childName);
             }
             logEvent(`Eltern-Portal: ${childName} wurde für heute krankgemeldet.`);
+            sendTelegramAlert(`ℹ️ Eltern-Meldung: ${childName} wurde krankgemeldet.`);
             alert("Krankmeldung erfolgreich an die Disposition und den Fahrer übertragen!");
             renderParentPortal();
         }
@@ -878,6 +903,9 @@
         function setDriverStatus(status) {
             document.getElementById('driver-status-text').textContent = `Status: ${status}`;
             logEvent(`Fahrer Hans Rosebrock hat Status geändert zu: ${status}`);
+            if(status === 'Krank') {
+                sendTelegramAlert("⚠️ Fahrer Hans Rosebrock hat sich als KRANK gemeldet!");
+            }
             alert(`Status auf "${status}" gesetzt.`);
         }
 
@@ -979,7 +1007,7 @@
                     if (isSchoolClosed) {
                         statusHtml = `<span style="color: #e53e3e; font-weight:650;">❌ KEINE Beförderung (Schule ${ts.school} geschlossen!)</span>`;
                     } else if (isSick) {
-                        statusHtml = `<span style="color: #d69e2e; font-weight:650;">⚠️️ KEINE Beförderung (Kind krankgemeldet)</span>`;
+                        statusHtml = `<span style="color: #d69e2e; font-weight:650;">⚠ KEINE Beförderung (Kind krankgemeldet)</span>`;
                     }
 
                     tbody.innerHTML += `
@@ -1013,6 +1041,9 @@
             if(d) {
                 d.status = d.status === 'krank' ? 'verfügbar' : 'krank';
                 logEvent(`Personal ${d.name} (${id}) Status geändert zu ${d.status}.`);
+                if(d.status === 'krank') {
+                    sendTelegramAlert(`⚠️ Mitarbeiter ${d.name} (${id}) wurde als KRANK markiert.`);
+                }
                 renderAdminDashboard();
             }
         }

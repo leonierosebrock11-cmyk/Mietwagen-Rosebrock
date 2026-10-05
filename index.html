@@ -390,14 +390,20 @@
                 </div>
             </div>
 
-            <!-- NEU: Schulausfall direkt im Admin-Portal selbst melden -->
+            <!-- ADMIN: Schulausfall per Dropdown-Auswahl melden -->
             <div class="admin-box" style="border-left: 4px solid #e53e3e; background-color: #fffaf0;">
-                <h3 style="color: #c53030; font-size: 1rem; margin-bottom: 8px;">🚨 Schulausfall oder Schließung manuell melden</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 12px;">Tragen Sie hier eine Schließung ein:</p>
+                <h3 style="color: #c53030; font-size: 1rem; margin-bottom: 8px;">🚨 Schulausfall oder Schließung melden</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 12px;">Wählen Sie die Schule aus und tragen Sie den Ausfall ein:</p>
                 
                 <div class="form-group">
-                    <label for="admin-school-name-input" style="font-weight: 600;">Schulname:</label>
-                    <input type="text" id="admin-school-name-input" value="Grundschule Altenhagen" style="font-size: 16px; padding: 10px;">
+                    <label for="admin-school-name-select" style="font-weight: 600;">Schule auswählen:</label>
+                    <select id="admin-school-name-select" style="font-size: 16px; padding: 10px;">
+                        <option value="Grundschule Altenhagen">Grundschule Altenhagen</option>
+                        <option value="Oberschule Lachendorf">Oberschule Lachendorf</option>
+                        <option value="Gymnasium Hollenstedt">Gymnasium Hollenstedt</option>
+                        <option value="Grundschule Tostedt">Grundschule Tostedt</option>
+                        <option value="Oberschule Welle">Oberschule Welle</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -566,7 +572,7 @@
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
             <h2 class="section-title">Eltern-Portal (Kind: Timmy)</h2>
 
-            <!-- Gefilterter Schulausfall-Hinweis im Eltern-Portal (erscheint NUR wenn Timmys Schule betroffen ist) -->
+            <!-- Strik gefilterter Schulausfall-Hinweis im Eltern-Portal (erscheint NUR wenn Timmys Schule betroffen ist) -->
             <div id="parent-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
                 <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule</h3>
                 <p id="parent-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
@@ -615,236 +621,4 @@
                                 <td style="font-weight: 500;">Leon Weber</td>
                                 <td>Klasse 4a</td>
                                 <td>Hauptstraße 8, Verden</td>
-                                <td><span style="color: #e53e3e; font-weight: 600;">Krankgemeldet</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Schulausfall melden Sektion -->
-            <div class="admin-box" style="border-left: 4px solid #e53e3e; background-color: #fffaf0;">
-                <h3 style="color: #c53030; font-size: 1rem; margin-bottom: 8px;">🚨 Schulausfall oder Schließung melden</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 12px;">Informieren Sie hier die Zentrale direkt:</p>
-                
-                <div class="form-group">
-                    <label for="school-name-input" style="font-weight: 600;">Schulname:</label>
-                    <input type="text" id="school-name-input" value="Grundschule Altenhagen" style="font-size: 16px; padding: 10px;">
-                </div>
-
-                <div class="form-group">
-                    <label for="school-reason-select" style="font-weight: 600;">Grund des Ausfalls:</label>
-                    <select id="school-reason-select" style="font-size: 16px; padding: 10px;" onchange="toggleReasonDetail(this)">
-                        <option value="Unwetter / Sturm / Schnee / Winterdienst">Unwetter / Sturm / Schnee / Winterdienst</option>
-                        <option value="Heizungsausfall / Technischer Defekt">Heizungsausfall / Technischer Defekt</option>
-                        <option value="Wasserschaden / Höhere Gewalt">Wasserschaden / Höhere Gewalt</option>
-                        <option value="Sonstiges (Bitte begründen)">Sonstiges (Bitte begründen)...</option>
-                    </select>
-                </div>
-
-                <!-- Ausklappbares Begründungsfeld -->
-                <div class="form-group" id="custom-reason-container" style="display: none; margin-top: 10px;">
-                    <label for="custom-reason-text" style="font-weight: 600; color: #2d3748;">Genaue Begründung / Details:</label>
-                    <textarea id="custom-reason-text" rows="3" placeholder="Geben Sie hier nähere Details ein..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 16px; background: #fff;"></textarea>
-                </div>
-
-                <button class="btn btn-danger" style="width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 600; margin-top: 12px;" onclick="submitSchoolClosureForm()">Ausfall an Dispo & Fahrer übertragen</button>
-            </div>
-        </div>
-
-    </div>
-
-    <script>
-        // Live Uhrzeit aktualisieren
-        function updateClock() {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('de-DE');
-            const timeStr = now.toLocaleTimeString('de-DE');
-            document.getElementById('live-clock').textContent = `${dateStr}, ${timeStr}`;
-        }
-        setInterval(updateClock, 1000);
-
-        function showView(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-            window.scrollTo(0, 0);
-
-            // Automatische Aktualisierung der Benachrichtigungen beim Portalwechsel
-            if (viewId === 'driver-view') {
-                updateDriverAlerts();
-            } else if (viewId === 'parent-view') {
-                updateParentAlerts();
-            }
-        }
-
-        function loginAdmin() {
-            const user = document.getElementById('admin-user').value;
-            const pass = document.getElementById('admin-pass').value;
-            if (user === 'Fred Rosebrock' && pass === 'R0sebr0ck') {
-                showView('admin-view');
-            } else {
-                alert('Falscher Benutzername oder Passwort!');
-            }
-        }
-
-        function setDriverStatus(status) {
-            const statusText = document.getElementById('driver-status-text');
-            let color = '#2b6cb0';
-            if (status === 'Bereit') color = '#38a169';
-            else if (status === 'In Pause') color = '#d69e2e';
-            else if (status === 'Krank') color = '#e53e3e';
-            
-            statusText.innerHTML = `Aktueller Status: <span style="font-weight: 600; color: ${color};">${status}</span>`;
-            alert('Status erfolgreich auf "' + status + '" gesetzt!');
-        }
-
-        // Ein- und Ausblenden der detaillierten Begründung im Schul-Portal
-        function toggleReasonDetail(selectElem) {
-            const container = document.getElementById('custom-reason-container');
-            if (selectElem.value.includes('Sonstiges')) {
-                container.style.display = 'block';
-            } else {
-                container.style.display = 'none';
-            }
-        }
-
-        // Ein- und Ausblenden der detaillierten Begründung im Admin-Portal
-        function toggleAdminReasonDetail(selectElem) {
-            const container = document.getElementById('admin-custom-reason-container');
-            if (selectElem.value.includes('Sonstiges')) {
-                container.style.display = 'block';
-            } else {
-                container.style.display = 'none';
-            }
-        }
-
-        function submitSchoolClosureForm() {
-            const school = document.getElementById('school-name-input').value;
-            const reasonSelect = document.getElementById('school-reason-select').value;
-            let finalReason = reasonSelect;
-            
-            if (reasonSelect.includes('Sonstiges')) {
-                const customText = document.getElementById('custom-reason-text').value;
-                if (customText.trim() !== '') {
-                    finalReason += ': ' + customText;
-                }
-            }
-
-            addSchoolClosureToTable(school, finalReason);
-            alert('Schulausfall für "' + school + '" erfolgreich gemeldet!\nGrund: ' + finalReason);
-        }
-
-        function submitAdminSchoolClosureForm() {
-            const school = document.getElementById('admin-school-name-input').value;
-            const reasonSelect = document.getElementById('admin-school-reason-select').value;
-            let finalReason = reasonSelect;
-            
-            if (reasonSelect.includes('Sonstiges')) {
-                const customText = document.getElementById('admin-custom-reason-text').value;
-                if (customText.trim() !== '') {
-                    finalReason += ': ' + customText;
-                }
-            }
-
-            addSchoolClosureToTable(school, finalReason);
-            alert('Schulausfall vom Admin für "' + school + '" erfolgreich eingetragen!\nGrund: ' + finalReason);
-        }
-
-        // Hilfsfunktion zum Hinzufügen einer geschlossenen Schule zur Admin-Tabelle (ohne Lösch-Button)
-        function addSchoolClosureToTable(schoolName, reasonText) {
-            const tableBody = document.querySelector('#admin-closed-schools-table tbody');
-            
-            let exists = false;
-            tableBody.querySelectorAll('tr').forEach(row => {
-                if (row.cells[0] && row.cells[0].textContent.trim() === schoolName) {
-                    exists = true;
-                    // Aktualisiere den Grund, falls bereits vorhanden
-                    row.cells[1].innerHTML = `<span style="color: #e53e3e; font-weight: 600;">${reasonText}</span>`;
-                }
-            });
-
-            if (exists) return;
-
-            const newRow = document.createElement('tr');
-            newRow.setAttribute('data-school', schoolName);
-            newRow.innerHTML = `
-                <td>${schoolName}</td>
-                <td><span style="color: #e53e3e; font-weight: 600;">${reasonText}</span></td>
-            `;
-            tableBody.appendChild(newRow);
-        }
-
-        // Logik für das Fahrer-Portal: Prüft geschlossene Schulen und listet betroffene Kinder auf
-        function updateDriverAlerts() {
-            const alertBox = document.getElementById('driver-school-closure-alert');
-            const alertText = document.getElementById('driver-alert-text');
-            
-            const closedSchools = [];
-            document.querySelectorAll('#admin-closed-schools-table tbody tr').forEach(row => {
-                if(row.cells[0]) closedSchools.push(row.cells[0].textContent.trim());
-            });
-
-            const driverRows = document.querySelectorAll('#driver-view table tbody tr');
-            const affectedKids = [];
-
-            driverRows.forEach(row => {
-                const schoolName = row.getAttribute('data-school');
-                const kidName = row.cells[0].textContent;
-                if (closedSchools.includes(schoolName)) {
-                    affectedKids.push(`${kidName} (${schoolName})`);
-                }
-            });
-
-            if (affectedKids.length > 0) {
-                alertBox.style.display = 'block';
-                alertText.innerHTML = `Folgende Schule(n) haben geschlossen: <strong>${closedSchools.join(', ')}</strong>.<br><strong>Betroffene Kinder auf Ihrer Tour (müssen NICHT befördert werden):</strong> ${affectedKids.join(', ')}.`;
-            } else if (closedSchools.length > 0) {
-                alertBox.style.display = 'block';
-                alertText.innerHTML = `Geschlossene Schulen gemeldet: <strong>${closedSchools.join(', ')}</strong>. Keine Kinder auf Ihrer aktuellen Tour betroffen.`;
-            } else {
-                alertBox.style.display = 'none';
-            }
-        }
-
-        // Logik für das Eltern-Portal: Filtert exakt, ob die Schule des Kindes (Timmy = Grundschule Altenhagen) geschlossen ist
-        function updateParentAlerts() {
-            const alertBox = document.getElementById('parent-school-closure-alert');
-            const alertText = document.getElementById('parent-alert-text');
-            const childSchool = "Grundschule Altenhagen"; // Schule des Kindes im Eltern-Portal
-
-            let isClosed = false;
-            let closureReason = "";
-
-            document.querySelectorAll('#admin-closed-schools-table tbody tr').forEach(row => {
-                if(row.cells[0] && row.cells[0].textContent.trim() === childSchool) {
-                    isClosed = true;
-                    closureReason = row.cells[1].textContent;
-                }
-            });
-
-            if (isClosed) {
-                alertBox.style.display = 'block';
-                alertText.innerHTML = `Die Schule Ihres Kindes (<strong>${childSchool}</strong>) ist heute geschlossen!<br><strong>Grund:</strong> ${closureReason}. Es findet keine Beförderung statt.`;
-            } else {
-                alertBox.style.display = 'none';
-            }
-        }
-
-        function toggleStatusAdmin(btn) {
-            const row = btn.closest('tr');
-            const statusCell = row.cells[2];
-            if (btn.classList.contains('btn-danger')) {
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-success');
-                btn.textContent = 'Bereit';
-                statusCell.innerHTML = '<span style="color: #d69e2e; font-weight: 600;">In Pause</span>';
-            } else {
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-danger');
-                btn.textContent = 'Pause';
-                statusCell.innerHTML = '<span style="color: #38a169; font-weight: 600;">Bereit</span>';
-            }
-        }
-    </script>
-</body>
-</html>
+                                <td>

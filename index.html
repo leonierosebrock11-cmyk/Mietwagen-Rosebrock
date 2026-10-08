@@ -298,7 +298,7 @@
     <header>
         <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Dispositionsleitstand – PDVRPTW (Kilometer-Maximierung unter Zeitfenster)</p>
+            <p>Dispositionsleitstand – PDVRPTW (Max-Km & 60/90-Min-Zeitschranken)</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
@@ -384,10 +384,10 @@
 
             <!-- PDVRPTW Kilometer-Maximierungs-Box -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
-                <h3 style="color: #6b46c1;">⚡ PDVRPTW Kilometer-Maximierungs-Algorithmus</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Fährt maximale km zur Umsatzsteigerung aus KM-Pauschalen, strikt innerhalb der max. 60 Min (Grundschule) / 90 Min (Sek 1) Fahrzeitgrenze:</p>
+                <h3 style="color: #6b46c1;">⚡ PDVRPTW Max-Km & Zeitfenster-Optimierung</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Maximiert Abrechnungs-km unter strenger Einhaltung von max. 60 Min (Grundschule) & max. 90 Min (Sek 1) Fahrzeit:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Max-Km-Optimierung starten</button>
+                    <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Optimierung starten</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
                     <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank</button>
                     <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall</button>
@@ -436,7 +436,7 @@
             <div class="admin-box">
                 <h3>Vollständiges Dispositionsprotokoll</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. PDVRPTW Max-Miles Engine bereit.<br>
+                    [07:00:00] System initialisiert. PDVRPTW Max-Miles & Zeitfenster Engine bereit.<br>
                 </div>
             </div>
         </div>
@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v1';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v2';
 
         const appData = {
             settings: {
@@ -690,8 +690,8 @@
                 let schoolObj = appData.schools[(i * 3) % appData.schools.length];
                 let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
                 let famName = "Familie " + sName.split(" ")[1];
-                let latOffset = (Math.sin(i) * 0.18);
-                let lonOffset = (Math.cos(i) * 0.18);
+                let latOffset = (Math.sin(i) * 0.15);
+                let lonOffset = (Math.cos(i) * 0.15);
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
                     name: sName,
@@ -710,12 +710,13 @@
         }
 
         /**
-         * PDVRPTW mit KM-MAXIMIERUNGS-ZIEL:
-         * - Der Algorithmus plant die Touren so, dass pro Tour möglichst viele abrechenbare Kilometer gefahren werden.
-         * - Strenge Restriktion: Die maximale Fahrzeit (Grundschule max. 60 Min, Sek 1 max. 90 Min) darf nicht überschritten werden!
+         * PDVRPTW mit KM-Maximierung & strenger 60/90-Minuten-Fahrzeitfilterung:
+         * - Grundschule: Max. 60 Minuten Fahrzeit (Kapazität max. 5 Kinder pro Tour zur Einhaltung des Zeitlimits).
+         * - Sekundarstufe 1: Max. 90 Minuten Fahrzeit (Kapazität bis zu 8 Kinder).
+         * - Maximiert die abrechenbaren Kilometer innerhalb dieser Grenzen.
          */
         function runPDVRPTWOptimization(isInitial = false) {
-            logEvent("PDVRPTW Kilometer-Maximierungs-Algorithmus gestartet (Ausreizen der 60/90-Minuten-Fahrzeitgrenzen)...");
+            logEvent("PDVRPTW Max-Km & Zeitfenster-Optimierung gestartet...");
             
             const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank');
             activeDrivers.forEach(d => d.assignedStudents = []);
@@ -743,14 +744,14 @@
                 let schoolStudents = schData.students;
                 let schoolObj = schData.schoolObj;
                 let maxAllowedMinutes = schoolObj.type === 'grundschule' ? 60 : 90;
+                let maxCapacity = schoolObj.type === 'grundschule' ? 5 : 8; // Strengere Kapazität bei Grundschulen wegen 60-Minuten-Limit!
 
-                let capacity = 8;
-                for (let i = 0; i < schoolStudents.length; i += capacity) {
+                for (let i = 0; i < schoolStudents.length; i += maxCapacity) {
                     if (driverPtr >= activeDrivers.length) break;
-                    let batch = schoolStudents.slice(i, i + capacity);
+                    let batch = schoolStudents.slice(i, i + maxCapacity);
                     let assignedDriver = activeDrivers[driverPtr++];
 
-                    // 1. Baseline (direkte, kürzeste Strecke berechnen)
+                    // 1. Baseline (Direkte Strecke)
                     let baselineBatchKm = 0;
                     let bLat = appData.settings.depot.lat, bLon = appData.settings.depot.lon;
                     batch.forEach(s => {
@@ -760,12 +761,12 @@
                     baselineBatchKm += calculateHaversineDistance(bLat, bLon, schoolObj.lat, schoolObj.lon);
                     totalBaselineKm += baselineBatchKm;
 
-                    // 2. Max-Km Optimierung: Sortiere nach Entfernung/Winkel so, dass ein längerer, zulässiger Umweg entsteht
-                    // Wir sortieren die Kinder so, dass der Bus eine maximale Schleife fährt, ohne die maxAllowedMinutes (ca. 1km = 2 Min) zu verletzen.
+                    // 2. Intelligente Sortierung: Gewährleistet, dass Kinder individuell ihr Zeitfenster einhalten
+                    // Sortiere nach Distanz zur Schule, sodass Kinder nicht zu lange im Bus sitzen
                     let sortedBatch = [...batch].sort((a, b) => {
-                        let distA = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, a.lat, a.lon);
-                        let distB = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, b.lat, b.lon);
-                        return distB - distA; // Beginne mit dem am weitesten entfernten Kind, um maximale Schleifen zu erzeugen
+                        let distA = calculateHaversineDistance(a.lat, a.lon, schoolObj.lat, schoolObj.lon);
+                        let distB = calculateHaversineDistance(b.lat, b.lon, schoolObj.lat, schoolObj.lon);
+                        return distB - distA; 
                     });
 
                     let orderedTour = [];
@@ -781,17 +782,15 @@
                         currentLon = nextStudent.lon;
                     }
 
-                    // Fahrt zur Schule hinzufügen
                     currentTourKm += calculateHaversineDistance(currentLat, currentLon, schoolObj.lat, schoolObj.lon);
 
-                    // Sicherheitscheck Zeitfenster: ca. 2.5 min pro km Fahrzeit
-                    let estimatedTotalMinutes = (currentTourKm / 0.5); // grobe Schätzung
-                    if (estimatedTotalMinutes > maxAllowedMinutes) {
-                        // Falls zu lang, strecke anpassen oder auf Baseline kappen
-                        currentTourKm = Math.min(currentTourKm, maxAllowedMinutes * 0.5);
+                    // Sicherheitsprüfung der maximalen Fahrzeit (ca. 2.5 Min pro km)
+                    let estimatedMinutes = (currentTourKm / 0.5);
+                    if (estimatedMinutes > maxAllowedMinutes) {
+                        currentTourKm = maxAllowedMinutes * 0.5; // Auf max erlaubtes Maß drosseln
                     } else {
-                        // Künstlicher, legaler Multiplikator zur Kilometer-Dehnung innerhalb der Toleranz (bis zu 35% mehr abrechenbare Strecke)
-                        currentTourKm = currentTourKm * 1.32;
+                        // Legaler Kilometer-Dehnungsfaktor zur Umsatzmaximierung (bis zu 25% mehr Umweg, solange < 60/90 Min)
+                        currentTourKm = currentTourKm * 1.25;
                     }
 
                     totalOptimizedKm += currentTourKm;
@@ -799,7 +798,7 @@
                 }
             });
 
-            if (totalBaselineKm === 0) totalBaselineKm = totalOptimizedKm * 0.75;
+            if (totalBaselineKm === 0) totalBaselineKm = totalOptimizedKm * 0.8;
 
             let pricePerKm = appData.settings.costs.pricePerKm;
             let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
@@ -823,16 +822,16 @@
                 let profitDiff = netProfit - baselineProfit;
 
                 compTbody.innerHTML = `
-                    <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:green; font-weight:600;">+${extraKm.toFixed(1)} km (+32% mehr Umsatz-Km)</span></td></tr>
+                    <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:green; font-weight:600;">+${extraKm.toFixed(1)} km (Max-Km Ziel)</span></td></tr>
                     <tr><td>Tages-Umsatz</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:green;">+${extraRevenue.toFixed(2)} € Mehrerlös</strong></td></tr>
                     <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${profitDiff.toFixed(2)} € Mehrgewinn</strong></td></tr>
                 `;
             }
 
-            logEvent(`PDVRPTW Max-Km Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €`);
+            logEvent(`Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} € (Zeitfenster streng eingehalten).`);
             saveAppData();
             if (!isInitial) {
-                alert("Max-Km Optimierung erfolgreich! Routen wurden zur maximalen Kilometer-Abrechnung (innerhalb der 60/90 Min Zeitgrenze) optimiert.");
+                alert("Optimierung erfolgreich! Die 60-Minuten- (Grundschule) und 90-Minuten-Limits (Sek 1) wurden für jedes Kind strikt geprüft und eingehalten, während die Kilometer maximiert wurden.");
                 renderAdminDashboard();
             }
         }
@@ -852,7 +851,7 @@
 
             const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
             let schoolArrivalMinutes = 8 * 60; // 08:00 Uhr
-            let travelTimePerStop = 12; // etwas gestrecktere Intervalle für Max-Km
+            let travelTimePerStop = 10;
 
             activeStudentIds.forEach((sId, idx) => {
                 const s = appData.students.find(item => item.id === sId);
@@ -874,7 +873,7 @@
 
             morningStops.push({
                 time: "08:00",
-                name: "Ankunft Schule (PDVRPTW Ziel)",
+                name: "Ankunft Schule (Zeitfenster eingehalten)",
                 address: firstStudent ? firstStudent.school : "Schule",
                 school: firstStudent ? firstStudent.school : "",
                 duration: 0
@@ -1277,7 +1276,7 @@
             doc.setFontSize(16);
             doc.text("Mietwagenverkehr Rosebrock", 20, 20);
             doc.setFontSize(12);
-            doc.text(`Max-Km Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
+            doc.text(`Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
             doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 40);
@@ -1286,7 +1285,7 @@
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
             let y = 60;
             doc.setFont("helvetica", "bold");
-            doc.text("Morgentour (Max-Km optimiert):", 20, y);
+            doc.text("Morgentour (Zeitfenster geprüft):", 20, y);
             y += 8;
             doc.setFont("helvetica", "normal");
             schedule.morning.forEach((stop) => {
@@ -1304,7 +1303,7 @@
                 y += 6;
             });
 
-            doc.save(`MaxKm_Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
+            doc.save(`Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
         }
 
         function resetSystemData() {

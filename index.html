@@ -228,6 +228,7 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin-bottom: 10px;
+            max-height: 350px;
         }
 
         table {
@@ -248,6 +249,9 @@
             background-color: var(--primary-color);
             color: white;
             font-weight: 500;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         .upload-grid {
@@ -454,26 +458,26 @@
                 </div>
             </div>
 
-            <!-- Fahrerübersicht -->
+            <!-- Fahrerübersicht (Alle 23 Fahrer) -->
             <div class="admin-box">
-                <h3>Personal- & Fahrerübersicht (23 Personen: 21 Fahrer, 2 Reserve)</h3>
+                <h3>Personal- & Fahrerübersicht (Alle 23 Personen: 21 Fahrer, 2 Reserve)</h3>
                 <div class="table-responsive">
                     <table id="admin-drivers-table">
                         <thead>
-                            <tr><th>Personal-ID</th><th>Name</th><th>Rolle</th><th>Fahrzeug-Bindung</th><th>Status</th><th>Tour</th><th>Aktion</th></tr>
+                            <tr><th>Personal-ID</th><th>Name</th><th>Adresse</th><th>Rolle</th><th>Fahrzeug-Bindung</th><th>Status</th><th>Aktion</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Fahrzeugübersicht -->
+            <!-- Fahrzeugübersicht (Alle 20 Fahrzeuge) -->
             <div class="admin-box">
-                <h3>Fahrzeugbestand (20 Fahrzeuge: 13 Kleinbusse, 5 Rollstuhl, 2 Pkw)</h3>
+                <h3>Fahrzeugbestand (Alle 20 Fahrzeuge: 13 Kleinbusse, 5 Rollstuhl, 2 Pkw)</h3>
                 <div class="table-responsive">
                     <table id="admin-vehicles-table">
                         <thead>
-                            <tr><th>Fahrzeug-ID</th><th>Bezeichnung</th><th>Typ</th><th>Kapazität</th><th>Rollstuhl</th><th>Status</th></tr>
+                            <tr><th>Fahrzeug-ID</th><th>Bezeichnung</th><th>Typ</th><th>Kapazität</th><th>Rollstuhl</th><th>Standort</th><th>Status</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -499,7 +503,7 @@
             <div class="admin-box">
                 <h3>Vollständiges Dispositionsprotokoll (Ereignisse)</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. 81 Schüler, 23 Mitarbeiter (21 regulär, 2 Reserve) und 20 Fahrzeuge geladen.<br>
+                    [07:00:00] System initialisiert. Alle 81 Schüler, 23 Mitarbeiter (21 regulär, 2 Reserve) und 20 Fahrzeuge geladen.<br>
                     [07:01:15] Normalbetrieb aktiv. VRP-Distanzmatrix & Fahrer-Fahrzeug-Bindungen geprüft.
                 </div>
             </div>
@@ -689,6 +693,7 @@
         };
 
         function initSyntheticDataset() {
+            // 20 Fahrzeuge
             for (let i = 1; i <= 20; i++) {
                 let type = "Kleinbus";
                 let cap = 8;
@@ -709,6 +714,7 @@
                 });
             }
 
+            // 23 Fahrer
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
             
@@ -717,6 +723,7 @@
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
                     name: `${firstNames[i-1]} ${lastNames[i-1]}`,
+                    address: `Musterweg ${i}, Hannover`,
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
                     assignedVehicle: isRes ? null : `V-${i.toString().padStart(2, '0')}`,
@@ -725,6 +732,7 @@
                 });
             }
 
+            // 81 Schüler
             const wheelchairIndices = [3, 15, 32, 50, 70];
 
             for (let i = 1; i <= 81; i++) {
@@ -936,7 +944,7 @@
             document.getElementById('driver-status-text').textContent = `Status: ${status}`;
             logEvent(`Fahrer Hans Rosebrock hat Status geändert zu: ${status}`);
             if(status === 'Krank') {
-                sendTelegramAlert("⚠️ Fahrer Hans Rosebrock hat sich als KRANK gemeldet!");
+                sendTelegramAlert("⚠️ Fahrer Hans Rosebrock hat sich as KRANK gemeldet!");
             }
             alert(`Status auf "${status}" gesetzt.`);
         }
@@ -989,30 +997,32 @@
                 }
             }
 
+            // Alle 23 Fahrer rendern (kein slice mehr)
             const driverTbody = document.querySelector('#admin-drivers-table tbody');
             if (driverTbody) {
                 driverTbody.innerHTML = '';
-                appData.drivers.slice(0, 12).forEach(d => {
+                appData.drivers.forEach(d => {
                     let color = d.status === 'krank' ? 'red' : (d.vacations.length > 0 ? 'orange' : 'green');
                     let statusText = d.status === 'krank' ? 'Krank' : (d.vacations.length > 0 ? 'Im Urlaub' : 'Verfügbar');
                     driverTbody.innerHTML += `
                         <tr>
                             <td>${d.id}</td>
                             <td>${d.name}</td>
+                            <td>${d.address}</td>
                             <td>${d.role}</td>
                             <td>${d.assignedVehicle || 'Reserve-Pool'}</td>
                             <td><span style="color:${color}; font-weight:650;">${statusText}</span></td>
-                            <td>Tour-${d.id.replace('P-','')}</td>
                             <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSick('${d.id}')">Status</button></td>
                         </tr>
                     `;
                 });
             }
 
+            // Alle 20 Fahrzeuge rendern (kein slice mehr)
             const vehTbody = document.querySelector('#admin-vehicles-table tbody');
             if (vehTbody) {
                 vehTbody.innerHTML = '';
-                appData.vehicles.slice(0, 12).forEach(v => {
+                appData.vehicles.forEach(v => {
                     vehTbody.innerHTML += `
                         <tr>
                             <td>${v.id}</td>
@@ -1020,6 +1030,7 @@
                             <td>${v.type}</td>
                             <td>${v.capacity} Sitze</td>
                             <td>${v.wheelchairSlots} Plätze</td>
+                            <td>${v.location}</td>
                             <td><span style="color:green; font-weight:650;">${v.status}</span></td>
                         </tr>
                     `;

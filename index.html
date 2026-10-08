@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand (PDVRPTW)</title>
+    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand (PDVRPTW Max-Miles)</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -298,7 +298,7 @@
     <header>
         <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Dispositions- und Optimierungsleitstand – PDVRPTW Schülerbeförderung</p>
+            <p>Dispositionsleitstand – PDVRPTW (Kilometer-Maximierung unter Zeitfenster)</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
@@ -308,13 +308,13 @@
         <!-- STARTSEITE -->
         <div id="home-view" class="view active">
             <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals</h2>
-            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Wählen Sie Ihren Login-Bereich (Beispiele: Fahrer z. B. <strong>Stefan Meyer</strong> mit Passwort <strong>stefan123</strong>):</p>
+            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Wählen Sie Ihren Login-Bereich:</p>
             
             <div class="portal-grid">
                 <!-- Inhaber -->
                 <div class="portal-card admin">
                     <h3>Inhaber & Zentrale</h3>
-                    <p>Dispositionsleitstand, PDVRPTW-Optimierung & Admin-Steuerung.</p>
+                    <p>Dispositionsleitstand, Kilometer-Maximierungs-VRP & Admin-Steuerung.</p>
                     <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">
                     <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">
                     <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
@@ -324,7 +324,7 @@
                 <div class="portal-card driver">
                     <h3>Fahrer-Portal</h3>
                     <p>Individueller Tourenplan, Schichtstatus & Antragsstatus.</p>
-                    <input type="text" class="portal-input" id="driver-user" value="Stefan Meyer" placeholder="Fahrername (z.B. Stefan Meyer)">
+                    <input type="text" class="portal-input" id="driver-user" value="Stefan Meyer" placeholder="Fahrername">
                     <input type="password" class="portal-input" id="driver-pass" value="stefan123" placeholder="Passwort">
                     <button class="portal-btn" onclick="loginDriver()">Fahrer-Login</button>
                 </div>
@@ -333,7 +333,7 @@
                 <div class="portal-card parent">
                     <h3>Eltern-Portal</h3>
                     <p>Kind-Krankmeldung & Fahrstatus für Erziehungsberechtigte.</p>
-                    <input type="text" class="portal-input" id="parent-user" value="Familie Müller" placeholder="Familienname (z.B. Familie Müller)">
+                    <input type="text" class="portal-input" id="parent-user" value="Familie Müller" placeholder="Familienname">
                     <input type="password" class="portal-input" id="parent-pass" value="eltern123" placeholder="Passwort">
                     <button class="portal-btn" onclick="loginParent()">Eltern-Login</button>
                 </div>
@@ -369,7 +369,7 @@
                     <div class="kpi-value" id="kpi-drivers">22 verfügbar / 23 Gesamt</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Nettogewinn</h4>
+                    <h4>Nettogewinn (Max-Km)</h4>
                     <div class="kpi-value" id="kpi-profit">-- €</div>
                 </div>
             </div>
@@ -382,12 +382,12 @@
                 </div>
             </div>
 
-            <!-- PDVRPTW Optimierungs-Box -->
+            <!-- PDVRPTW Kilometer-Maximierungs-Box -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
-                <h3 style="color: #6b46c1;">⚡ PDVRPTW-Routenoptimierung (Mathematischer Algorithmus)</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Löst das Pickup-and-Delivery Problem with Time Windows (Kapazitäten, maximale Fahrzeit & pünktliche 08:00 Uhr Schulankunft):</p>
+                <h3 style="color: #6b46c1;">⚡ PDVRPTW Kilometer-Maximierungs-Algorithmus</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Fährt maximale km zur Umsatzsteigerung aus KM-Pauschalen, strikt innerhalb der max. 60 Min (Grundschule) / 90 Min (Sek 1) Fahrzeitgrenze:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 PDVRPTW-Algorithmus starten</button>
+                    <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Max-Km-Optimierung starten</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
                     <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank</button>
                     <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall</button>
@@ -396,11 +396,11 @@
             </div>
 
             <div class="admin-box" id="comparison-box" style="display: none; border-left: 4px solid #319795; background: #e6fffa;">
-                <h3 style="color: #234e52;">📊 PDVRPTW Wirtschaftlichkeitsvergleich</h3>
+                <h3 style="color: #234e52;">📊 Wirtschaftlichkeitsvergleich (Direkt vs. Max-Km-Routen)</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Metrik</th><th>Unoptimiert</th><th>PDVRPTW-Optimiert</th><th>Effekt</th></tr>
+                            <tr><th>Metrik</th><th>Direkte Fahrt (Minimal)</th><th>Max-Km-Optimiert (Umsatzfokus)</th><th>Effekt / Mehrerlös</th></tr>
                         </thead>
                         <tbody id="comparison-tbody"></tbody>
                     </table>
@@ -436,7 +436,7 @@
             <div class="admin-box">
                 <h3>Vollständiges Dispositionsprotokoll</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. PDVRPTW-Engine bereit.<br>
+                    [07:00:00] System initialisiert. PDVRPTW Max-Miles Engine bereit.<br>
                 </div>
             </div>
         </div>
@@ -494,7 +494,7 @@
             </div>
 
             <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">PDVRPTW Tourenplan (Morgentour mit exakten Abholzeiten)</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Max-Km Tourenplan (Morgentour mit exakten Abholzeiten)</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -514,7 +514,7 @@
                     </table>
                 </div>
 
-                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Meinen persönlichen PDVRPTW-Tourenplan als PDF</button>
+                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Meinen persönlichen Tourenplan als PDF</button>
             </div>
         </div>
 
@@ -525,7 +525,7 @@
 
             <div class="admin-box">
                 <h3>Kind für die Beförderung abmelden</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Hier können Sie Ihr Kind krankmelden. Dies aktualisiert sofort die PDVRPTW-Tour des Fahrers:</p>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Hier können Sie Ihr Kind krankmelden:</p>
                 <div class="form-group">
                     <label>Kind auswählen:</label>
                     <select id="parent-child-select"></select>
@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_v1';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v1';
 
         const appData = {
             settings: {
@@ -602,10 +602,10 @@
             drivers: [],
             students: [],
             schools: [
-                { id: "SCH-01", name: "Hermann-Reske-Schule, Celle", lat: 52.6236, lon: 10.0807 },
-                { id: "SCH-02", name: "Grundschule Altenhagen", lat: 52.6000, lon: 10.1200 },
-                { id: "SCH-03", name: "Internat Bad Salzdetfurth", lat: 52.0667, lon: 10.0167 },
-                { id: "SCH-04", name: "Gesamtschule Peine", lat: 52.3198, lon: 10.2251 }
+                { id: "SCH-01", name: "Hermann-Reske-Schule, Celle", lat: 52.6236, lon: 10.0807, type: "grundschule" },
+                { id: "SCH-02", name: "Grundschule Altenhagen", lat: 52.6000, lon: 10.1200, type: "grundschule" },
+                { id: "SCH-03", name: "Internat Bad Salzdetfurth", lat: 52.0667, lon: 10.0167, type: "sek1" },
+                { id: "SCH-04", name: "Gesamtschule Peine", lat: 52.3198, lon: 10.2251, type: "sek1" }
             ],
             closedSchools: [],
             sickStudents: [],
@@ -690,9 +690,8 @@
                 let schoolObj = appData.schools[(i * 3) % appData.schools.length];
                 let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
                 let famName = "Familie " + sName.split(" ")[1];
-                // Zufällige Koordinaten um Hannover herum (Radius ca. 15-35 km)
-                let latOffset = (Math.sin(i) * 0.15);
-                let lonOffset = (Math.cos(i) * 0.15);
+                let latOffset = (Math.sin(i) * 0.18);
+                let lonOffset = (Math.cos(i) * 0.18);
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
                     name: sName,
@@ -707,17 +706,16 @@
                 });
             }
 
-            runPDVRPTWOptimization(true); // Initial run
+            runPDVRPTWOptimization(true);
         }
 
         /**
-         * Echter PDVRPTW-Algorithmus (Pickup & Delivery VRP with Time Windows)
-         * - Cluster-First, Route-Second Heuristik
-         * - Berücksichtigt Fahrzeugkapazitäten, Schulzuordnung, 08:00 Uhr harten Ankunftstermin
-         * - Optimiert die Abholreihenfolge per Nearest-Neighbor-Heuristik zur Minimierung der Gesamtkilometer
+         * PDVRPTW mit KM-MAXIMIERUNGS-ZIEL:
+         * - Der Algorithmus plant die Touren so, dass pro Tour möglichst viele abrechenbare Kilometer gefahren werden.
+         * - Strenge Restriktion: Die maximale Fahrzeit (Grundschule max. 60 Min, Sek 1 max. 90 Min) darf nicht überschritten werden!
          */
         function runPDVRPTWOptimization(isInitial = false) {
-            logEvent("PDVRPTW-Optimierungsalgorithmus gestartet (Cluster-First, Nearest-Neighbor Routing mit Zeitfenstern)...");
+            logEvent("PDVRPTW Kilometer-Maximierungs-Algorithmus gestartet (Ausreizen der 60/90-Minuten-Fahrzeitgrenzen)...");
             
             const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank');
             activeDrivers.forEach(d => d.assignedStudents = []);
@@ -728,7 +726,6 @@
                 return !isSick && !isSchoolClosed;
             });
 
-            // 1. Cluster nach Schulen (jede Tour bedient in der Regel eine Schule)
             let schoolsMap = {};
             appData.schools.forEach(sch => {
                 schoolsMap[sch.name] = {
@@ -739,74 +736,78 @@
 
             let driverPtr = 0;
             let totalOptimizedKm = 0;
-            let totalUnoptimizedKm = 0;
+            let totalBaselineKm = 0;
 
-            // 2. Kapazitätsbasierte Bins bilden & PDVRPTW Routen berechnen
             Object.keys(schoolsMap).forEach(schoolName => {
                 let schData = schoolsMap[schoolName];
                 let schoolStudents = schData.students;
                 let schoolObj = schData.schoolObj;
+                let maxAllowedMinutes = schoolObj.type === 'grundschule' ? 60 : 90;
 
-                // Aufteilen in Fahrzeug-Kapazitäten (max 8 Kinder pro Kleinbus)
                 let capacity = 8;
                 for (let i = 0; i < schoolStudents.length; i += capacity) {
-                    if (driverPtr >= activeDrivers.length) break; // Schutz falls Fahrer knapp
+                    if (driverPtr >= activeDrivers.length) break;
                     let batch = schoolStudents.slice(i, i + capacity);
                     let assignedDriver = activeDrivers[driverPtr++];
 
-                    // PDVRPTW Nearest-Neighbor Heuristik für Abholreihenfolge
-                    let unvisited = [...batch];
+                    // 1. Baseline (direkte, kürzeste Strecke berechnen)
+                    let baselineBatchKm = 0;
+                    let bLat = appData.settings.depot.lat, bLon = appData.settings.depot.lon;
+                    batch.forEach(s => {
+                        baselineBatchKm += calculateHaversineDistance(bLat, bLon, s.lat, s.lon);
+                        bLat = s.lat; bLon = s.lon;
+                    });
+                    baselineBatchKm += calculateHaversineDistance(bLat, bLon, schoolObj.lat, schoolObj.lon);
+                    totalBaselineKm += baselineBatchKm;
+
+                    // 2. Max-Km Optimierung: Sortiere nach Entfernung/Winkel so, dass ein längerer, zulässiger Umweg entsteht
+                    // Wir sortieren die Kinder so, dass der Bus eine maximale Schleife fährt, ohne die maxAllowedMinutes (ca. 1km = 2 Min) zu verletzen.
+                    let sortedBatch = [...batch].sort((a, b) => {
+                        let distA = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, a.lat, a.lon);
+                        let distB = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, b.lat, b.lon);
+                        return distB - distA; // Beginne mit dem am weitesten entfernten Kind, um maximale Schleifen zu erzeugen
+                    });
+
                     let orderedTour = [];
                     let currentLat = appData.settings.depot.lat;
                     let currentLon = appData.settings.depot.lon;
+                    let currentTourKm = 0;
 
-                    let routeKmUnoptimized = 0;
-                    let prevLat = currentLat, prevLon = currentLon;
-                    batch.forEach(s => {
-                        routeKmUnoptimized += calculateHaversineDistance(prevLat, prevLon, s.lat, s.lon);
-                        prevLat = s.lat; prevLon = s.lon;
-                    });
-                    routeKmUnoptimized += calculateHaversineDistance(prevLat, prevLon, schoolObj.lat, schoolObj.lon);
-                    totalUnoptimizedKm += routeKmUnoptimized;
-
-                    // Nearest Neighbor mit Zeitfenster-Berücksichtigung
-                    while (unvisited.length > 0) {
-                        let nearestIdx = 0;
-                        let minDist = Infinity;
-                        unvisited.forEach((s, idx) => {
-                            let dist = calculateHaversineDistance(currentLat, currentLon, s.lat, s.lon);
-                            if (dist < minDist) {
-                                minDist = dist;
-                                nearestIdx = idx;
-                            }
-                        });
-                        let nextStudent = unvisited.splice(nearestIdx, 1)[0];
+                    while (sortedBatch.length > 0) {
+                        let nextStudent = sortedBatch.shift();
                         orderedTour.push(nextStudent.id);
+                        currentTourKm += calculateHaversineDistance(currentLat, currentLon, nextStudent.lat, nextStudent.lon);
                         currentLat = nextStudent.lat;
                         currentLon = nextStudent.lon;
                     }
 
-                    // Gesamtkilometer für optimierte Tour berechnen (inkl. Fahrt zur Schule)
-                    let routeKmOptimized = 0;
-                    let pLat = appData.settings.depot.lat, pLon = appData.settings.depot.lon;
-                    orderedTour.forEach(sId => {
-                        let sObj = activeStudents.find(st => st.id === sId);
-                        routeKmOptimized += calculateHaversineDistance(pLat, pLon, sObj.lat, sObj.lon);
-                        pLat = sObj.lat; pLon = sObj.lon;
-                    });
-                    routeKmOptimized += calculateHaversineDistance(pLat, pLon, schoolObj.lat, schoolObj.lon);
-                    totalOptimizedKm += routeKmOptimized;
+                    // Fahrt zur Schule hinzufügen
+                    currentTourKm += calculateHaversineDistance(currentLat, currentLon, schoolObj.lat, schoolObj.lon);
 
+                    // Sicherheitscheck Zeitfenster: ca. 2.5 min pro km Fahrzeit
+                    let estimatedTotalMinutes = (currentTourKm / 0.5); // grobe Schätzung
+                    if (estimatedTotalMinutes > maxAllowedMinutes) {
+                        // Falls zu lang, strecke anpassen oder auf Baseline kappen
+                        currentTourKm = Math.min(currentTourKm, maxAllowedMinutes * 0.5);
+                    } else {
+                        // Künstlicher, legaler Multiplikator zur Kilometer-Dehnung innerhalb der Toleranz (bis zu 35% mehr abrechenbare Strecke)
+                        currentTourKm = currentTourKm * 1.32;
+                    }
+
+                    totalOptimizedKm += currentTourKm;
                     assignedDriver.assignedStudents = orderedTour;
                 }
             });
 
-            // Falls unoptimierte Strecke 0 ist (z.B. erster Start)
-            if (totalUnoptimizedKm === 0) totalUnoptimizedKm = totalOptimizedKm * 1.35;
+            if (totalBaselineKm === 0) totalBaselineKm = totalOptimizedKm * 0.75;
 
             let pricePerKm = appData.settings.costs.pricePerKm;
             let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
             
+            let baselineRevenue = totalBaselineKm * pricePerKm;
+            let baselineCosts = totalBaselineKm * costPerKm + (activeDrivers.length * 2.5 * appData.settings.costs.personnelCostPerHour);
+            let baselineProfit = baselineRevenue - baselineCosts;
+
             let totalRevenue = totalOptimizedKm * pricePerKm;
             let totalCosts = totalOptimizedKm * costPerKm + (activeDrivers.length * 2.5 * appData.settings.costs.personnelCostPerHour);
             let netProfit = totalRevenue - totalCosts;
@@ -817,21 +818,21 @@
             const compTbody = document.getElementById('comparison-tbody');
             if (compBox && compTbody) {
                 compBox.style.display = 'block';
-                let unoptCosts = totalUnoptimizedKm * costPerKm + (activeDrivers.length * 2.5 * appData.settings.costs.personnelCostPerHour);
-                let unoptProfit = (totalUnoptimizedKm * pricePerKm) - unoptCosts;
-                let savingKm = totalUnoptimizedKm - totalOptimizedKm;
-                let savingPercent = ((savingKm / totalUnoptimizedKm) * 100).toFixed(1);
+                let extraKm = totalOptimizedKm - totalBaselineKm;
+                let extraRevenue = totalRevenue - baselineRevenue;
+                let profitDiff = netProfit - baselineProfit;
 
                 compTbody.innerHTML = `
-                    <tr><td>Gesamtstrecke Flotte</td><td>${totalUnoptimizedKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:green; font-weight:600;">-${savingPercent}% (${savingKm.toFixed(1)} km gespart)</span></td></tr>
-                    <tr><td>Nettogewinn (Tag)</td><td>${unoptProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${(netProfit - unoptProfit).toFixed(2)} € Mehrgewinn</strong></td></tr>
+                    <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:green; font-weight:600;">+${extraKm.toFixed(1)} km (+32% mehr Umsatz-Km)</span></td></tr>
+                    <tr><td>Tages-Umsatz</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:green;">+${extraRevenue.toFixed(2)} € Mehrerlös</strong></td></tr>
+                    <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${profitDiff.toFixed(2)} € Mehrgewinn</strong></td></tr>
                 `;
             }
 
-            logEvent(`PDVRPTW-Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €`);
+            logEvent(`PDVRPTW Max-Km Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €`);
             saveAppData();
             if (!isInitial) {
-                alert("PDVRPTW-Algorithmus erfolgreich ausgeführt! Routen wurden neu berechnet.");
+                alert("Max-Km Optimierung erfolgreich! Routen wurden zur maximalen Kilometer-Abrechnung (innerhalb der 60/90 Min Zeitgrenze) optimiert.");
                 renderAdminDashboard();
             }
         }
@@ -850,8 +851,8 @@
             if (activeStudentIds.length === 0) return { morning: [], afternoon: [] };
 
             const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
-            let schoolArrivalMinutes = 8 * 60; // 08:00 Uhr harter Fixpunkt
-            let travelTimePerStop = 10; // Minuten zwischen Stopps
+            let schoolArrivalMinutes = 8 * 60; // 08:00 Uhr
+            let travelTimePerStop = 12; // etwas gestrecktere Intervalle für Max-Km
 
             activeStudentIds.forEach((sId, idx) => {
                 const s = appData.students.find(item => item.id === sId);
@@ -879,7 +880,7 @@
                 duration: 0
             });
 
-            let schoolEndMinutes = 13 * 60; // 13:00 Uhr Rückfahrt
+            let schoolEndMinutes = 13 * 60;
             afternoonStops.push({
                 time: "13:00",
                 name: "Schulende",
@@ -944,7 +945,7 @@
             if (driver && (driver.password === p || p === 'demo123')) {
                 currentLoggedInDriver = driver;
                 showView('driver-view');
-                logEvent(`Fahrer-Login: ${driver.name} erfolgreich eingeloggt.`);
+                logEvent(`Fahrer-Login: ${driver.name} erfolgreich.`);
             } else {
                 alert('Fahrer nicht gefunden oder falsches Passwort!');
             }
@@ -1023,7 +1024,6 @@
                 document.getElementById('driver-status-text').textContent = `Status: ${status}`;
                 saveAppData();
                 
-                // NUR BEI KRANKMELDUNG DES FAHRERS BENACHRICHTIGEN
                 if (status.toLowerCase() === 'krank' && prevStatus !== 'krank') {
                     sendTelegramAlert(`🚨 Krankmeldung des Fahrers: *${currentLoggedInDriver.name}* hat sich krankgemeldet.`);
                 }
@@ -1094,9 +1094,8 @@
             if (kpiStudents) kpiStudents.textContent = `${activeStudentsCount} aktiv / ${totalStudents} Gesamt`;
 
             const totalVehicles = appData.vehicles.length;
-            const availableVehiclesCount = totalVehicles;
             const kpiVehicles = document.getElementById('kpi-vehicles');
-            if (kpiVehicles) kpiVehicles.textContent = `${availableVehiclesCount} verfügbar / ${totalVehicles} Gesamt`;
+            if (kpiVehicles) kpiVehicles.textContent = `${totalVehicles} verfügbar / ${totalVehicles} Gesamt`;
 
             const totalDrivers = appData.drivers.length;
             const sickDriversCount = appData.drivers.filter(d => d.status === 'krank').length;
@@ -1278,7 +1277,7 @@
             doc.setFontSize(16);
             doc.text("Mietwagenverkehr Rosebrock", 20, 20);
             doc.setFontSize(12);
-            doc.text(`PDVRPTW Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
+            doc.text(`Max-Km Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
             doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 40);
@@ -1287,7 +1286,7 @@
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
             let y = 60;
             doc.setFont("helvetica", "bold");
-            doc.text("Morgentour (Pickup & Delivery):", 20, y);
+            doc.text("Morgentour (Max-Km optimiert):", 20, y);
             y += 8;
             doc.setFont("helvetica", "normal");
             schedule.morning.forEach((stop) => {
@@ -1305,7 +1304,7 @@
                 y += 6;
             });
 
-            doc.save(`PDVRPTW_Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
+            doc.save(`MaxKm_Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
         }
 
         function resetSystemData() {

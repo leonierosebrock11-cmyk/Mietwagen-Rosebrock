@@ -490,7 +490,7 @@
                 </div>
             </div>
 
-            <!-- ERSETZTER BEREICH: Urlaubskalender & Abwesenheiten (Jahreskalender für alle 23 Fahrer & 12 Monate) -->
+            <!-- Urlaubskalender & Abwesenheiten (Jahreskalender für alle 23 Fahrer & 12 Monate) -->
             <div class="admin-box" style="border-left: 4px solid #dd6b20;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <h3 style="margin: 0;">Urlaubskalender & Abwesenheiten (<span id="cal-year-title">2026</span>)</h3>
@@ -1066,7 +1066,7 @@
         }
 
         /* ==========================================================
-         * NEUE JAHRESKALENDER-LOGIK FÜR ALLE 23 FAHRER & 12 MONATE
+         * JAHRESKALENDER-LOGIK FÜR ALLE 23 FAHRER & 12 MONATE
          * ========================================================== */
         let currentCalendarYear = 2026;
 
@@ -1103,13 +1103,11 @@
             const container = document.getElementById('full-year-calendar-container');
             if (!container) return;
 
-            // Mapping aller Urlaube pro Fahrer aufbauen
             let driverVacationsMap = {};
             appData.drivers.forEach(d => {
                 driverVacationsMap[d.name] = [];
             });
 
-            // Aus festen driver.vacations (genehmigt)
             appData.drivers.forEach(d => {
                 if (d.vacations) {
                     d.vacations.forEach(vStr => {
@@ -1126,7 +1124,6 @@
                 }
             });
 
-            // Aus Anträgen (driverRequests)
             if (appData.driverRequests) {
                 appData.driverRequests.forEach(req => {
                     if (req.type === 'Urlaubsantrag' && req.dates) {
@@ -1271,7 +1268,6 @@
                 }
             }
 
-            // Rendere den neuen Jahreskalender
             renderFullYearCalendar();
 
             const driverTbody = document.querySelector('#admin-drivers-table tbody');
@@ -1337,7 +1333,8 @@
                 if (myReqs.length === 0) {
                     myReqTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>`;
                 } else {
-                    myReqs.innerHTML = '';
+                    // KORREKTUR: myReqTbody statt myReqs verwenden, um Mehrfach-Anzeigen zu verhindern
+                    myReqTbody.innerHTML = '';
                     myReqs.forEach(r => {
                         myReqTbody.innerHTML += `
                             <tr>

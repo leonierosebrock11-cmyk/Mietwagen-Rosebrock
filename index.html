@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v7';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v8';
 
         const appData = {
             settings: {
@@ -690,6 +690,7 @@
             }
 
             const studentNames = ["Maximilian Müller", "Alexander Schmidt", "Paul Schneider", "Elias Fischer", "Ben Weber", "Noah Meyer", "Leon Wagner", "Louis Becker", "Felix Schulz", "Henry Hoffmann", "Emilia Schäfer", "Hannah Koch", "Sophia Bauer", "Emma Richter", "Mia Klein", "Hanna Wolf", "Lina Schröder", "Mila Neumann", "Ella Schwarz", "Klara Zimmermann", "Jonas Braun", "Lukas Krüger", "Finn Hofmann", "Tim Hartmann", "David Lange"];
+            const impairmentTypes = ["Keine Beeinträchtigung", "Körperliche Beeinträchtigung", "Geistige Beeinträchtigung", "Eingeschränkte Mobilität"];
             
             for (let i = 1; i <= 81; i++) {
                 let schoolObj = appData.schools[(i * 3) % appData.schools.length];
@@ -697,6 +698,10 @@
                 let famName = "Familie " + sName.split(" ")[1];
                 let latOffset = (Math.sin(i) * 0.15);
                 let lonOffset = (Math.cos(i) * 0.15);
+
+                let impairment = impairmentTypes[i % impairmentTypes.length];
+                let needsAttendant = (i % 10 === 0); // Jedes 10. Kind benötigt laut Profil eine Begleitperson
+
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
                     name: sName,
@@ -707,6 +712,8 @@
                     class: `Klasse ${(i % 4) + 1}`,
                     parent: famName,
                     password: "eltern123",
+                    impairment: impairment,
+                    needsAttendant: needsAttendant,
                     transportToday: true
                 });
             }

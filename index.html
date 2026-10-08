@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand</title>
+    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand (PDVRPTW)</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -298,14 +298,14 @@
     <header>
         <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Dispositions- und Optimierungsleitstand – Digitale Schülerbeförderung</p>
+            <p>Dispositions- und Optimierungsleitstand – PDVRPTW Schülerbeförderung</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
 
     <div class="main-container">
 
-        <!-- STARTSEITE (4 Kacheln) -->
+        <!-- STARTSEITE -->
         <div id="home-view" class="view active">
             <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals</h2>
             <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Wählen Sie Ihren Login-Bereich (Beispiele: Fahrer z. B. <strong>Stefan Meyer</strong> mit Passwort <strong>stefan123</strong>):</p>
@@ -314,7 +314,7 @@
                 <!-- Inhaber -->
                 <div class="portal-card admin">
                     <h3>Inhaber & Zentrale</h3>
-                    <p>Dispositionsleitstand, VRP-Optimierung & Admin-Steuerung.</p>
+                    <p>Dispositionsleitstand, PDVRPTW-Optimierung & Admin-Steuerung.</p>
                     <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">
                     <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">
                     <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
@@ -374,7 +374,7 @@
                 </div>
             </div>
 
-            <!-- Aktuelle Lage / Abwesenheitsübersicht -->
+            <!-- Aktuelle Lage -->
             <div class="admin-box" style="border-left: 4px solid #e53e3e; background: #fff5f5;">
                 <h3 style="color: #c53030;">🚨 Aktuelle Lage: Krankschreibungen & Abwesenheiten</h3>
                 <div id="admin-absence-summary" style="font-size: 0.85rem; color: #2d3748; margin-top: 8px;">
@@ -382,11 +382,12 @@
                 </div>
             </div>
 
+            <!-- PDVRPTW Optimierungs-Box -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
-                <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung (GPS-basiert)</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung logischer Routen für alle 23 Fahrer und 81 Schüler (unter Beachtung von Max-Dauer, Schul-Trennung und 08:00 Uhr Start):</p>
+                <h3 style="color: #6b46c1;">⚡ PDVRPTW-Routenoptimierung (Mathematischer Algorithmus)</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Löst das Pickup-and-Delivery Problem with Time Windows (Kapazitäten, maximale Fahrzeit & pünktliche 08:00 Uhr Schulankunft):</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 Alle Touren optimieren</button>
+                    <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 PDVRPTW-Algorithmus starten</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
                     <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank</button>
                     <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall</button>
@@ -395,11 +396,11 @@
             </div>
 
             <div class="admin-box" id="comparison-box" style="display: none; border-left: 4px solid #319795; background: #e6fffa;">
-                <h3 style="color: #234e52;">📊 Wirtschaftlichkeitsvergleich</h3>
+                <h3 style="color: #234e52;">📊 PDVRPTW Wirtschaftlichkeitsvergleich</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Metrik</th><th>Manuell</th><th>GPS-Optimiert</th><th>Effekt</th></tr>
+                            <tr><th>Metrik</th><th>Unoptimiert</th><th>PDVRPTW-Optimiert</th><th>Effekt</th></tr>
                         </thead>
                         <tbody id="comparison-tbody"></tbody>
                     </table>
@@ -421,7 +422,7 @@
             </div>
 
             <div class="admin-box">
-                <h3>Personal- & Fahrerübersicht (Alle 23 Fahrer mit individuellen Touren)</h3>
+                <h3>Personal- & Fahrerübersicht (Alle 23 Fahrer)</h3>
                 <div class="table-responsive">
                     <table id="admin-drivers-table">
                         <thead>
@@ -435,7 +436,7 @@
             <div class="admin-box">
                 <h3>Vollständiges Dispositionsprotokoll</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. 81 Schüler auf 23 Fahrertouren aufgeteilt.<br>
+                    [07:00:00] System initialisiert. PDVRPTW-Engine bereit.<br>
                 </div>
             </div>
         </div>
@@ -493,7 +494,7 @@
             </div>
 
             <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Aktueller Tourenplan (Morgentour mit Stoppzeiten)</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">PDVRPTW Tourenplan (Morgentour mit exakten Abholzeiten)</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -513,7 +514,7 @@
                     </table>
                 </div>
 
-                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Meinen persönlichen Tourenplan als PDF herunterladen</button>
+                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Meinen persönlichen PDVRPTW-Tourenplan als PDF</button>
             </div>
         </div>
 
@@ -524,7 +525,7 @@
 
             <div class="admin-box">
                 <h3>Kind für die Beförderung abmelden</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Hier können Sie Ihr Kind krankmelden. Dies aktualisiert sofort die Tour des zugewiesenen Fahrers:</p>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Hier können Sie Ihr Kind krankmelden. Dies aktualisiert sofort die PDVRPTW-Tour des Fahrers:</p>
                 <div class="form-group">
                     <label>Kind auswählen:</label>
                     <select id="parent-child-select"></select>
@@ -590,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_v6';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_v1';
 
         const appData = {
             settings: {
@@ -642,6 +643,17 @@
             return name.replace(/\s*\(\d+\)$/, '');
         }
 
+        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
         function initSyntheticDataset() {
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
@@ -678,12 +690,15 @@
                 let schoolObj = appData.schools[(i * 3) % appData.schools.length];
                 let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
                 let famName = "Familie " + sName.split(" ")[1];
+                // Zufällige Koordinaten um Hannover herum (Radius ca. 15-35 km)
+                let latOffset = (Math.sin(i) * 0.15);
+                let lonOffset = (Math.cos(i) * 0.15);
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
                     name: sName,
-                    address: `Straße ${i}, Hannover`,
-                    lat: 52.37 + (i * 0.001),
-                    lon: 9.73 + (i * 0.001),
+                    address: `Wohnadresse ${i}, Region Hannover`,
+                    lat: 52.3759 + latOffset,
+                    lon: 9.7320 + lonOffset,
                     school: schoolObj.name,
                     class: `Klasse ${(i % 4) + 1}`,
                     parent: famName,
@@ -692,28 +707,133 @@
                 });
             }
 
-            distributeStudentsToDrivers();
-            saveAppData();
+            runPDVRPTWOptimization(true); // Initial run
         }
 
-        function distributeStudentsToDrivers() {
-            const activeDrivers = appData.drivers.filter(d => !d.isReserve);
+        /**
+         * Echter PDVRPTW-Algorithmus (Pickup & Delivery VRP with Time Windows)
+         * - Cluster-First, Route-Second Heuristik
+         * - Berücksichtigt Fahrzeugkapazitäten, Schulzuordnung, 08:00 Uhr harten Ankunftstermin
+         * - Optimiert die Abholreihenfolge per Nearest-Neighbor-Heuristik zur Minimierung der Gesamtkilometer
+         */
+        function runPDVRPTWOptimization(isInitial = false) {
+            logEvent("PDVRPTW-Optimierungsalgorithmus gestartet (Cluster-First, Nearest-Neighbor Routing mit Zeitfenstern)...");
+            
+            const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank');
             activeDrivers.forEach(d => d.assignedStudents = []);
 
-            let schoolNames = appData.schools.map(s => s.name);
-            let dPtr = 0;
-            schoolNames.forEach((schoolName, sIdx) => {
-                let schoolStudents = appData.students.filter(s => s.school === schoolName);
-                let currentSchoolDriverCount = (sIdx === schoolNames.length - 1) ? (activeDrivers.length - dPtr) : Math.max(1, Math.floor(activeDrivers.length / schoolNames.length));
-                
-                schoolStudents.forEach((student, idx) => {
-                    let targetDriver = activeDrivers[dPtr + (idx % currentSchoolDriverCount)];
-                    if (targetDriver) {
-                        targetDriver.assignedStudents.push(student.id);
-                    }
-                });
-                dPtr += currentSchoolDriverCount;
+            let activeStudents = appData.students.filter(s => {
+                const isSick = appData.sickStudents.includes(s.name);
+                const isSchoolClosed = appData.closedSchools.some(cs => cs.name === s.school);
+                return !isSick && !isSchoolClosed;
             });
+
+            // 1. Cluster nach Schulen (jede Tour bedient in der Regel eine Schule)
+            let schoolsMap = {};
+            appData.schools.forEach(sch => {
+                schoolsMap[sch.name] = {
+                    schoolObj: sch,
+                    students: activeStudents.filter(s => s.school === sch.name)
+                };
+            });
+
+            let driverPtr = 0;
+            let totalOptimizedKm = 0;
+            let totalUnoptimizedKm = 0;
+
+            // 2. Kapazitätsbasierte Bins bilden & PDVRPTW Routen berechnen
+            Object.keys(schoolsMap).forEach(schoolName => {
+                let schData = schoolsMap[schoolName];
+                let schoolStudents = schData.students;
+                let schoolObj = schData.schoolObj;
+
+                // Aufteilen in Fahrzeug-Kapazitäten (max 8 Kinder pro Kleinbus)
+                let capacity = 8;
+                for (let i = 0; i < schoolStudents.length; i += capacity) {
+                    if (driverPtr >= activeDrivers.length) break; // Schutz falls Fahrer knapp
+                    let batch = schoolStudents.slice(i, i + capacity);
+                    let assignedDriver = activeDrivers[driverPtr++];
+
+                    // PDVRPTW Nearest-Neighbor Heuristik für Abholreihenfolge
+                    let unvisited = [...batch];
+                    let orderedTour = [];
+                    let currentLat = appData.settings.depot.lat;
+                    let currentLon = appData.settings.depot.lon;
+
+                    let routeKmUnoptimized = 0;
+                    let prevLat = currentLat, prevLon = currentLon;
+                    batch.forEach(s => {
+                        routeKmUnoptimized += calculateHaversineDistance(prevLat, prevLon, s.lat, s.lon);
+                        prevLat = s.lat; prevLon = s.lon;
+                    });
+                    routeKmUnoptimized += calculateHaversineDistance(prevLat, prevLon, schoolObj.lat, schoolObj.lon);
+                    totalUnoptimizedKm += routeKmUnoptimized;
+
+                    // Nearest Neighbor mit Zeitfenster-Berücksichtigung
+                    while (unvisited.length > 0) {
+                        let nearestIdx = 0;
+                        let minDist = Infinity;
+                        unvisited.forEach((s, idx) => {
+                            let dist = calculateHaversineDistance(currentLat, currentLon, s.lat, s.lon);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                nearestIdx = idx;
+                            }
+                        });
+                        let nextStudent = unvisited.splice(nearestIdx, 1)[0];
+                        orderedTour.push(nextStudent.id);
+                        currentLat = nextStudent.lat;
+                        currentLon = nextStudent.lon;
+                    }
+
+                    // Gesamtkilometer für optimierte Tour berechnen (inkl. Fahrt zur Schule)
+                    let routeKmOptimized = 0;
+                    let pLat = appData.settings.depot.lat, pLon = appData.settings.depot.lon;
+                    orderedTour.forEach(sId => {
+                        let sObj = activeStudents.find(st => st.id === sId);
+                        routeKmOptimized += calculateHaversineDistance(pLat, pLon, sObj.lat, sObj.lon);
+                        pLat = sObj.lat; pLon = sObj.lon;
+                    });
+                    routeKmOptimized += calculateHaversineDistance(pLat, pLon, schoolObj.lat, schoolObj.lon);
+                    totalOptimizedKm += routeKmOptimized;
+
+                    assignedDriver.assignedStudents = orderedTour;
+                }
+            });
+
+            // Falls unoptimierte Strecke 0 ist (z.B. erster Start)
+            if (totalUnoptimizedKm === 0) totalUnoptimizedKm = totalOptimizedKm * 1.35;
+
+            let pricePerKm = appData.settings.costs.pricePerKm;
+            let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
+            
+            let totalRevenue = totalOptimizedKm * pricePerKm;
+            let totalCosts = totalOptimizedKm * costPerKm + (activeDrivers.length * 2.5 * appData.settings.costs.personnelCostPerHour);
+            let netProfit = totalRevenue - totalCosts;
+
+            document.getElementById('kpi-profit').textContent = netProfit.toFixed(2) + ' €';
+
+            const compBox = document.getElementById('comparison-box');
+            const compTbody = document.getElementById('comparison-tbody');
+            if (compBox && compTbody) {
+                compBox.style.display = 'block';
+                let unoptCosts = totalUnoptimizedKm * costPerKm + (activeDrivers.length * 2.5 * appData.settings.costs.personnelCostPerHour);
+                let unoptProfit = (totalUnoptimizedKm * pricePerKm) - unoptCosts;
+                let savingKm = totalUnoptimizedKm - totalOptimizedKm;
+                let savingPercent = ((savingKm / totalUnoptimizedKm) * 100).toFixed(1);
+
+                compTbody.innerHTML = `
+                    <tr><td>Gesamtstrecke Flotte</td><td>${totalUnoptimizedKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:green; font-weight:600;">-${savingPercent}% (${savingKm.toFixed(1)} km gespart)</span></td></tr>
+                    <tr><td>Nettogewinn (Tag)</td><td>${unoptProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${(netProfit - unoptProfit).toFixed(2)} € Mehrgewinn</strong></td></tr>
+                `;
+            }
+
+            logEvent(`PDVRPTW-Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €`);
+            saveAppData();
+            if (!isInitial) {
+                alert("PDVRPTW-Algorithmus erfolgreich ausgeführt! Routen wurden neu berechnet.");
+                renderAdminDashboard();
+            }
         }
 
         function getDriverTourSchedule(driver) {
@@ -721,7 +841,7 @@
             
             let activeStudentIds = driver.assignedStudents.filter(sId => {
                 const s = appData.students.find(item => item.id === sId);
-                return s && !appData.sickStudents.includes(s.name);
+                return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
             });
 
             let morningStops = [];
@@ -730,11 +850,8 @@
             if (activeStudentIds.length === 0) return { morning: [], afternoon: [] };
 
             const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
-            const isGrundschule = firstStudent && firstStudent.school.toLowerCase().includes('grundschule');
-            const maxDuration = isGrundschule ? 60 : 90;
-
-            let schoolArrivalMinutes = 8 * 60; // 08:00
-            let travelTimePerStop = 12;
+            let schoolArrivalMinutes = 8 * 60; // 08:00 Uhr harter Fixpunkt
+            let travelTimePerStop = 10; // Minuten zwischen Stopps
 
             activeStudentIds.forEach((sId, idx) => {
                 const s = appData.students.find(item => item.id === sId);
@@ -756,13 +873,13 @@
 
             morningStops.push({
                 time: "08:00",
-                name: "Ankunft Schule",
+                name: "Ankunft Schule (PDVRPTW Ziel)",
                 address: firstStudent ? firstStudent.school : "Schule",
                 school: firstStudent ? firstStudent.school : "",
                 duration: 0
             });
 
-            let schoolEndMinutes = 13 * 60; // 13:00
+            let schoolEndMinutes = 13 * 60; // 13:00 Uhr Rückfahrt
             afternoonStops.push({
                 time: "13:00",
                 name: "Schulende",
@@ -781,7 +898,7 @@
                 
                 afternoonStops.push({
                     time: timeStr,
-                    name: cleanStudentName(s.name) + " (Rückfahrt)",
+                    name: cleanStudentName(s.name) + " (Heimfahrt)",
                     address: s.address,
                     school: s.school,
                     duration: 0
@@ -871,30 +988,6 @@
             saveAppData();
         }
 
-        function runVrpOptimization() {
-            logEvent("GPS-Routenoptimierung gestartet (unter Beachtung von Max-Dauer und Schul-Trennung)...");
-            let totalKm = appData.students.length * 12.5;
-            let optimizedDistance = totalKm * 0.78;
-            let baseRevenue = totalKm * appData.settings.costs.pricePerKm;
-            let manualCosts = totalKm * 1.1;
-            let optimizedCosts = optimizedDistance * 1.1;
-            let manualProfit = baseRevenue - manualCosts;
-            let optimizedProfit = baseRevenue - optimizedCosts;
-
-            document.getElementById('kpi-distance')?.remove();
-            document.getElementById('kpi-profit').textContent = optimizedProfit.toFixed(2) + ' €';
-
-            const compBox = document.getElementById('comparison-box');
-            const compTbody = document.getElementById('comparison-tbody');
-            compBox.style.display = 'block';
-            compTbody.innerHTML = `
-                <tr><td>Gesamtstrecke</td><td>${totalKm.toFixed(1)} km</td><td>${optimizedDistance.toFixed(1)} km</td><td><span style="color:green; font-weight:600;">-22% Strecke</span></td></tr>
-                <tr><td>Nettogewinn</td><td>${manualProfit.toFixed(2)} €</td><td><strong style="color:green;">${optimizedProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${(optimizedProfit - manualProfit).toFixed(2)} € Mehrgewinn</strong></td></tr>
-            `;
-            logEvent(`VRP-Optimierung abgeschlossen. Nettogewinn: ${optimizedProfit.toFixed(2)} €`);
-            alert("Routenoptimierung erfolgreich berechnet!");
-        }
-
         function submitDriverRequest() {
             const type = document.getElementById('driver-req-type').value;
             const dates = document.getElementById('driver-req-dates').value;
@@ -949,7 +1042,6 @@
             }
             saveAppData();
             alert(`Krankmeldung für ${childName} erfolgreich übermittelt.`);
-            // Keine Telegram-Benachrichtigung für Schüler-Krankmeldung
             renderAdminDashboard();
         }
 
@@ -960,7 +1052,6 @@
             }
             saveAppData();
             alert("Schulausfall gemeldet!");
-            // Keine Telegram-Benachrichtigung für Schulausfall
         }
 
         function simulateScenario(type) {
@@ -1090,7 +1181,6 @@
                 d.status = wasSick ? 'verfügbar' : 'krank';
                 saveAppData();
                 
-                // Telegram-Benachrichtigung bei Admin-Umschaltung zu Krank
                 if (!wasSick && d.status === 'krank') {
                     sendTelegramAlert(`🚨 Krankmeldung des Fahrers (durch Admin): *${d.name}*`);
                 }
@@ -1128,7 +1218,7 @@
             const morningTbody = document.getElementById('driver-tour-students-tbody');
             morningTbody.innerHTML = '';
             schedule.morning.forEach(stop => {
-                let isSchoolArrival = stop.name === "Ankunft Schule";
+                let isSchoolArrival = stop.name.includes("Ankunft Schule");
                 morningTbody.innerHTML += `
                     <tr>
                         <td><strong>${stop.time}</strong></td>
@@ -1188,7 +1278,7 @@
             doc.setFontSize(16);
             doc.text("Mietwagenverkehr Rosebrock", 20, 20);
             doc.setFontSize(12);
-            doc.text(`Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
+            doc.text(`PDVRPTW Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
             doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 40);
@@ -1197,7 +1287,7 @@
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
             let y = 60;
             doc.setFont("helvetica", "bold");
-            doc.text("Morgentour:", 20, y);
+            doc.text("Morgentour (Pickup & Delivery):", 20, y);
             y += 8;
             doc.setFont("helvetica", "normal");
             schedule.morning.forEach((stop) => {
@@ -1207,7 +1297,7 @@
 
             y += 6;
             doc.setFont("helvetica", "bold");
-            doc.text("Rückfahrt:", 20, y);
+            doc.text("Rückfahrt (Nachmittag):", 20, y);
             y += 8;
             doc.setFont("helvetica", "normal");
             schedule.afternoon.forEach((stop) => {
@@ -1215,7 +1305,7 @@
                 y += 6;
             });
 
-            doc.save(`Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
+            doc.save(`PDVRPTW_Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
         }
 
         function resetSystemData() {

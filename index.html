@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v4';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v5';
 
         const appData = {
             settings: {
@@ -610,7 +610,8 @@
             closedSchools: [],
             sickStudents: [],
             driverRequests: [],
-            events: []
+            events: [],
+            lastMorningCheckDate: ""
         };
 
         let currentLoggedInDriver = null;
@@ -633,6 +634,7 @@
                     appData.sickStudents = parsed.sickStudents || [];
                     appData.driverRequests = parsed.driverRequests || [];
                     appData.events = parsed.events || [];
+                    appData.lastMorningCheckDate = parsed.lastMorningCheckDate || "";
                     return true;
                 }
             } catch (e) {}
@@ -858,6 +860,21 @@
         function updateClock() {
             const now = new Date();
             document.getElementById('live-clock').textContent = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
+
+            // Automatische 07:00-Uhr-Prüfung für eingeteilte Fahrer
+            if (now.getHours() === 7 && now.getMinutes() === 0) {
+                const todayStr = now.toDateString();
+                if (appData.lastMorningCheckDate !== todayStr) {
+                    appData.lastMorningCheckDate = todayStr;
+                    saveAppData();
+                    const unreportedDrivers = appData.drivers.filter(d => !d.isReserve && d.assignedStudents && d.assignedStudents.length > 0 && d.status !== 'bereit' && d.status !== 'krank');
+                    if (unreportedDrivers.length > 0) {
+                        unreportedDrivers.forEach(d => {
+                            sendTelegramAlert(`🚨 *Meldepflicht-Alarm*: Fahrer *${d.name}* (eingeteilt) hat sich bis 07:00 Uhr morgens nicht gemeldet!`);
+                        });
+                    }
+                }
+            }
         }
         setInterval(updateClock, 1000);
         updateClock();

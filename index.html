@@ -254,53 +254,6 @@
             z-index: 1;
         }
 
-        /* Jahreskalender Grid Styles */
-        .cal-months-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
-        .cal-month-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background: #f8fafc;
-            padding: 8px;
-        }
-        .cal-month-card h4 {
-            font-size: 0.9rem;
-            color: var(--primary-color);
-            margin-bottom: 6px;
-            text-align: center;
-            font-weight: 600;
-        }
-        .cal-table-wrapper {
-            overflow-x: auto;
-            max-height: 280px;
-        }
-        .cal-table {
-            font-size: 0.75rem;
-            min-width: max-content;
-        }
-        .cal-table th, .cal-table td {
-            padding: 3px 5px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-            white-space: nowrap;
-        }
-        .cal-table th {
-            background-color: #4a5568;
-            font-size: 0.7rem;
-        }
-        .cal-driver-col {
-            text-align: left !important;
-            font-weight: 500;
-            background: #fff;
-            position: sticky;
-            left: 0;
-            z-index: 2;
-        }
-
         .upload-grid {
             display: flex;
             flex-direction: column;
@@ -475,9 +428,9 @@
                 </div>
             </div>
 
-            <!-- Fahrer-Anliegen & Urlaubsanträge -->
+            <!-- Fahrer-Anliegen & Urlaubsanträge (Übersichtlich wie gewünscht) -->
             <div class="admin-box" style="border-left: 4px solid #38a169;">
-                <h3>Anliegen & Urlaubsanträge der Fahrer</h3>
+                <h3>Fahrer-Anliegen & Urlaubsanträge</h3>
                 <div class="table-responsive">
                     <table id="admin-requests-table">
                         <thead>
@@ -487,28 +440,6 @@
                             <tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            <!-- Urlaubskalender & Abwesenheiten (Jahreskalender für alle 23 Fahrer & 12 Monate) -->
-            <div class="admin-box" style="border-left: 4px solid #dd6b20;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                    <h3 style="margin: 0;">Urlaubskalender & Abwesenheiten (<span id="cal-year-title">2026</span>)</h3>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="changeCalendarYear(-1)">‹ Vorheriges Jahr</button>
-                        <strong id="cal-year-display" style="font-size: 1rem; color: var(--primary-color);">2026</strong>
-                        <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="changeCalendarYear(1)">Nächstes Jahr ›</button>
-                    </div>
-                </div>
-                <div style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                    <span><strong>Legende:</strong></span>
-                    <span>🟩 Genehmigter Urlaub</span>
-                    <span>🟨 Beantragter Urlaub</span>
-                    <span>🟥 Abgelehnter Urlaub</span>
-                    <span style="background: #edf2f7; padding: 2px 6px; border-radius: 3px;">Grau = Wochenende</span>
-                </div>
-                <div id="full-year-calendar-container" class="cal-months-grid">
-                    <!-- Dynamisch gerenderte Monatskalender für alle 12 Monate und alle 23 Fahrer -->
                 </div>
             </div>
 
@@ -738,8 +669,10 @@
         }
 
         /* ==========================================================
-         * VOLLSTÄNDIGES DATENMODELL MIT REALEN ADRESSEN & GPS
+         * DATENMODELL & PERSISTENZ (LOCALSTORAGE)
          * ========================================================== */
+        const STORAGE_KEY = 'rosebrock_app_data_v2';
+
         const appData = {
             settings: {
                 depot: { id: "DEP-01", name: "Betriebshof Hannover-Mitte", address: "Industriestr. 1, Hannover", lat: 52.3759, lon: 9.7320 },
@@ -759,6 +692,34 @@
             driverRequests: [],
             events: []
         };
+
+        function saveAppData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                console.error("Fehler beim Speichern in localStorage:", e);
+            }
+        }
+
+        function loadAppData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appData.vehicles = parsed.vehicles || [];
+                    appData.drivers = parsed.drivers || [];
+                    appData.students = parsed.students || [];
+                    appData.closedSchools = parsed.closedSchools || [];
+                    appData.sickStudents = parsed.sickStudents || [];
+                    appData.driverRequests = parsed.driverRequests || [];
+                    appData.events = parsed.events || [];
+                    return true;
+                }
+            } catch (e) {
+                console.error("Fehler beim Laden aus localStorage:", e);
+            }
+            return false;
+        }
 
         function initSyntheticDataset() {
             const streetsCelle = ["Trift", "Fritzenwiese", "Hannoversche Heerstraße", "Celler Straße", "Wittinger Straße", "Hehlentorstraße", "Mühlenstraße", "Braunschweiger Heerstraße"];
@@ -861,6 +822,7 @@
                     transportToday: true
                 });
             }
+            saveAppData();
         }
 
         function updateClock() {
@@ -899,6 +861,7 @@
                 logBox.scrollTop = logBox.scrollHeight;
             }
             appData.events.push({ time, msg });
+            saveAppData();
         }
 
         function runVrpOptimization() {
@@ -961,6 +924,7 @@
             };
 
             appData.driverRequests.push(newReq);
+            saveAppData();
             logEvent(`Fahrer-Portal: Neuer Antrag (${type}) von ${driver.name} eingereicht.`);
             sendTelegramAlert(`🏖️ Neuer Fahrer-Antrag von *${driver.name}*:\n*Art:* ${type}\n*Details:* ${newReq.details}\n*(Hinweis: Ab 18 Uhr eingereicht, Bearbeitung am nächsten Morgen)*`);
 
@@ -976,10 +940,11 @@
                 req.status = newStatus;
                 if (newStatus === 'genehmigt' && req.type === 'Urlaubsantrag') {
                     const drv = appData.drivers.find(d => d.name === req.driverName);
-                    if (drv) {
+                    if (drv && !drv.vacations.includes(req.dates)) {
                         drv.vacations.push(req.dates);
                     }
                 }
+                saveAppData();
                 logEvent(`Admin hat Antrag von ${req.driverName} auf '${newStatus}' gesetzt.`);
                 sendTelegramAlert(`ℹ️ Statusänderung für Antrag von *${req.driverName}* (${req.type}): *${newStatus.toUpperCase()}*`);
                 renderAdminDashboard();
@@ -995,6 +960,7 @@
                 const reserveDrv = appData.drivers.find(d => d.isReserve && d.status === 'verfügbar');
                 const reserveVeh = appData.vehicles.find(v => v.isReserve);
                 
+                saveAppData();
                 sendTelegramAlert(`⚠️ *DRINGENDER ERSATZBEDARF*\nFahrer Stefan Meyer ist krank!\nErsatz-Zuweisung: Reservefahrer *${reserveDrv ? reserveDrv.name : 'Keiner'}* übernimmt mit Reservefahrzeug *${reserveVeh ? reserveVeh.id : 'Depot'}*.`);
                 alert("Testfall 2 & 4: Fahrerausfall simuliert!\nReservefahrer und Reservefahrzeug wurden eingeplant.");
                 renderAdminDashboard();
@@ -1003,6 +969,7 @@
                 if (!appData.sickStudents.includes(sampleStudentName)) {
                     appData.sickStudents.push(sampleStudentName);
                 }
+                saveAppData();
                 logEvent(`SZENARIO: Schüler ${sampleStudentName} krankgemeldet.`);
                 sendTelegramAlert(`ℹ️ Schülerkrankmeldung: ${sampleStudentName} fällt heute aus.`);
                 alert(`Testfall: ${sampleStudentName} krankgemeldet. Tour und PDF aktualisiert.`);
@@ -1014,22 +981,12 @@
                 if (!appData.closedSchools.some(s => s.name === sampleSchool)) {
                     appData.closedSchools.push({ name: sampleSchool, reason: "Witterungsbedingter Unwetter-Ausfall" });
                 }
+                saveAppData();
                 logEvent(`SZENARIO: Schulausfall für "${sampleSchool}" gemeldet.`);
                 sendTelegramAlert(`🚨 Schulausfall gemeldet für: ${sampleSchool}`);
                 alert("Testfall: Schulausfall aktiv!");
                 renderAdminDashboard();
             }
-        }
-
-        function adminReportSchoolClosure() {
-            const schName = document.getElementById('admin-school-select')?.value || "Hermann-Reske-Schule, Celle";
-            if (!appData.closedSchools.some(s => s.name === schName)) {
-                appData.closedSchools.push({ name: schName, reason: "Durch Zentrale gemeldete Schließung" });
-            }
-            logEvent(`Zentrale: Schulausfall für ${schName} manuell erfasst.`);
-            sendTelegramAlert(`🚨 Zentrale trug Schulausfall ein: ${schName}`);
-            alert(`Schulausfall für "${schName}" eingetragen.`);
-            renderAdminDashboard();
         }
 
         function schoolReportClosure() {
@@ -1038,6 +995,7 @@
             if (!appData.closedSchools.some(s => s.name === schName)) {
                 appData.closedSchools.push({ name: schName, reason: reason });
             }
+            saveAppData();
             logEvent(`Schul-Portal: Schließung für ${schName} (${reason}) übermittelt.`);
             sendTelegramAlert(`🚨 Schließungsmeldung der Schule (${schName}): ${reason}`);
             alert("Schulausfall erfolgreich gemeldet!");
@@ -1049,6 +1007,7 @@
             if (!appData.sickStudents.includes(childName)) {
                 appData.sickStudents.push(childName);
             }
+            saveAppData();
             logEvent(`Eltern-Portal: ${childName} wurde krankgemeldet.`);
             sendTelegramAlert(`ℹ️ Eltern-Meldung (${appData.students[2].parent}): ${childName} wurde krankgemeldet.`);
             alert(`Krankmeldung für ${childName} erfolgreich übertragen!`);
@@ -1063,184 +1022,6 @@
                 sendTelegramAlert("⚠️ Fahrer Hans Rosebrock hat sich als KRANK gemeldet!");
             }
             alert(`Status auf "${status}" gesetzt.`);
-        }
-
-        /* ==========================================================
-         * JAHRESKALENDER-LOGIK FÜR ALLE 23 FAHRER & 12 MONATE
-         * ========================================================== */
-        let currentCalendarYear = 2026;
-
-        function changeCalendarYear(delta) {
-            currentCalendarYear += delta;
-            document.getElementById('cal-year-display').textContent = currentCalendarYear;
-            document.getElementById('cal-year-title').textContent = currentCalendarYear;
-            renderFullYearCalendar();
-        }
-
-        function parseDateString(dateStr) {
-            if (!dateStr) return null;
-            let parts = dateStr.split('-').map(s => s.trim());
-            let parseSingle = (str) => {
-                let p = str.split('.');
-                if (p.length === 3) {
-                    let d = parseInt(p[0], 10);
-                    let m = parseInt(p[1], 10) - 1;
-                    let y = parseInt(p[2], 10);
-                    return new Date(y, m, d);
-                }
-                return null;
-            };
-            let start = parseSingle(parts[0]);
-            let end = parts[1] ? parseSingle(parts[1]) : start;
-            return { start, end };
-        }
-
-        function showVacationDetails(driverName, dateStr, status, details) {
-            alert(`Urlaubsdetail:\nFahrer: ${driverName}\nDatum: ${dateStr}\nStatus: ${status}\nDetails: ${details || 'Keine Angaben'}`);
-        }
-
-        function renderFullYearCalendar() {
-            const container = document.getElementById('full-year-calendar-container');
-            if (!container) return;
-
-            let driverVacationsMap = {};
-            appData.drivers.forEach(d => {
-                driverVacationsMap[d.name] = [];
-            });
-
-            appData.drivers.forEach(d => {
-                if (d.vacations) {
-                    d.vacations.forEach(vStr => {
-                        let parsed = parseDateString(vStr);
-                        if (parsed && parsed.start) {
-                            driverVacationsMap[d.name].push({
-                                start: parsed.start,
-                                end: parsed.end || parsed.start,
-                                status: 'genehmigt',
-                                details: `Urlaub (${vStr})`
-                            });
-                        }
-                    });
-                }
-            });
-
-            if (appData.driverRequests) {
-                appData.driverRequests.forEach(req => {
-                    if (req.type === 'Urlaubsantrag' && req.dates) {
-                        let parsed = parseDateString(req.dates);
-                        if (parsed && parsed.start) {
-                            let statusMapped = 'beantragt';
-                            if (req.status === 'genehmigt') statusMapped = 'genehmigt';
-                            else if (req.status === 'abgelehnt') statusMapped = 'abgelehnt';
-                            else if (req.status === 'offen') statusMapped = 'beantragt';
-                            
-                            if (driverVacationsMap[req.driverName]) {
-                                driverVacationsMap[req.driverName].push({
-                                    start: parsed.start,
-                                    end: parsed.end || parsed.start,
-                                    status: statusMapped,
-                                    details: req.details || req.dates
-                                });
-                            }
-                        }
-                    }
-                });
-            }
-
-            function getStatusOnDate(driverName, dateObj) {
-                let vacations = driverVacationsMap[driverName] || [];
-                let statusPriority = { 'genehmigt': 3, 'beantragt': 2, 'abgelehnt': 1 };
-                let bestStatus = null;
-                let matchedVac = null;
-                let bestPriority = 0;
-                let timeTime = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()).getTime();
-
-                vacations.forEach(v => {
-                    let sTime = new Date(v.start.getFullYear(), v.start.getMonth(), v.start.getDate()).getTime();
-                    let eTime = new Date(v.end.getFullYear(), v.end.getMonth(), v.end.getDate()).getTime();
-                    if (timeTime >= sTime && timeTime <= eTime) {
-                        let p = statusPriority[v.status] || 1;
-                        if (p > bestPriority) {
-                            bestPriority = p;
-                            bestStatus = v.status;
-                            matchedVac = v;
-                        }
-                    }
-                });
-                return { status: bestStatus, vac: matchedVac };
-            }
-
-            const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-            
-            let html = '';
-            for (let m = 0; m < 12; m++) {
-                let daysInMonth = new Date(currentCalendarYear, m + 1, 0).getDate();
-                
-                html += `
-                    <div class="cal-month-card">
-                        <h4>${monthNames[m]} ${currentCalendarYear}</h4>
-                        <div class="cal-table-wrapper">
-                            <table class="cal-table">
-                                <thead>
-                                    <tr>
-                                        <th class="cal-driver-col">Fahrer</th>
-                `;
-                for (let d = 1; d <= daysInMonth; d++) {
-                    html += `<th>${d}</th>`;
-                }
-                html += `
-                                    </tr>
-                                </thead>
-                                <tbody>
-                `;
-
-                appData.drivers.forEach(drv => {
-                    let driverDisplayName = drv.name + (drv.isReserve ? ' (Reserve)' : '');
-                    html += `
-                        <tr>
-                            <td class="cal-driver-col"><strong>${driverDisplayName}</strong></td>
-                    `;
-                    for (let d = 1; d <= daysInMonth; d++) {
-                        let cellDate = new Date(currentCalendarYear, m, d);
-                        let dayOfWeek = cellDate.getDay();
-                        let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                        
-                        let res = getStatusOnDate(drv.name, cellDate);
-                        let cellBg = isWeekend ? '#edf2f7' : '#fff';
-                        let symbol = '';
-                        let statusText = '';
-                        let detailsText = '';
-
-                        if (res.status === 'genehmigt') {
-                            symbol = '🟩';
-                            statusText = 'Genehmigt';
-                            detailsText = res.vac ? res.vac.details : '';
-                        } else if (res.status === 'beantragt') {
-                            symbol = '🟨';
-                            statusText = 'Beantragt';
-                            detailsText = res.vac ? res.vac.details : '';
-                        } else if (res.status === 'abgelehnt') {
-                            symbol = '🟥';
-                            statusText = 'Abgelehnt';
-                            detailsText = res.vac ? res.vac.details : '';
-                        }
-
-                        let clickAttr = res.vac ? `onclick="showVacationDetails('${drv.name}', '${d}.${m+1}.${currentCalendarYear}', '${statusText}', '${(detailsText || '').replace(/'/g, "\\'")}')" style="cursor:pointer;" title="${statusText}: ${drv.name}"` : `style="background: ${cellBg};"`;
-
-                        html += `<td ${clickAttr}>${symbol}</td>`;
-                    }
-                    html += `</tr>`;
-                });
-
-                html += `
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = html;
         }
 
         function renderAdminDashboard() {
@@ -1267,8 +1048,6 @@
                     });
                 }
             }
-
-            renderFullYearCalendar();
 
             const driverTbody = document.querySelector('#admin-drivers-table tbody');
             if (driverTbody) {
@@ -1333,7 +1112,6 @@
                 if (myReqs.length === 0) {
                     myReqTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>`;
                 } else {
-                    // KORREKTUR: myReqTbody statt myReqs verwenden, um Mehrfach-Anzeigen zu verhindern
                     myReqTbody.innerHTML = '';
                     myReqs.forEach(r => {
                         myReqTbody.innerHTML += `
@@ -1409,16 +1187,19 @@
             const d = appData.drivers.find(item => item.id === id);
             if(d) {
                 d.status = d.status === 'krank' ? 'verfügbar' : 'krank';
+                saveAppData();
                 logEvent(`Personal ${d.name} (${id}) Status geändert zu ${d.status}.`);
                 renderAdminDashboard();
             }
         }
 
         function resetSystemData() {
+            localStorage.removeItem(STORAGE_KEY);
             appData.drivers.forEach(d => { d.status = "verfügbar"; d.vacations = []; });
             appData.closedSchools = [];
             appData.sickStudents = [];
             appData.driverRequests = [];
+            appData.events = [];
             logEvent("Stammdaten auf Normalbetrieb zurückgesetzt.");
             document.getElementById('comparison-box').style.display = 'none';
             document.getElementById('kpi-distance').textContent = "-- km";
@@ -1475,7 +1256,11 @@
             alert("Der Tourenplan mit echten Namen wurde als PDF generiert!");
         }
 
-        initSyntheticDataset();
+        // Initialisierung beim Laden der Seite (mit Fallback auf synthetische Testdaten, falls kein Speicherstand existiert)
+        if (!loadAppData()) {
+            initSyntheticDataset();
+        }
+
         renderAdminDashboard();
         renderDriverPortal();
         renderParentPortal();

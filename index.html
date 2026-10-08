@@ -696,7 +696,6 @@
             saveAppData();
         }
 
-        // Problem 6: Do not mix schools in a morning tour
         function distributeStudentsToDrivers() {
             const activeDrivers = appData.drivers.filter(d => !d.isReserve);
             activeDrivers.forEach(d => d.assignedStudents = []);
@@ -717,11 +716,9 @@
             });
         }
 
-        // Problem 1, 5, 7, 8, 9, 10, 11: Dynamic Schedule with Stop Times & Max Duration Checks
         function getDriverTourSchedule(driver) {
             if (!driver || !driver.assignedStudents) return { morning: [], afternoon: [] };
             
-            // Filter out sick students dynamically (Problem 1 & 13)
             let activeStudentIds = driver.assignedStudents.filter(sId => {
                 const s = appData.students.find(item => item.id === sId);
                 return s && !appData.sickStudents.includes(s.name);
@@ -734,7 +731,7 @@
 
             const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
             const isGrundschule = firstStudent && firstStudent.school.toLowerCase().includes('grundschule');
-            const maxDuration = isGrundschule ? 60 : 90; // Problem 5 & 10: 60 min for Grundschule, 90 min normal
+            const maxDuration = isGrundschule ? 60 : 90;
 
             let schoolArrivalMinutes = 8 * 60; // 08:00
             let travelTimePerStop = 12;
@@ -750,7 +747,7 @@
                 
                 morningStops.push({
                     time: timeStr,
-                    name: cleanStudentName(s.name), // Problem 2: remove numbers in parentheses
+                    name: cleanStudentName(s.name),
                     address: s.address,
                     school: s.school,
                     duration: (schoolArrivalMinutes - pickupMinutes)
@@ -765,8 +762,7 @@
                 duration: 0
             });
 
-            // Afternoon return trip (Problem 8 & 9)
-            let schoolEndMinutes = 13 * 60; // 13:00 standard, or 15:30 if AG
+            let schoolEndMinutes = 13 * 60; // 13:00
             afternoonStops.push({
                 time: "13:00",
                 name: "Schulende",
@@ -885,7 +881,7 @@
             let manualProfit = baseRevenue - manualCosts;
             let optimizedProfit = baseRevenue - optimizedCosts;
 
-            document.getElementById('kpi-distance')?.remove(); // safely handled if not present
+            document.getElementById('kpi-distance')?.remove();
             document.getElementById('kpi-profit').textContent = optimizedProfit.toFixed(2) + ' €';
 
             const compBox = document.getElementById('comparison-box');
@@ -929,9 +925,16 @@
 
         function setDriverStatus(status) {
             if (currentLoggedInDriver) {
+                const prevStatus = currentLoggedInDriver.status;
                 currentLoggedInDriver.status = status.toLowerCase();
                 document.getElementById('driver-status-text').textContent = `Status: ${status}`;
                 saveAppData();
+                
+                // NUR BEI KRANKMELDUNG DES FAHRERS BENACHRICHTIGEN
+                if (status.toLowerCase() === 'krank' && prevStatus !== 'krank') {
+                    sendTelegramAlert(`🚨 Krankmeldung des Fahrers: *${currentLoggedInDriver.name}* hat sich krankgemeldet.`);
+                }
+
                 alert(`Status auf "${status}" gesetzt.`);
                 renderAdminDashboard();
             }
@@ -940,14 +943,13 @@
         function parentReportSick() {
             const select = document.getElementById('parent-child-select');
             const childName = cleanStudentName(select.value);
-            // Match student name without number
             const matchedStudent = appData.students.find(s => cleanStudentName(s.name) === childName);
             if (matchedStudent && !appData.sickStudents.includes(matchedStudent.name)) {
                 appData.sickStudents.push(matchedStudent.name);
             }
             saveAppData();
             alert(`Krankmeldung für ${childName} erfolgreich übermittelt.`);
-            sendTelegramAlert(`ℹ️ Krankmeldung für ${childName} durch Eltern.`);
+            // Keine Telegram-Benachrichtigung für Schüler-Krankmeldung
             renderAdminDashboard();
         }
 
@@ -958,13 +960,17 @@
             }
             saveAppData();
             alert("Schulausfall gemeldet!");
-            sendTelegramAlert(`🚨 Schulausfall gemeldet für ${currentLoggedInSchool.name}: ${reason}`);
+            // Keine Telegram-Benachrichtigung für Schulausfall
         }
 
         function simulateScenario(type) {
             if (type === 'driver_sick') {
-                appData.drivers[1].status = "krank";
-                saveAppData();
+                const simDriver = appData.drivers[1];
+                if (simDriver.status !== 'krank') {
+                    simDriver.status = "krank";
+                    saveAppData();
+                    sendTelegramAlert(`🚨 Krankmeldung des Fahrers (Simulation): *${simDriver.name}*`);
+                }
                 alert("Fahrer Stefan Meyer als krank simuliert.");
                 renderAdminDashboard();
             } else if (type === 'student_sick') {
@@ -984,7 +990,6 @@
 
         function getDriverStatusDisplay(d) {
             if (d.status === 'krank') return '<span style="color:red; font-weight:600;">Krank</span>';
-            // Problem 3: Automatically check vacation from approved requests
             const hasVacation = appData.driverRequests.some(r => r.driverName === d.name && r.type === 'Urlaubsantrag' && r.status === 'genehmigt');
             if (hasVacation) return '<span style="color:purple; font-weight:600;">Urlaub</span>';
             if (d.status === 'pause') return '<span style="color:orange; font-weight:600;">In Pause</span>';
@@ -992,14 +997,13 @@
         }
 
         function renderAdminDashboard() {
-            // Problem 4: Dynamic KPI updates distinguishing total vs active/available
             const totalStudents = appData.students.length;
             const activeStudentsCount = totalStudents - appData.sickStudents.length;
             const kpiStudents = document.getElementById('kpi-students');
             if (kpiStudents) kpiStudents.textContent = `${activeStudentsCount} aktiv / ${totalStudents} Gesamt`;
 
             const totalVehicles = appData.vehicles.length;
-            const availableVehiclesCount = totalVehicles; // all available unless explicitly out
+            const availableVehiclesCount = totalVehicles;
             const kpiVehicles = document.getElementById('kpi-vehicles');
             if (kpiVehicles) kpiVehicles.textContent = `${availableVehiclesCount} verfügbar / ${totalVehicles} Gesamt`;
 
@@ -1010,7 +1014,6 @@
             const kpiDrivers = document.getElementById('kpi-drivers');
             if (kpiDrivers) kpiDrivers.textContent = `${availableDriversCount} verfügbar / ${totalDrivers} Gesamt`;
 
-            // Absence Summary
             const absenceSummary = document.getElementById('admin-absence-summary');
             if (absenceSummary) {
                 let sickDrivers = appData.drivers.filter(d => d.status === 'krank');
@@ -1057,7 +1060,6 @@
                 }
             }
 
-            // Problem 3: Personal & Driver overview with all 23 drivers & automatic vacation status
             const driverTbody = document.querySelector('#admin-drivers-table tbody');
             if (driverTbody) {
                 driverTbody.innerHTML = '';
@@ -1084,8 +1086,15 @@
         function toggleDriverSickAdmin(id) {
             const d = appData.drivers.find(item => item.id === id);
             if(d) {
-                d.status = d.status === 'krank' ? 'verfügbar' : 'krank';
+                const wasSick = d.status === 'krank';
+                d.status = wasSick ? 'verfügbar' : 'krank';
                 saveAppData();
+                
+                // Telegram-Benachrichtigung bei Admin-Umschaltung zu Krank
+                if (!wasSick && d.status === 'krank') {
+                    sendTelegramAlert(`🚨 Krankmeldung des Fahrers (durch Admin): *${d.name}*`);
+                }
+
                 renderAdminDashboard();
             }
         }
@@ -1114,7 +1123,6 @@
                 }
             }
 
-            // Problem 1 & 9: Render dynamic schedule with stop times & cleaned names
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
             
             const morningTbody = document.getElementById('driver-tour-students-tbody');
@@ -1135,7 +1143,6 @@
             const returnTbody = document.getElementById('driver-return-tour-tbody');
             returnTbody.innerHTML = '';
             schedule.afternoon.forEach(stop => {
-                let isSchoolEnd = stop.name === "Schulende";
                 returnTbody.innerHTML += `
                     <tr>
                         <td><strong>${stop.time}</strong></td>

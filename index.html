@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand</title>
-    <!-- Externe Bibliotheken für Excel-, PDF- und Word-Export/-Import -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -324,7 +323,7 @@
                 <!-- Fahrer -->
                 <div class="portal-card driver">
                     <h3>Fahrer-Portal</h3>
-                    <p>Individueller Tourenplan, Schichtstatus & PDF-Export.</p>
+                    <p>Individueller Tourenplan, Schichtstatus & Antragsstatus.</p>
                     <input type="text" class="portal-input" id="driver-user" value="Stefan Meyer" placeholder="Fahrername (z.B. Stefan Meyer)">
                     <input type="password" class="portal-input" id="driver-pass" value="stefan123" placeholder="Passwort">
                     <button class="portal-btn" onclick="loginDriver()">Fahrer-Login</button>
@@ -375,9 +374,17 @@
                 </div>
             </div>
 
+            <!-- Aktuelle Lage / Abwesenheitsübersicht -->
+            <div class="admin-box" style="border-left: 4px solid #e53e3e; background: #fff5f5;">
+                <h3 style="color: #c53030;">🚨 Aktuelle Lage: Krankschreibungen & Abwesenheiten</h3>
+                <div id="admin-absence-summary" style="font-size: 0.85rem; color: #2d3748; margin-top: 8px;">
+                    Keine Abwesenheiten gemeldet.
+                </div>
+            </div>
+
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
                 <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung (GPS-basiert)</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung logischer Routen für alle 21 aktiven Fahrer und 81 Schüler:</p>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung logischer Routen für alle 23 Fahrer und 81 Schüler:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 Alle Touren optimieren</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
@@ -428,12 +435,12 @@
             <div class="admin-box">
                 <h3>Vollständiges Dispositionsprotokoll</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. 81 Schüler auf 21 Fahrertouren aufgeteilt.<br>
+                    [07:00:00] System initialisiert. 81 Schüler auf 23 Fahrertouren aufgeteilt.<br>
                 </div>
             </div>
         </div>
 
-        <!-- FAHRER PORTAL (DYNAMISCH FÜR DEN EINGELOGGTEN FAHRER) -->
+        <!-- FAHRER PORTAL -->
         <div id="driver-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
             <h2 style="font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Fahrer-Portal</h2>
@@ -458,6 +465,21 @@
                     <textarea id="driver-req-msg" placeholder="Nachricht an Zentrale..." rows="2" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:4px;"></textarea>
                 </div>
                 <button class="btn btn-success" style="width: 100%;" onclick="submitDriverRequest()">Antrag absenden</button>
+            </div>
+
+            <!-- Eigene Anträge & Status -->
+            <div class="admin-box" style="border-left: 4px solid #319795;">
+                <h3>Meine Anträge & Status</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Art</th><th>Details</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="driver-my-requests-tbody">
+                            <tr><td colspan="3" style="text-align: center; color: #718096;">Keine Anträge gestellt.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div style="margin-bottom: 20px;">
@@ -557,15 +579,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-        }
-
-        const STORAGE_KEY = 'rosebrock_app_data_v4';
+        const STORAGE_KEY = 'rosebrock_app_data_v5';
 
         const appData = {
             settings: {
@@ -614,14 +628,9 @@
         }
 
         function initSyntheticDataset() {
-            const streetsCelle = ["Trift", "Fritzenwiese", "Hannoversche Heerstraße", "Celler Straße", "Hehlentorstraße"];
-            const streetsHannover = ["Lister Meile", "Hildesheimer Straße", "Vahrenwalder Straße", "Goethestraße"];
-            const streetsPeine = ["Fuhsestraße", "Bahnhofstraße", "Dammstraße"];
-
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
 
-            // 20 Fahrzeuge
             for (let i = 1; i <= 20; i++) {
                 let type = i >= 14 && i <= 18 ? "Rollstuhlfahrzeug" : "Kleinbus";
                 appData.vehicles.push({
@@ -633,24 +642,21 @@
                 });
             }
 
-            // 23 Fahrer mit individuellem Passwort
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
                     name: drvName,
-                    password: drvName.toLowerCase().split(" ")[0] + "123", // z.B. stefan123
+                    password: drvName.toLowerCase().split(" ")[0] + "123",
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
                     assignedVehicle: isRes ? null : `V-${i.toString().padStart(2, '0')}`,
                     isReserve: isRes,
-                    vacations: [],
                     assignedStudents: []
                 });
             }
 
-            // 81 Schüler
             const studentNames = ["Maximilian Müller", "Alexander Schmidt", "Paul Schneider", "Elias Fischer", "Ben Weber", "Noah Meyer", "Leon Wagner", "Louis Becker", "Felix Schulz", "Henry Hoffmann", "Emilia Schäfer", "Hannah Koch", "Sophia Bauer", "Emma Richter", "Mia Klein", "Hanna Wolf", "Lina Schröder", "Mila Neumann", "Ella Schwarz", "Klara Zimmermann", "Jonas Braun", "Lukas Krüger", "Finn Hofmann", "Tim Hartmann", "David Lange"];
             
             for (let i = 1; i <= 81; i++) {
@@ -724,7 +730,7 @@
                 showView('driver-view');
                 logEvent(`Fahrer-Login: ${driver.name} erfolgreich eingeloggt.`);
             } else {
-                alert('Fahrer nicht gefunden oder falsches Passwort! (Tipp: Stefan Meyer / stefan123)');
+                alert('Fahrer nicht gefunden oder falsches Passwort!');
             }
         }
 
@@ -738,7 +744,7 @@
                 showView('parent-view');
                 logEvent(`Eltern-Login: ${student.parent} eingeloggt.`);
             } else {
-                alert('Familie nicht gefunden oder falsches Passwort! (Tipp: Familie Müller / eltern123)');
+                alert('Familie nicht gefunden oder falsches Passwort!');
             }
         }
 
@@ -806,7 +812,7 @@
             });
             saveAppData();
             alert("Antrag erfolgreich an Inhaber gesendet!");
-            renderAdminDashboard();
+            renderDriverPortal();
         }
 
         function updateRequestStatus(reqId, newStatus) {
@@ -820,10 +826,11 @@
 
         function setDriverStatus(status) {
             if (currentLoggedInDriver) {
-                currentLoggedInDriver.status = status;
+                currentLoggedInDriver.status = status.toLowerCase();
                 document.getElementById('driver-status-text').textContent = `Status: ${status}`;
                 saveAppData();
                 alert(`Status auf "${status}" gesetzt.`);
+                renderAdminDashboard();
             }
         }
 
@@ -852,12 +859,15 @@
             if (type === 'driver_sick') {
                 appData.drivers[1].status = "krank";
                 saveAppData();
-                alert("Fahrer Stefan Meyer als krank simuliert. Reserve eingesetzt.");
+                alert("Fahrer Stefan Meyer als krank simuliert.");
                 renderAdminDashboard();
             } else if (type === 'student_sick') {
-                appData.sickStudents.push(appData.students[0].name);
+                if (appData.students.length > 0 && !appData.sickStudents.includes(appData.students[0].name)) {
+                    appData.sickStudents.push(appData.students[0].name);
+                }
                 saveAppData();
                 alert("Schülerkrankmeldung simuliert.");
+                renderAdminDashboard();
             } else if (type === 'school_closed') {
                 appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
                 saveAppData();
@@ -866,6 +876,26 @@
         }
 
         function renderAdminDashboard() {
+            // Absence Summary
+            const absenceSummary = document.getElementById('admin-absence-summary');
+            if (absenceSummary) {
+                let sickDrivers = appData.drivers.filter(d => d.status === 'krank');
+                let html = "";
+                if (sickDrivers.length > 0) {
+                    html += `<strong>Kranke Fahrer:</strong> ${sickDrivers.map(d => d.name).join(', ')}<br>`;
+                }
+                if (appData.sickStudents.length > 0) {
+                    html += `<strong>Kranke Schüler:</strong> ${appData.sickStudents.join(', ')}<br>`;
+                }
+                if (appData.closedSchools.length > 0) {
+                    html += `<strong>Geschlossene Schulen:</strong> ${appData.closedSchools.map(s => s.name + ' (' + s.reason + ')').join(', ')}`;
+                }
+                if (html === "") {
+                    html = "Keine Abwesenheiten gemeldet.";
+                }
+                absenceSummary.innerHTML = html;
+            }
+
             const reqTbody = document.querySelector('#admin-requests-table tbody');
             if (reqTbody) {
                 if (appData.driverRequests.length === 0) {
@@ -919,6 +949,27 @@
         function renderDriverPortal() {
             if (!currentLoggedInDriver) return;
             document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Kein Fahrzeug'}</strong> | Passwort: <code>${currentLoggedInDriver.password}</code>`;
+            document.getElementById('driver-status-text').textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
+
+            // My requests table
+            const myReqTbody = document.getElementById('driver-my-requests-tbody');
+            const myRequests = appData.driverRequests.filter(r => r.driverName === currentLoggedInDriver.name);
+            if (myReqTbody) {
+                if (myRequests.length === 0) {
+                    myReqTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Keine Anträge gestellt.</td></tr>`;
+                } else {
+                    myReqTbody.innerHTML = '';
+                    myRequests.forEach(r => {
+                        myReqTbody.innerHTML += `
+                            <tr>
+                                <td>${r.type}</td>
+                                <td>${r.details}</td>
+                                <td><span style="font-weight:600; color:${r.status==='genehmigt'?'green':r.status==='abgelehnt'?'red':'orange'}">${r.status}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
 
             const tbody = document.getElementById('driver-tour-students-tbody');
             tbody.innerHTML = '';

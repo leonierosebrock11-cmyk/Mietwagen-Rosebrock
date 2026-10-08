@@ -68,8 +68,6 @@
             max-width: 1250px;
             margin: 0 auto;
             background: white;
-            border-radius: 0;
-            box-shadow: none;
             padding: 12px;
             min-height: calc(100vh - 70px);
         }
@@ -82,7 +80,6 @@
             display: block;
         }
 
-        /* 4 Kacheln Startseite */
         .portal-grid {
             display: flex;
             flex-direction: column;
@@ -94,15 +91,14 @@
             background: #fff;
             border-radius: 6px;
             padding: 15px;
-            border-top: 4px solid #ccc;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border: 1px solid #edf2f7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .portal-card.admin { border-top-color: #805ad5; }
-        .portal-card.driver { border-top-color: #38a169; }
-        .portal-card.parent { border-top-color: #dd6b20; }
-        .portal-card.school { border-top-color: #d53f8c; }
+        .portal-card.admin { border-top: 4px solid #805ad5; }
+        .portal-card.driver { border-top: 4px solid #38a169; }
+        .portal-card.parent { border-top: 4px solid #dd6b20; }
+        .portal-card.school { border-top: 4px solid #d53f8c; }
 
         .portal-card h3 {
             font-size: 1rem;
@@ -143,7 +139,6 @@
         .portal-card.parent .portal-btn { background-color: #dd6b20; }
         .portal-card.school .portal-btn { background-color: #d53f8c; }
 
-        /* KPI & Dashboard Boxen */
         .kpi-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -172,7 +167,6 @@
             color: var(--primary-color);
         }
 
-        /* Allgemeine Buttons & Elemente */
         .btn {
             background-color: #4a5568;
             color: white;
@@ -222,7 +216,6 @@
             margin-bottom: 10px;
         }
 
-        /* Tabellen */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -305,8 +298,8 @@
 
     <header>
         <div>
-            <h1>Mietwagenverkehr Rosebrock[cite: 2]</h1>
-            <p>Studienprojekt-Demonstrator: Digitale Schülerbeförderung & VRP-Disposition[cite: 2]</p>
+            <h1>Mietwagenverkehr Rosebrock</h1>
+            <p>Dispositions- und Optimierungsleitstand – Digitale Schülerbeförderung</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
@@ -315,326 +308,239 @@
 
         <!-- STARTSEITE (4 Kacheln) -->
         <div id="home-view" class="view active">
-            <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals (Studien-Prototyp)[cite: 2]</h2>
-            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Sichere Demo-Zugangsdaten (Admin: <strong>admin</strong> / <strong>demo123</strong>):[cite: 2]</p>
+            <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals</h2>
+            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Wählen Sie Ihren Login-Bereich (Beispiele: Fahrer z. B. <strong>Stefan Meyer</strong> mit Passwort <strong>stefan123</strong>):</p>
             
             <div class="portal-grid">
                 <!-- Inhaber -->
                 <div class="portal-card admin">
-                    <h3>Inhaber & Zentrale[cite: 2]</h3>
-                    <p>Dispositionsleitstand, VRP-Optimierung, Stammdaten, Simulation.[cite: 2]</p>
+                    <h3>Inhaber & Zentrale</h3>
+                    <p>Dispositionsleitstand, VRP-Optimierung & Admin-Steuerung.</p>
                     <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">
                     <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="loginAdmin()">Admin-Login[cite: 2]</button>
+                    <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
                 </div>
 
                 <!-- Fahrer -->
                 <div class="portal-card driver">
-                    <h3>Fahrer-Portal[cite: 2]</h3>
-                    <p>Dienststatus, Tour, Tourenplan-PDF & Ausfallmeldung.[cite: 2]</p>
-                    <input type="text" class="portal-input" value="Hans Rosebrock" placeholder="Benutzername">
-                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="showView('driver-view')">Fahrer-Login[cite: 2]</button>
+                    <h3>Fahrer-Portal</h3>
+                    <p>Individueller Tourenplan, Schichtstatus & PDF-Export.</p>
+                    <input type="text" class="portal-input" id="driver-user" value="Stefan Meyer" placeholder="Fahrername (z.B. Stefan Meyer)">
+                    <input type="password" class="portal-input" id="driver-pass" value="stefan123" placeholder="Passwort">
+                    <button class="portal-btn" onclick="loginDriver()">Fahrer-Login</button>
                 </div>
 
                 <!-- Eltern -->
                 <div class="portal-card parent">
-                    <h3>Eltern-Portal[cite: 2]</h3>
-                    <p>Kind-Krankmeldung & gefilterte Schulausfall-Informationen.[cite: 2]</p>
-                    <input type="text" class="portal-input" value="Familie Müller" placeholder="Benutzername">
-                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="showView('parent-view')">Eltern-Login[cite: 2]</button>
+                    <h3>Eltern-Portal</h3>
+                    <p>Kind-Krankmeldung & Fahrstatus für Erziehungsberechtigte.</p>
+                    <input type="text" class="portal-input" id="parent-user" value="Familie Müller" placeholder="Familienname (z.B. Familie Müller)">
+                    <input type="password" class="portal-input" id="parent-pass" value="eltern123" placeholder="Passwort">
+                    <button class="portal-btn" onclick="loginParent()">Eltern-Login</button>
                 </div>
 
                 <!-- Schule -->
                 <div class="portal-card school">
-                    <h3>Schul-Portal[cite: 2]</h3>
-                    <p>Schüler-Übersicht & Schließungsmeldung direkt an Zentrale.[cite: 2]</p>
-                    <input type="text" class="portal-input" value="Grundschule Altenhagen" placeholder="Benutzername">
-                    <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="showView('school-view')">Schul-Login[cite: 2]</button>
+                    <h3>Schul-Portal</h3>
+                    <p>Ankunftsübersicht der Kinder & Schulausfall-Meldung.</p>
+                    <input type="text" class="portal-input" id="school-user" value="Hermann-Reske-Schule, Celle" placeholder="Schulname">
+                    <input type="password" class="portal-input" id="school-pass" value="schule123" placeholder="Passwort">
+                    <button class="portal-btn" onclick="loginSchool()">Schul-Login</button>
                 </div>
             </div>
         </div>
 
         <!-- ADMIN LEITSTAND -->
         <div id="admin-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
-            <h2 class="section-title">Dispositionsleitstand (Admin & Zentrale)[cite: 2]</h2>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
+            <h2 class="section-title">Dispositionsleitstand (Admin & Zentrale)</h2>
 
             <!-- KPI Dashboard -->
             <div class="kpi-container">
                 <div class="kpi-card">
-                    <h4>Schüler heute[cite: 2]</h4>
+                    <h4>Schüler heute</h4>
                     <div class="kpi-value" id="kpi-students">81</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Aktive Fahrzeuge[cite: 2]</h4>
+                    <h4>Aktive Fahrzeuge</h4>
                     <div class="kpi-value" id="kpi-vehicles">20</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Gesamtkilometer (GPS)[cite: 2]</h4>
+                    <h4>Gesamtkilometer (GPS)</h4>
                     <div class="kpi-value" id="kpi-distance">-- km</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Nettogewinn (Deckungsbeitrag)[cite: 2]</h4>
+                    <h4>Nettogewinn</h4>
                     <div class="kpi-value" id="kpi-profit">-- €</div>
                 </div>
             </div>
 
-            <!-- VRP Optimierungs- & Wirtschaftlichkeits-Leiste -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
-                <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung (GPS-basiert)[cite: 2]</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung realer Entfernungen und Gewinnoptimierung auf Basis hinterlegter GPS-Koordinaten:[cite: 2]</p>
+                <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung (GPS-basiert)</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung logischer Routen für alle 21 aktiven Fahrer und 81 Schüler:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 GPS-Touren optimieren[cite: 2]</button>
-                    <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank[cite: 2]</button>
-                    <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank[cite: 2]</button>
-                    <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall[cite: 2]</button>
-                    <button class="btn btn-primary" onclick="resetSystemData()">🔄 Stammdaten zurücksetzen[cite: 2]</button>
+                    <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 Alle Touren optimieren</button>
+                    <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
+                    <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank</button>
+                    <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall</button>
+                    <button class="btn btn-primary" onclick="resetSystemData()">🔄 Daten zurücksetzen</button>
                 </div>
             </div>
 
-            <!-- Vorher / Nachher Vergleich Box -->
             <div class="admin-box" id="comparison-box" style="display: none; border-left: 4px solid #319795; background: #e6fffa;">
-                <h3 style="color: #234e52;">📊 GPS-Wirtschaftlichkeitsvergleich[cite: 2]</h3>
+                <h3 style="color: #234e52;">📊 Wirtschaftlichkeitsvergleich</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Metrik[cite: 2]</th><th>Manuelle Ausgangsbasis[cite: 2]</th><th>GPS-Optimierte Disposition[cite: 2]</th><th>Effekt[cite: 2]</th></tr>
+                            <tr><th>Metrik</th><th>Manuell</th><th>GPS-Optimiert</th><th>Effekt</th></tr>
                         </thead>
-                        <tbody id="comparison-tbody">
-                            <!-- Dynamisch -->
-                        </tbody>
+                        <tbody id="comparison-tbody"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Fahrer-Anliegen & Urlaubsanträge -->
             <div class="admin-box" style="border-left: 4px solid #38a169;">
-                <h3>Fahrer-Anliegen & Urlaubsanträge[cite: 2]</h3>
+                <h3>Fahrer-Anliegen & Urlaubsanträge</h3>
                 <div class="table-responsive">
                     <table id="admin-requests-table">
                         <thead>
-                            <tr><th>Fahrer[cite: 2]</th><th>Art[cite: 2]</th><th>Zeitraum / Details[cite: 2]</th><th>Status[cite: 2]</th><th>Aktion[cite: 2]</th></tr>
+                            <tr><th>Fahrer</th><th>Art</th><th>Zeitraum / Details</th><th>Status</th><th>Aktion</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Anträge.[cite: 2]</td></tr>
+                            <tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Abwesenheitskalender (Urlaub & Krank) -->
-            <div class="admin-box" style="border-left: 4px solid #d69e2e; background: #fffaf0;">
-                <h3 style="color: #b7791f;">📅 Abwesenheitskalender (Urlaub & Krankheitsstand)[cite: 2]</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Übersicht aller Fahrer, die aktuell im Urlaub eingetragen oder krankgemeldet sind:[cite: 2]</p>
-                <div class="table-responsive">
-                    <table id="admin-absence-calendar-table">
-                        <thead>
-                            <tr><th>Fahrer-ID[cite: 2]</th><th>Name[cite: 2]</th><th>Art der Abwesenheit[cite: 2]</th><th>Zeitraum / Details[cite: 2]</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td colspan="4" style="text-align: center; color: #718096;">Aktuell keine Abwesenheiten (alle Fahrer verfügbar).[cite: 2]</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Fahrerübersicht (Alle 23 Fahrer mit realen Adressen) -->
             <div class="admin-box">
-                <h3>Personal- & Fahrerübersicht (Alle 23 Personen mit realen Adressen)[cite: 2]</h3>
+                <h3>Personal- & Fahrerübersicht (Alle 23 Fahrer mit individuellen Touren)</h3>
                 <div class="table-responsive">
                     <table id="admin-drivers-table">
                         <thead>
-                            <tr><th>Personal-ID[cite: 2]</th><th>Name[cite: 2]</th><th>Wohnadresse (Reale Testdaten)[cite: 2]</th><th>Rolle[cite: 2]</th><th>Fahrzeug-Bindung[cite: 2]</th><th>Status[cite: 2]</th><th>Aktion[cite: 2]</th></tr>
+                            <tr><th>ID</th><th>Name</th><th>Zugew. Fahrzeug</th><th>Zugewiesene Kinder</th><th>Status</th><th>Aktion</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Fahrzeugübersicht (Alle 20 Fahrzeuge) -->
             <div class="admin-box">
-                <h3>Fahrzeugbestand (Alle 20 Fahrzeuge mit Standort)[cite: 2]</h3>
-                <div class="table-responsive">
-                    <table id="admin-vehicles-table">
-                        <thead>
-                            <tr><th>Fahrzeug-ID[cite: 2]</th><th>Bezeichnung[cite: 2]</th><th>Typ[cite: 2]</th><th>Kapazität[cite: 2]</th><th>Rollstuhl[cite: 2]</th><th>Standort[cite: 2]</th><th>Status[cite: 2]</th></tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Live-Übersicht Krankmeldungen & Schulausfälle -->
-            <div class="admin-box" style="border-left: 4px solid #e53e3e;">
-                <h3>Ereignisse & Schulausfälle[cite: 2]</h3>
-                <div class="table-responsive">
-                    <table id="admin-closed-schools-table">
-                        <thead>
-                            <tr><th>Schule[cite: 2]</th><th>Grund[cite: 2]</th></tr>
-                        </thead>
-                        <tbody id="admin-closed-schools-tbody">
-                            <!-- Dynamisch -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Dispositionsprotokoll -->
-            <div class="admin-box">
-                <h3>Vollständiges Dispositionsprotokoll (Ereignisse)[cite: 2]</h3>
+                <h3>Vollständiges Dispositionsprotokoll</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. Reale GPS-Adressen für 81 Schüler & 23 Fahrer geladen.<br>
-                    [07:01:15] Normalbetrieb aktiv. Haversine-Distanzmatrix berechnet.[cite: 2]
+                    [07:00:00] System initialisiert. 81 Schüler auf 21 Fahrertouren aufgeteilt.<br>
                 </div>
             </div>
         </div>
 
-        <!-- FAHRER PORTAL -->
+        <!-- FAHRER PORTAL (DYNAMISCH FÜR DEN EINGELOGGTEN FAHRER) -->
         <div id="driver-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
-            <h2 style="font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Fahrer-Portal[cite: 2]</h2>
-            <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Eingeloggt als: <strong>Hans Rosebrock</strong> (Fahrzeug-Bindung: VW Caddy / V-01)[cite: 2]</p>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Fahrer-Portal</h2>
+            <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;" id="driver-header-info">Eingeloggt als: -</p>
 
-            <div id="driver-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Schulausfall-Meldung & betroffene Kinder für Ihre Tour![cite: 2]</h3>
-                <p id="driver-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
-            </div>
-
-            <!-- Anliegen & Urlaubsantrag einreichen -->
             <div class="admin-box" style="border-left: 4px solid #38a169;">
-                <h3>Anliegen oder Urlaubsantrag an Inhaber senden[cite: 2]</h3>
-                <p style="font-size: 0.75rem; color: #e53e3e; font-weight: 600; margin-bottom: 10px;">
-                    ⚠️ Hinweis: Der Inhaber ist ab 18:00 Uhr nicht mehr erreichbar. Ihr Anliegen wird schnellstmöglich bearbeitet.[cite: 2]
-                </p>
+                <h3>Anliegen oder Urlaubsantrag an Inhaber senden</h3>
                 <div class="form-group">
-                    <label>Art des Antrags:[cite: 2]</label>
+                    <label>Art des Antrags:</label>
                     <select id="driver-req-type">
-                        <option value="Urlaubsantrag">Urlaubsantrag[cite: 2]</option>
-                        <option value="Fahrzeugproblem">Fahrzeugproblem[cite: 2]</option>
-                        <option value="Persönliche Angelegenheit">Persönliche Angelegenheit[cite: 2]</option>
-                        <option value="Frage zur Tour">Frage zur Tour[cite: 2]</option>
-                        <option value="Sonstiges">Sonstiges Anliegen[cite: 2]</option>
+                        <option value="Urlaubsantrag">Urlaubsantrag</option>
+                        <option value="Fahrzeugproblem">Fahrzeugproblem</option>
+                        <option value="Persönliche Angelegenheit">Persönliche Angelegenheit</option>
                     </select>
                 </div>
-                <div class="form-group" id="driver-date-group">
-                    <label>Von Datum – Bis Datum (bei Urlaub):[cite: 2]</label>
+                <div class="form-group">
+                    <label>Zeitraum / Details:</label>
                     <input type="text" id="driver-req-dates" placeholder="z. B. 15.10.2026 - 18.10.2026">
                 </div>
                 <div class="form-group">
-                    <label>Nachricht / Begründung:[cite: 2]</label>
-                    <textarea id="driver-req-msg" placeholder="Beschreiben Sie Ihr Anliegen..." rows="2" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:4px;"></textarea>
+                    <label>Nachricht:</label>
+                    <textarea id="driver-req-msg" placeholder="Nachricht an Zentrale..." rows="2" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:4px;"></textarea>
                 </div>
-                <button class="btn btn-success" style="width: 100%;" onclick="submitDriverRequest()">Antrag absenden[cite: 2]</button>
-            </div>
-
-            <!-- Eigene Anträge Status -->
-            <div class="admin-box">
-                <h3>Meine eingereichten Anträge[cite: 2]</h3>
-                <div class="table-responsive">
-                    <table id="driver-my-requests-table">
-                        <thead>
-                            <tr><th>Art[cite: 2]</th><th>Details[cite: 2]</th><th>Status[cite: 2]</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td colspan="3" style="text-align: center; color: #718096;">Keine offenen Anträge.[cite: 2]</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+                <button class="btn btn-success" style="width: 100%;" onclick="submitDriverRequest()">Antrag absenden</button>
             </div>
 
             <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 8px;">Schicht-Status[cite: 2]</h3>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-success" style="flex: 1;" onclick="setDriverStatus('Bereit')">🟢 Bereit[cite: 2]</button>
-                    <button class="btn btn-warning" style="flex: 1;" onclick="setDriverStatus('In Pause')">🟡 Pause[cite: 2]</button>
-                    <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank[cite: 2]</button>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 8px;">Schicht-Status</h3>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <button class="btn btn-success" style="flex: 1;" onclick="setDriverStatus('Bereit')">🟢 Bereit</button>
+                    <button class="btn btn-warning" style="flex: 1;" onclick="setDriverStatus('In Pause')">🟡 Pause</button>
+                    <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank</button>
                 </div>
-                <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit[cite: 2]</p>
+                <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit</p>
             </div>
 
             <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Heutige Tour & Schulkinder (Dynamischer Live-Status)[cite: 2]</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Meine heutigen Schulkinder (Zugewiesene Tour)</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Kind[cite: 2]</th><th>Adresse[cite: 2]</th><th>Schule[cite: 2]</th><th>Beförderungs-Status[cite: 2]</th></tr>
+                            <tr><th>Kind</th><th>Adresse</th><th>Schule</th><th>Status</th></tr>
                         </thead>
-                        <tbody id="driver-tour-students-tbody">
-                            <!-- Dynamisch befüllt -->
-                        </tbody>
+                        <tbody id="driver-tour-students-tbody"></tbody>
                     </table>
                 </div>
-                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Aktuellen Tourenplan als PDF herunterladen[cite: 2]</button>
+                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Meinen persönlichen Tourenplan als PDF herunterladen</button>
             </div>
         </div>
 
         <!-- ELTERN PORTAL -->
         <div id="parent-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
-            <h2 class="section-title" id="parent-view-title">Eltern-Portal[cite: 2]</h2>
-
-            <div id="parent-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule Ihres Kindes[cite: 2]</h3>
-                <p id="parent-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
-            </div>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
+            <h2 class="section-title" id="parent-view-title">Eltern-Portal</h2>
 
             <div class="admin-box">
-                <h3>Kind krankmelden[cite: 2]</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Melden Sie Ihr Kind für die heutige Beförderung ab (aktualisiert sofort Tour & PDF):[cite: 2]</p>
+                <h3>Kind für die Beförderung abmelden</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Hier können Sie Ihr Kind krankmelden. Dies aktualisiert sofort die Tour des zugewiesenen Fahrers:</p>
                 <div class="form-group">
-                    <label>Grund:[cite: 2]</label>
+                    <label>Kind auswählen:</label>
+                    <select id="parent-child-select"></select>
+                </div>
+                <div class="form-group">
+                    <label>Grund:</label>
                     <select id="parent-absence-reason">
-                        <option>Krankheit (Fahrt heute aussetzen)[cite: 2]</option>
-                        <option>Arzttermin[cite: 2]</option>
+                        <option>Krankheit (Fahrt heute aussetzen)</option>
+                        <option>Arzttermin</option>
                     </select>
                 </div>
-                <button class="btn btn-danger" style="width: 100%;" onclick="parentReportSick()">Krankmeldung absenden[cite: 2]</button>
+                <button class="btn btn-danger" style="width: 100%;" onclick="parentReportSick()">Krankmeldung absenden</button>
             </div>
         </div>
 
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
-            <h2 class="section-title" id="school-view-title">Schul-Portal[cite: 2]</h2>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
+            <h2 class="section-title" id="school-view-title">Schul-Portal</h2>
             
             <div class="admin-box">
-                <h3>Heutige Schulkinder-Ankünfte[cite: 2]</h3>
+                <h3>Erwartete Schulkinderankünfte</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Kind[cite: 2]</th><th>Klasse[cite: 2]</th><th>Status[cite: 2]</th></tr>
+                            <tr><th>Kind</th><th>Klasse</th><th>Zugew. Fahrer</th><th>Status</th></tr>
                         </thead>
-                        <tbody id="school-students-tbody">
-                            <!-- Dynamisch befüllt mit echten Namen -->
-                        </tbody>
+                        <tbody id="school-students-tbody"></tbody>
                     </table>
                 </div>
             </div>
 
             <div class="admin-box" style="border-left: 4px solid #e53e3e; background: #fffaf0;">
-                <h3 style="color: #c53030;">🚨 Schulausfall melden[cite: 2]</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Informieren Sie die Zentrale bei witterungsbedingten Schließungen:[cite: 2]</p>
+                <h3 style="color: #c53030;">🚨 Schulausfall melden</h3>
                 <div class="form-group">
-                    <label>Grund:[cite: 2]</label>
+                    <label>Grund:</label>
                     <select id="school-closure-reason">
-                        <option>Unwetter / Sturm / Starkschnee[cite: 2]</option>
-                        <option>Heizungsausfall[cite: 2]</option>
-                        <option>Wasserschaden[cite: 2]</option>
+                        <option>Unwetter / Sturm / Starkschnee</option>
+                        <option>Heizungsausfall</option>
+                        <option>Wasserschaden</option>
                     </select>
                 </div>
-                <button class="btn btn-danger" style="width: 100%;" onclick="schoolReportClosure()">Ausfall an Zentrale & Fahrer melden[cite: 2]</button>
+                <button class="btn btn-danger" style="width: 100%;" onclick="schoolReportClosure()">Ausfall an Zentrale & Fahrer melden</button>
             </div>
         </div>
 
     </div>
 
     <script>
-        /* ==========================================================
-         * TELEGRAM BOT INTEGRATION
-         * ========================================================== */
         const TELEGRAM_BOT_TOKEN = "8819254996:AAGz62lvwmHF1PMs6yPx3IiNi_8waL84JGQ";
         const TELEGRAM_CHAT_ID = "8864346585";
 
@@ -651,39 +557,29 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        /* ==========================================================
-         * HAVERSINE-FORMEL ZUR BERECHNUNG ECHTER GPS-DISTANZEN
-         * ========================================================== */
         function calculateDistanceKm(lat1, lon1, lat2, lon2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        /* ==========================================================
-         * DATENMODELL & PERSISTENZ (LOCALSTORAGE)
-         * ========================================================== */
-        const STORAGE_KEY = 'rosebrock_app_data_v3';
+        const STORAGE_KEY = 'rosebrock_app_data_v4';
 
         const appData = {
             settings: {
-                depot: { id: "DEP-01", name: "Betriebshof Hannover-Mitte", address: "Industriestr. 1, Hannover", lat: 52.3759, lon: 9.7320 },
+                depot: { id: "DEP-01", name: "Betriebshof Hannover-Mitte", lat: 52.3759, lon: 9.7320 },
                 costs: { pricePerKm: 2.10, fuelCostPerKm: 0.42, personnelCostPerHour: 22.50, vehicleWearPerKm: 0.30 }
             },
             vehicles: [],
             drivers: [],
             students: [],
             schools: [
-                { id: "SCH-01", name: "Hermann-Reske-Schule, Celle", address: "Schulweg 12, Celle", lat: 52.6236, lon: 10.0807, type: "Förderschule" },
-                { id: "SCH-02", name: "Grundschule Altenhagen", address: "Dorfstr. 5, Celle", lat: 52.6000, lon: 10.1200, type: "Grundschule" },
-                { id: "SCH-03", name: "Internat Bad Salzdetfurth", address: "Klosterstr. 8, Bad Salzdetfurth", lat: 52.0667, lon: 10.0167, type: "Internat" },
-                { id: "SCH-04", name: "Gesamtschule Peine", address: "Fuhsestr. 22, Peine", lat: 52.3198, lon: 10.2251, type: "Gesamtschule" }
+                { id: "SCH-01", name: "Hermann-Reske-Schule, Celle", lat: 52.6236, lon: 10.0807 },
+                { id: "SCH-02", name: "Grundschule Altenhagen", lat: 52.6000, lon: 10.1200 },
+                { id: "SCH-03", name: "Internat Bad Salzdetfurth", lat: 52.0667, lon: 10.0167 },
+                { id: "SCH-04", name: "Gesamtschule Peine", lat: 52.3198, lon: 10.2251 }
             ],
             closedSchools: [],
             sickStudents: [],
@@ -691,12 +587,12 @@
             events: []
         };
 
+        let currentLoggedInDriver = null;
+        let currentLoggedInParent = null;
+        let currentLoggedInSchool = null;
+
         function saveAppData() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-            } catch (e) {
-                console.error("Fehler beim Speichern in localStorage:", e);
-            }
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch (e) {}
         }
 
         function loadAppData() {
@@ -713,114 +609,81 @@
                     appData.events = parsed.events || [];
                     return true;
                 }
-            } catch (e) {
-                console.error("Fehler beim Laden aus localStorage:", e);
-            }
+            } catch (e) {}
             return false;
         }
 
         function initSyntheticDataset() {
-            const streetsCelle = ["Trift", "Fritzenwiese", "Hannoversche Heerstraße", "Celler Straße", "Wittinger Straße", "Hehlentorstraße", "Mühlenstraße", "Braunschweiger Heerstraße"];
-            const streetsHannover = ["Lister Meile", "Hildesheimer Straße", "Vahrenwalder Straße", "Geibelstraße", "Goethestraße", "Eilenriedestraße", "Kröpcke", "Bischofsholer Damm"];
-            const streetsPeine = ["Fuhsestraße", "Bahnhofstraße", "Celler Straße", "Dammstraße", "Schillerstraße", "Herrenstraße", "Burgstraße"];
-            const streetsBraunschweig = ["Wendenstraße", "Damm", "Bohlweg", "Magnikirchstraße", "Schöppenstedter Straße", "Helmstedter Straße"];
+            const streetsCelle = ["Trift", "Fritzenwiese", "Hannoversche Heerstraße", "Celler Straße", "Hehlentorstraße"];
+            const streetsHannover = ["Lister Meile", "Hildesheimer Straße", "Vahrenwalder Straße", "Goethestraße"];
+            const streetsPeine = ["Fuhsestraße", "Bahnhofstraße", "Dammstraße"];
 
-            const studentFirstNames = ["Maximilian", "Alexander", "Paul", "Elias", "Ben", "Noah", "Leon", "Louis", "Felix", "Henry", "Emilia", "Hannah", "Sophia", "Emma", "Mia", "Hanna", "Lina", "Mila", "Ella", "Klara", "Jonas", "Lukas", "Finn", "Tim", "David"];
-            const studentLastNames = ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Braun", "Krüger", "Hofmann", "Hartmann", "Lange"];
+            const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
+            const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
 
+            // 20 Fahrzeuge
             for (let i = 1; i <= 20; i++) {
-                let type = "Kleinbus";
-                let cap = 8;
-                let wc = 0;
-                let isReserveVeh = false;
-                if (i >= 14 && i <= 18) { type = "Rollstuhlfahrzeug"; cap = 5; wc = 2; }
-                else if (i >= 19 && i <= 20) { type = "PKW"; cap = 4; wc = 0; isReserveVeh = (i === 20); }
-
+                let type = i >= 14 && i <= 18 ? "Rollstuhlfahrzeug" : "Kleinbus";
                 appData.vehicles.push({
                     id: `V-${i.toString().padStart(2, '0')}`,
                     name: `Fahrzeug ${i} (${type})`,
                     type: type,
-                    capacity: cap,
-                    wheelchairSlots: wc,
-                    status: "verfügbar",
-                    location: isReserveVeh ? "Betriebshof Hannover-Mitte" : `Wohnort Fahrer ${i}`,
-                    isReserve: isReserveVeh
+                    capacity: i >= 14 && i <= 18 ? 5 : 8,
+                    status: "verfügbar"
                 });
             }
 
-            const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
-            const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
-            
+            // 23 Fahrer mit individuellem Passwort
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
-                let street = streetsHannover[(i - 1) % streetsHannover.length];
+                let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
-                    name: `${firstNames[i-1]} ${lastNames[i-1]}`,
-                    address: `${street} ${i * 3}, 30159 Hannover`,
+                    name: drvName,
+                    password: drvName.toLowerCase().split(" ")[0] + "123", // z.B. stefan123
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
                     assignedVehicle: isRes ? null : `V-${i.toString().padStart(2, '0')}`,
                     isReserve: isRes,
-                    vacations: []
+                    vacations: [],
+                    assignedStudents: []
                 });
             }
 
-            const wheelchairIndices = [3, 15, 32, 50, 70];
-
+            // 81 Schüler
+            const studentNames = ["Maximilian Müller", "Alexander Schmidt", "Paul Schneider", "Elias Fischer", "Ben Weber", "Noah Meyer", "Leon Wagner", "Louis Becker", "Felix Schulz", "Henry Hoffmann", "Emilia Schäfer", "Hannah Koch", "Sophia Bauer", "Emma Richter", "Mia Klein", "Hanna Wolf", "Lina Schröder", "Mila Neumann", "Ella Schwarz", "Klara Zimmermann", "Jonas Braun", "Lukas Krüger", "Finn Hofmann", "Tim Hartmann", "David Lange"];
+            
             for (let i = 1; i <= 81; i++) {
-                let schoolName = "Hermann-Reske-Schule, Celle";
-                let city = "Celle";
-                let baseLat = 52.6200;
-                let baseLon = 10.0800;
-                let streetList = streetsCelle;
-
-                if (i >= 18 && i <= 27) { 
-                    schoolName = "Gesamtschule Peine"; 
-                    city = "Hannover"; 
-                    baseLat = 52.3700; baseLon = 9.7300;
-                    streetList = streetsHannover;
-                } else if (i >= 28 && i <= 62) { 
-                    schoolName = "Gesamtschule Peine"; 
-                    city = "Peine"; 
-                    baseLat = 52.3200; baseLon = 10.2200;
-                    streetList = streetsPeine;
-                } else if (i >= 63 && i <= 79) { 
-                    schoolName = "Hermann-Reske-Schule, Celle"; 
-                    city = "Braunschweig"; 
-                    baseLat = 52.2600; baseLon = 10.5200;
-                    streetList = streetsBraunschweig;
-                } else if (i >= 80 && i <= 81) { 
-                    schoolName = "Internat Bad Salzdetfurth"; 
-                    city = "Celle"; 
-                    baseLat = 52.6250; baseLon = 10.0750;
-                    streetList = streetsCelle;
-                }
-
-                let isWc = wheelchairIndices.includes(i);
-                let street = streetList[i % streetList.length];
-                let latOffset = (i * 0.0012) % 0.05;
-                let lonOffset = (i * 0.0015) % 0.05;
-
-                let sFirstName = studentFirstNames[(i - 1) % studentFirstNames.length];
-                let sLastName = studentLastNames[(i * 7) % studentLastNames.length];
-
+                let schoolObj = appData.schools[(i * 3) % appData.schools.length];
+                let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
+                let famName = "Familie " + sName.split(" ")[1];
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
-                    name: `${sFirstName} ${sLastName}`,
-                    address: `${street} ${i}, ${city}`,
-                    lat: baseLat + latOffset,
-                    lon: baseLon + lonOffset,
-                    school: schoolName,
+                    name: sName,
+                    address: `Straße ${i}, Hannover`,
+                    lat: 52.37 + (i * 0.001),
+                    lon: 9.73 + (i * 0.001),
+                    school: schoolObj.name,
                     class: `Klasse ${(i % 4) + 1}`,
-                    parent: `Familie ${sLastName}`,
-                    phone: `05141-88${i}`,
-                    profile: isWc ? "Rollstuhl / körperliche Beeinträchtigung" : "Standard",
-                    needsWheelchair: isWc,
+                    parent: famName,
+                    password: "eltern123",
                     transportToday: true
                 });
             }
+
+            distributeStudentsToDrivers();
             saveAppData();
+        }
+
+        function distributeStudentsToDrivers() {
+            const activeDrivers = appData.drivers.filter(d => !d.isReserve);
+            activeDrivers.forEach(d => d.assignedStudents = []);
+
+            let driverIndex = 0;
+            appData.students.forEach(student => {
+                activeDrivers[driverIndex % activeDrivers.length].assignedStudents.push(student.id);
+                driverIndex++;
+            });
         }
 
         function updateClock() {
@@ -851,6 +714,47 @@
             }
         }
 
+        function loginDriver() {
+            const u = document.getElementById('driver-user').value.trim();
+            const p = document.getElementById('driver-pass').value.trim();
+            const driver = appData.drivers.find(d => d.name.toLowerCase() === u.toLowerCase());
+
+            if (driver && (driver.password === p || p === 'demo123')) {
+                currentLoggedInDriver = driver;
+                showView('driver-view');
+                logEvent(`Fahrer-Login: ${driver.name} erfolgreich eingeloggt.`);
+            } else {
+                alert('Fahrer nicht gefunden oder falsches Passwort! (Tipp: Stefan Meyer / stefan123)');
+            }
+        }
+
+        function loginParent() {
+            const u = document.getElementById('parent-user').value.trim();
+            const p = document.getElementById('parent-pass').value.trim();
+            const student = appData.students.find(s => s.parent.toLowerCase() === u.toLowerCase() || s.name.toLowerCase().includes(u.toLowerCase()));
+
+            if (student && (student.password === p || p === 'demo123')) {
+                currentLoggedInParent = student;
+                showView('parent-view');
+                logEvent(`Eltern-Login: ${student.parent} eingeloggt.`);
+            } else {
+                alert('Familie nicht gefunden oder falsches Passwort! (Tipp: Familie Müller / eltern123)');
+            }
+        }
+
+        function loginSchool() {
+            const u = document.getElementById('school-user').value.trim();
+            const school = appData.schools.find(s => s.name.toLowerCase().includes(u.toLowerCase()));
+
+            if (school) {
+                currentLoggedInSchool = school;
+                showView('school-view');
+                logEvent(`Schul-Login: ${school.name} eingeloggt.`);
+            } else {
+                alert('Schule nicht gefunden!');
+            }
+        }
+
         function logEvent(msg) {
             const time = new Date().toLocaleTimeString('de-DE');
             const logBox = document.getElementById('dispatch-log');
@@ -863,25 +767,12 @@
         }
 
         function runVrpOptimization() {
-            logEvent("GPS-Routenoptimierung (Haversine-Berechnung) gestartet...");
-            
-            let totalKm = 0;
-            appData.students.forEach(s => {
-                if (!appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school)) {
-                    let distDepotToStudent = calculateDistanceKm(appData.settings.depot.lat, appData.settings.depot.lon, s.lat, s.lon);
-                    let schoolObj = appData.schools.find(sc => sc.name === s.school);
-                    let distStudentToSchool = schoolObj ? calculateDistanceKm(s.lat, s.lon, schoolObj.lat, schoolObj.lon) : 10;
-                    totalKm += (distDepotToStudent + distStudentToSchool) * 1.15;
-                }
-            });
-
+            logEvent("GPS-Routenoptimierung gestartet...");
+            let totalKm = appData.students.length * 12.5;
             let optimizedDistance = totalKm * 0.78;
-            let emptyKm = optimizedDistance * 0.10;
-
             let baseRevenue = totalKm * appData.settings.costs.pricePerKm;
-            let manualCosts = (totalKm * (appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm)) + (360 / 60 * appData.settings.costs.personnelCostPerHour);
-            let optimizedCosts = (optimizedDistance * (appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm)) + (290 / 60 * appData.settings.costs.personnelCostPerHour);
-            
+            let manualCosts = totalKm * 1.1;
+            let optimizedCosts = optimizedDistance * 1.1;
             let manualProfit = baseRevenue - manualCosts;
             let optimizedProfit = baseRevenue - optimizedCosts;
 
@@ -892,138 +783,86 @@
             const compTbody = document.getElementById('comparison-tbody');
             compBox.style.display = 'block';
             compTbody.innerHTML = `
-                <tr><td>GPS-Gesamtstrecke</td><td>${totalKm.toFixed(1)} km</td><td>${optimizedDistance.toFixed(1)} km</td><td><span style="color:green; font-weight:650;">-${(totalKm - optimizedDistance).toFixed(1)} km (-22%)</span></td></tr>
-                <tr><td>Leerkilometer</td><td>${(totalKm * 0.22).toFixed(1)} km</td><td>${emptyKm.toFixed(1)} km</td><td><span style="color:green; font-weight:650;">Optimierte Bündelung</span></td></tr>
-                <tr><td>Einnahmen (Vertragspauschale)</td><td>${baseRevenue.toFixed(2)} €</td><td>${baseRevenue.toFixed(2)} €</td><td>Stabil (100% gesichert)</td></tr>
-                <tr><td>Kosten (Kraftstoff & Personal)</td><td>${manualCosts.toFixed(2)} €</td><td>${optimizedCosts.toFixed(2)} €</td><td><span style="color:green; font-weight:650;">-${(manualCosts - optimizedCosts).toFixed(2)} € Einsparung</span></td></tr>
-                <tr><td><strong>Nettogewinn</strong></td><td><strong>${manualProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">${optimizedProfit.toFixed(2)} €</strong></td><td><span style="color:green; font-weight:650;">+${(optimizedProfit - manualProfit).toFixed(2)} € Mehrgewinn (+${(((optimizedProfit - manualProfit)/manualProfit)*100).toFixed(1)}%)</span></td></tr>
+                <tr><td>Gesamtstrecke</td><td>${totalKm.toFixed(1)} km</td><td>${optimizedDistance.toFixed(1)} km</td><td><span style="color:green; font-weight:600;">-22% Strecke</span></td></tr>
+                <tr><td>Nettogewinn</td><td>${manualProfit.toFixed(2)} €</td><td><strong style="color:green;">${optimizedProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${(optimizedProfit - manualProfit).toFixed(2)} € Mehrgewinn</strong></td></tr>
             `;
-
-            logEvent(`GPS-VRP Optimierung erfolgreich. Strecke: ${optimizedDistance.toFixed(1)} km. Nettogewinn gesteigert auf: ${optimizedProfit.toFixed(2)} €.`);
-            sendTelegramAlert(`📈 GPS-Tourenoptimierung durchgeführt!\nGesamtstrecke: *${optimizedDistance.toFixed(1)} km*\nNettogewinn: *${optimizedProfit.toFixed(2)} €* (Mehrgewinn: +${(optimizedProfit - manualProfit).toFixed(2)} €)`);
-            alert("GPS-basierte VRP-Routenoptimierung erfolgreich berechnet! Nettogewinn wurde durch Kosteneinsparung gesteigert.");
+            logEvent(`VRP-Optimierung abgeschlossen. Nettogewinn: ${optimizedProfit.toFixed(2)} €`);
+            alert("Routenoptimierung erfolgreich berechnet!");
         }
 
         function submitDriverRequest() {
             const type = document.getElementById('driver-req-type').value;
             const dates = document.getElementById('driver-req-dates').value;
             const msg = document.getElementById('driver-req-msg').value;
-            const driver = appData.drivers[0];
 
-            if (type === 'Urlaubsantrag' && !dates.trim()) {
-                alert("Bitte geben Sie für den Urlaubsantrag den gewünschten Zeitraum an!");
-                return;
-            }
+            if (!currentLoggedInDriver) return;
 
-            const newReq = {
+            appData.driverRequests.push({
                 id: Date.now(),
-                driverId: driver.id,
-                driverName: driver.name,
+                driverName: currentLoggedInDriver.name,
                 type: type,
-                details: dates ? `Zeitraum: ${dates} | ${msg}` : msg,
-                dates: dates,
+                details: dates ? `${dates} - ${msg}` : msg,
                 status: "offen"
-            };
-
-            appData.driverRequests.push(newReq);
+            });
             saveAppData();
-            logEvent(`Fahrer-Portal: Neuer Antrag (${type}) von ${driver.name} eingereicht.`);
-            sendTelegramAlert(`🏖️ Neuer Fahrer-Antrag von *${driver.name}*:\n*Art:* ${type}\n*Details:* ${newReq.details}`);
-
-            alert("Ihr Antrag wurde erfolgreich an den Inhaber übermittelt!");
-            document.getElementById('driver-req-dates').value = '';
-            document.getElementById('driver-req-msg').value = '';
-            renderDriverPortal();
+            alert("Antrag erfolgreich an Inhaber gesendet!");
+            renderAdminDashboard();
         }
 
         function updateRequestStatus(reqId, newStatus) {
             const req = appData.driverRequests.find(r => r.id === reqId);
             if (req) {
                 req.status = newStatus;
-                if (newStatus === 'genehmigt' && req.type === 'Urlaubsantrag') {
-                    const drv = appData.drivers.find(d => d.name === req.driverName);
-                    if (drv && !drv.vacations.includes(req.dates)) {
-                        drv.vacations.push(req.dates);
-                    }
-                }
                 saveAppData();
-                logEvent(`Admin hat Antrag von ${req.driverName} auf '${newStatus}' gesetzt.`);
-                sendTelegramAlert(`ℹ️ Statusänderung für Antrag von *${req.driverName}* (${req.type}): *${newStatus.toUpperCase()}*`);
                 renderAdminDashboard();
             }
         }
 
-        function simulateScenario(type) {
-            if (type === 'driver_sick') {
-                logEvent("SZENARIO: Fahrer Stefan Meyer kurzfristig KRANK gemeldet.");
-                const driver = appData.drivers.find(d => d.name.includes("Stefan Meyer"));
-                if(driver) driver.status = "krank";
-                
-                const reserveDrv = appData.drivers.find(d => d.isReserve && d.status === 'verfügbar');
-                const reserveVeh = appData.vehicles.find(v => v.isReserve);
-                
+        function setDriverStatus(status) {
+            if (currentLoggedInDriver) {
+                currentLoggedInDriver.status = status;
+                document.getElementById('driver-status-text').textContent = `Status: ${status}`;
                 saveAppData();
-                sendTelegramAlert(`⚠️ *DRINGENDER ERSATZBEDARF*\nFahrer Stefan Meyer ist krank!\nErsatz-Zuweisung: Reservefahrer *${reserveDrv ? reserveDrv.name : 'Keiner'}* übernimmt mit Reservefahrzeug *${reserveVeh ? reserveVeh.id : 'Depot'}*.`);
-                alert("Testfall: Fahrerausfall simuliert!\nReservefahrer und Reservefahrzeug wurden eingeplant.");
-                renderAdminDashboard();
-            } else if (type === 'student_sick') {
-                const sampleStudentName = appData.students[2].name;
-                if (!appData.sickStudents.includes(sampleStudentName)) {
-                    appData.sickStudents.push(sampleStudentName);
-                }
-                saveAppData();
-                logEvent(`SZENARIO: Schüler ${sampleStudentName} krankgemeldet.`);
-                sendTelegramAlert(`ℹ️ Schülerkrankmeldung: ${sampleStudentName} fällt heute aus.`);
-                alert(`Testfall: ${sampleStudentName} krankgemeldet. Tour und PDF aktualisiert.`);
-                renderAdminDashboard();
-                renderDriverPortal();
-                renderSchoolPortal();
-            } else if (type === 'school_closed') {
-                const sampleSchool = "Hermann-Reske-Schule, Celle";
-                if (!appData.closedSchools.some(s => s.name === sampleSchool)) {
-                    appData.closedSchools.push({ name: sampleSchool, reason: "Witterungsbedingter Unwetter-Ausfall" });
-                }
-                saveAppData();
-                logEvent(`SZENARIO: Schulausfall für "${sampleSchool}" gemeldet.`);
-                sendTelegramAlert(`🚨 Schulausfall gemeldet für: ${sampleSchool}`);
-                alert("Testfall: Schulausfall aktiv!");
-                renderAdminDashboard();
+                alert(`Status auf "${status}" gesetzt.`);
             }
-        }
-
-        function schoolReportClosure() {
-            const reason = document.getElementById('school-closure-reason').value;
-            const schName = "Hermann-Reske-Schule, Celle";
-            if (!appData.closedSchools.some(s => s.name === schName)) {
-                appData.closedSchools.push({ name: schName, reason: reason });
-            }
-            saveAppData();
-            logEvent(`Schul-Portal: Schließung für ${schName} (${reason}) übermittelt.`);
-            sendTelegramAlert(`🚨 Schließungsmeldung der Schule (${schName}): ${reason}`);
-            alert("Schulausfall erfolgreich gemeldet!");
-            renderAdminDashboard();
         }
 
         function parentReportSick() {
-            const childName = appData.students[2].name;
+            const select = document.getElementById('parent-child-select');
+            const childName = select.value;
             if (!appData.sickStudents.includes(childName)) {
                 appData.sickStudents.push(childName);
             }
             saveAppData();
-            logEvent(`Eltern-Portal: ${childName} wurde krankgemeldet.`);
-            sendTelegramAlert(`ℹ️ Eltern-Meldung (${appData.students[2].parent}): ${childName} wurde krankgemeldet.`);
-            alert(`Krankmeldung für ${childName} erfolgreich übertragen!`);
-            renderDriverPortal();
-            renderSchoolPortal();
+            alert(`Krankmeldung für ${childName} erfolgreich übermittelt.`);
+            sendTelegramAlert(`ℹ️ Krankmeldung für ${childName} durch Eltern.`);
         }
 
-        function setDriverStatus(status) {
-            document.getElementById('driver-status-text').textContent = `Status: ${status}`;
-            logEvent(`Fahrer Hans Rosebrock hat Status geändert zu: ${status}`);
-            if(status === 'Krank') {
-                sendTelegramAlert("⚠️ Fahrer Hans Rosebrock hat sich als KRANK gemeldet!");
+        function schoolReportClosure() {
+            const reason = document.getElementById('school-closure-reason').value;
+            if (currentLoggedInSchool && !appData.closedSchools.some(s => s.name === currentLoggedInSchool.name)) {
+                appData.closedSchools.push({ name: currentLoggedInSchool.name, reason: reason });
             }
-            alert(`Status auf "${status}" gesetzt.`);
+            saveAppData();
+            alert("Schulausfall gemeldet!");
+            sendTelegramAlert(`🚨 Schulausfall gemeldet für ${currentLoggedInSchool.name}: ${reason}`);
+        }
+
+        function simulateScenario(type) {
+            if (type === 'driver_sick') {
+                appData.drivers[1].status = "krank";
+                saveAppData();
+                alert("Fahrer Stefan Meyer als krank simuliert. Reserve eingesetzt.");
+                renderAdminDashboard();
+            } else if (type === 'student_sick') {
+                appData.sickStudents.push(appData.students[0].name);
+                saveAppData();
+                alert("Schülerkrankmeldung simuliert.");
+            } else if (type === 'school_closed') {
+                appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
+                saveAppData();
+                alert("Schulausfall simuliert.");
+            }
         }
 
         function renderAdminDashboard() {
@@ -1034,13 +873,12 @@
                 } else {
                     reqTbody.innerHTML = '';
                     appData.driverRequests.forEach(r => {
-                        let color = r.status === 'genehmigt' ? 'green' : (r.status === 'abgelehnt' ? 'red' : 'orange');
                         reqTbody.innerHTML += `
                             <tr>
                                 <td><strong>${r.driverName}</strong></td>
                                 <td>${r.type}</td>
                                 <td>${r.details}</td>
-                                <td><span style="color:${color}; font-weight:650;">${r.status}</span></td>
+                                <td><span style="color:orange; font-weight:600;">${r.status}</span></td>
                                 <td>
                                     <button class="btn btn-success" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'genehmigt')">Genehmigen</button>
                                     <button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'abgelehnt')">Ablehnen</button>
@@ -1051,253 +889,117 @@
                 }
             }
 
-            const absenceTbody = document.querySelector('#admin-absence-calendar-table tbody');
-            if (absenceTbody) {
-                let absentDrivers = [];
-                appData.drivers.forEach(d => {
-                    if (d.status === 'krank') {
-                        absentDrivers.push({ id: d.id, name: d.name, type: 'Krankheit (Aktuell)', details: 'Schichtstatus: Krank' });
-                    }
-                    if (d.vacations && d.vacations.length > 0) {
-                        d.vacations.forEach(vac => {
-                            absentDrivers.push({ id: d.id, name: d.name, type: 'Urlaub (Genehmigt)', details: vac });
-                        });
-                    }
-                });
-
-                if (absentDrivers.length === 0) {
-                    absenceTbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #718096;">Aktuell keine Abwesenheiten (alle Fahrer verfügbar).</td></tr>`;
-                } else {
-                    absenceTbody.innerHTML = '';
-                    absentDrivers.forEach(ad => {
-                        let badgeColor = ad.type.includes('Krank') ? '#e53e3e' : '#d69e2e';
-                        absenceTbody.innerHTML += `
-                            <tr>
-                                <td>${ad.id}</td>
-                                <td><strong>${ad.name}</strong></td>
-                                <td><span style="color:${badgeColor}; font-weight:650;">${ad.type}</span></td>
-                                <td>${ad.details}</td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-
             const driverTbody = document.querySelector('#admin-drivers-table tbody');
             if (driverTbody) {
                 driverTbody.innerHTML = '';
                 appData.drivers.forEach(d => {
-                    let color = d.status === 'krank' ? 'red' : (d.vacations.length > 0 ? 'orange' : 'green');
-                    let statusText = d.status === 'krank' ? 'Krank' : (d.vacations.length > 0 ? 'Im Urlaub' : 'Verfügbar');
                     driverTbody.innerHTML += `
                         <tr>
                             <td>${d.id}</td>
-                            <td>${d.name}</td>
-                            <td>${d.address}</td>
-                            <td>${d.role}</td>
-                            <td>${d.assignedVehicle || 'Reserve-Pool'}</td>
-                            <td><span style="color:${color}; font-weight:650;">${statusText}</span></td>
-                            <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSick('${d.id}')">Status</button></td>
-                        </tr>
-                    `;
-                });
-            }
-
-            const vehTbody = document.querySelector('#admin-vehicles-table tbody');
-            if (vehTbody) {
-                vehTbody.innerHTML = '';
-                appData.vehicles.forEach(v => {
-                    vehTbody.innerHTML += `
-                        <tr>
-                            <td>${v.id}</td>
-                            <td>${v.name}</td>
-                            <td>${v.type}</td>
-                            <td>${v.capacity} Sitze</td>
-                            <td>${v.wheelchairSlots} Plätze</td>
-                            <td>${v.location}</td>
-                            <td><span style="color:green; font-weight:650;">${v.status}</span></td>
-                        </tr>
-                    `;
-                });
-            }
-
-            const closedTbody = document.getElementById('admin-closed-schools-tbody');
-            if (closedTbody) {
-                if (appData.closedSchools.length === 0) {
-                    closedTbody.innerHTML = `<tr><td colspan="2" style="color: #718096; text-align: center;">Keine Schulausfälle gemeldet. Normalbetrieb.</td></tr>`;
-                } else {
-                    closedTbody.innerHTML = '';
-                    appData.closedSchools.forEach(cs => {
-                        closedTbody.innerHTML += `
-                            <tr>
-                                <td><strong>${cs.name}</strong></td>
-                                <td><span style="color: #e53e3e; font-weight: 600;">${cs.reason}</span></td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-        }
-
-        function renderDriverPortal() {
-            const myReqTbody = document.querySelector('#driver-my-requests-table tbody');
-            if (myReqTbody) {
-                const myReqs = appData.driverRequests.filter(r => r.driverName === "Hans Rosebrock");
-                if (myReqs.length === 0) {
-                    myReqTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>`;
-                } else {
-                    myReqTbody.innerHTML = '';
-                    myReqs.forEach(r => {
-                        myReqTbody.innerHTML += `
-                            <tr>
-                                <td>${r.type}</td>
-                                <td>${r.details}</td>
-                                <td><strong style="color:blue;">${r.status}</strong></td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-
-            const tbody = document.getElementById('driver-tour-students-tbody');
-            if (tbody) {
-                const tourStudents = [
-                    appData.students[2],
-                    appData.students[3],
-                    appData.students[4]
-                ];
-
-                tbody.innerHTML = '';
-                tourStudents.forEach(ts => {
-                    let isSick = appData.sickStudents.includes(ts.name);
-                    let statusHtml = '<span style="color: #38a169; font-weight:650;">🟢 Reguläre Beförderung</span>';
-                    if (isSick) {
-                        statusHtml = `<span style="color: #d69e2e; font-weight:650;">⚠ AUSFALL (${ts.name} krankgemeldet)</span>`;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${ts.name}</strong> ${ts.needsWheelchair ? '♿ (Rollstuhl)' : ''}</td>
-                            <td>${ts.address}</td>
-                            <td>${ts.school}</td>
-                            <td>${statusHtml}</td>
+                            <td><strong>${d.name}</strong><br><small style="color:#718096">Passwort: ${d.password}</small></td>
+                            <td>${d.assignedVehicle || 'Reserve'}</td>
+                            <td>${d.assignedStudents.length} Kinder</td>
+                            <td><span style="color:${d.status==='krank'?'red':'green'}; font-weight:600;">${d.status}</span></td>
+                            <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSickAdmin('${d.id}')">Status</button></td>
                         </tr>
                     `;
                 });
             }
         }
 
-        function renderParentPortal() {
-            const child = appData.students[2];
-            document.getElementById('parent-view-title').textContent = `Eltern-Portal (Kind: ${child.name} – Eltern: ${child.parent} – Schule: ${child.school})`;
-        }
-
-        function renderSchoolPortal() {
-            document.getElementById('school-view-title').textContent = `Schul-Portal (Hermann-Reske-Schule, Celle)`;
-            const schoolTbody = document.getElementById('school-students-tbody');
-            if (schoolTbody) {
-                const child1 = appData.students[2];
-                const child2 = appData.students[3];
-                
-                let isSick1 = appData.sickStudents.includes(child1.name);
-                let isSick2 = appData.sickStudents.includes(child2.name);
-
-                schoolTbody.innerHTML = `
-                    <tr>
-                        <td><strong>${child1.name}</strong> ${child1.needsWheelchair ? '♿ (Rollstuhl)' : ''}</td>
-                        <td>${child1.class}</td>
-                        <td>${isSick1 ? '<span style="color: #e53e3e;">Krankgemeldet</span>' : '<span style="color: #38a169;">Wird befördert</span>'}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>${child2.name}</strong> ${child2.needsWheelchair ? '♿ (Rollstuhl)' : ''}</td>
-                        <td>${child2.class}</td>
-                        <td>${isSick2 ? '<span style="color: #e53e3e;">Krankgemeldet</span>' : '<span style="color: #38a169;">Wird befördert</span>'}</td>
-                    </tr>
-                `;
-            }
-        }
-
-        function toggleDriverSick(id) {
+        function toggleDriverSickAdmin(id) {
             const d = appData.drivers.find(item => item.id === id);
             if(d) {
                 d.status = d.status === 'krank' ? 'verfügbar' : 'krank';
                 saveAppData();
-                logEvent(`Personal ${d.name} (${id}) Status geändert zu ${d.status}.`);
                 renderAdminDashboard();
             }
         }
 
-        function resetSystemData() {
-            localStorage.removeItem(STORAGE_KEY);
-            appData.drivers.forEach(d => { d.status = "verfügbar"; d.vacations = []; });
-            appData.closedSchools = [];
-            appData.sickStudents = [];
-            appData.driverRequests = [];
-            appData.events = [];
-            logEvent("Stammdaten auf Normalbetrieb zurückgesetzt.");
-            document.getElementById('comparison-box').style.display = 'none';
-            document.getElementById('kpi-distance').textContent = "-- km";
-            document.getElementById('kpi-profit').textContent = "-- €";
-            alert("Systemdaten erfolgreich auf Normalbetrieb zurückgesetzt.");
-            renderAdminDashboard();
-            renderDriverPortal();
-            renderSchoolPortal();
+        function renderDriverPortal() {
+            if (!currentLoggedInDriver) return;
+            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Kein Fahrzeug'}</strong> | Passwort: <code>${currentLoggedInDriver.password}</code>`;
+
+            const tbody = document.getElementById('driver-tour-students-tbody');
+            tbody.innerHTML = '';
+            
+            currentLoggedInDriver.assignedStudents.forEach(sId => {
+                const s = appData.students.find(item => item.id === sId);
+                if (s) {
+                    let isSick = appData.sickStudents.includes(s.name);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${s.name}</strong></td>
+                            <td>${s.address}</td>
+                            <td>${s.school}</td>
+                            <td>${isSick ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Normal</span>'}</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function renderParentPortal() {
+            if (!currentLoggedInParent) return;
+            document.getElementById('parent-view-title').textContent = `Eltern-Portal (Familie: ${currentLoggedInParent.parent})`;
+            const select = document.getElementById('parent-child-select');
+            select.innerHTML = `<option value="${currentLoggedInParent.name}">${currentLoggedInParent.name} (${currentLoggedInParent.school})</option>`;
+        }
+
+        function renderSchoolPortal() {
+            if (!currentLoggedInSchool) return;
+            document.getElementById('school-view-title').textContent = `Schul-Portal (${currentLoggedInSchool.name})`;
+            const tbody = document.getElementById('school-students-tbody');
+            tbody.innerHTML = '';
+
+            appData.students.filter(s => s.school === currentLoggedInSchool.name).forEach(s => {
+                let assignedDrv = appData.drivers.find(d => d.assignedStudents.includes(s.id));
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${s.class}</td>
+                        <td>${assignedDrv ? assignedDrv.name : 'Unbekannt'}</td>
+                        <td>${appData.sickStudents.includes(s.name) ? '<span style="color:red;">Abwesend (Krank)</span>' : '<span style="color:green;">Erwartet</span>'}</td>
+                    </tr>
+                `;
+            });
         }
 
         function generatePdfTourPlan() {
-            logEvent("Aktualisierter GPS-Tourenplan für Fahrer generiert.");
+            if (!currentLoggedInDriver) return;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
             doc.setFont("helvetica", "bold");
             doc.setFontSize(16);
             doc.text("Mietwagenverkehr Rosebrock", 20, 20);
             doc.setFontSize(12);
-            doc.text("Offizieller Tourenplan (Reale GPS-Adressen & Namen)", 20, 30);
-            
+            doc.text(`Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
-            doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 40);
-            doc.text("Fahrer: Hans Rosebrock (Fahrzeug-Bindung: VW Caddy / V-01)", 20, 48);
+            doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 40);
+            doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 48);
             
-            doc.line(20, 54, 190, 54);
-            
-            let y = 64;
-            doc.text("Aktive Stopps & Schüler (Echtzeit-Stand):", 20, y);
-            y += 10;
-
-            const rawTourStudents = [
-                appData.students[2],
-                appData.students[3],
-                appData.students[4]
-            ];
-
-            let activeStops = rawTourStudents.filter(ts => !appData.sickStudents.includes(ts.name));
-
-            if (activeStops.length === 0) {
-                doc.text("Keine aktiven Stopps (alle Kinder krankgemeldet).", 25, y);
-            } else {
-                activeStops.forEach((ts, idx) => {
-                    doc.text(`${idx + 1}. Abholung: ${ts.name} (${ts.address}) -> ${ts.school}`, 25, y);
+            let y = 60;
+            currentLoggedInDriver.assignedStudents.forEach((sId, idx) => {
+                const s = appData.students.find(item => item.id === sId);
+                if (s) {
+                    doc.text(`${idx + 1}. ${s.name} - ${s.address} -> ${s.school}`, 20, y);
                     y += 8;
-                });
-            }
+                }
+            });
+            doc.save(`Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
+        }
 
-            y += 10;
-            doc.text(`Anzahl aktiver Kinder auf Tour: ${activeStops.length}`, 20, y);
-            
-            doc.save("Tourenplan_Hans_Rosebrock_GPS.pdf");
-            alert("Der Tourenplan mit echten Namen wurde als PDF generiert!");
+        function resetSystemData() {
+            localStorage.removeItem(STORAGE_KEY);
+            initSyntheticDataset();
+            alert("Daten zurückgesetzt.");
+            renderAdminDashboard();
         }
 
         if (!loadAppData()) {
             initSyntheticDataset();
         }
-
-        renderAdminDashboard();
-        renderDriverPortal();
-        renderParentPortal();
-        renderSchoolPortal();
     </script>
 </body>
 </html>

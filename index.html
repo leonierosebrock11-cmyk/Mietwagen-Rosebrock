@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v5';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v6';
 
         const appData = {
             settings: {
@@ -674,6 +674,9 @@
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
+                // Realistische vertragliche Monatsstunden (100h, 120h oder 43h für Reserve/Teilzeit)
+                let monthlyHours = isRes ? 43 : (i % 2 === 0 ? 120 : 100);
+
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
                     name: drvName,
@@ -682,6 +685,7 @@
                     status: "verfügbar",
                     assignedVehicle: isRes ? null : `V-${i.toString().padStart(2, '0')}`,
                     isReserve: isRes,
+                    monthlyContractHours: monthlyHours,
                     assignedStudents: []
                 });
             }
@@ -752,12 +756,21 @@
             let pricePerKm = appData.settings.costs.pricePerKm;
             let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
             
+            // Exakte Personalkosten-Berechnung basierend auf festen Monatsverträgen (geteilt auf ~21.5 Arbeitstage/Monat)
+            let hourlyRate = appData.settings.costs.personnelCostPerHour;
+            let dailyPersonnelCosts = 0;
+            activeDrivers.forEach(d => {
+                let monthlySalary = d.monthlyContractHours * hourlyRate;
+                let dailyShare = monthlySalary / 21.5;
+                dailyPersonnelCosts += dailyShare;
+            });
+
             let baselineRevenue = totalBaselineKm * pricePerKm;
-            let baselineCosts = totalBaselineKm * costPerKm + (activeDrivers.length * 2.5 * appData.settings.costs.personnelCostPerHour);
+            let baselineCosts = totalBaselineKm * costPerKm + dailyPersonnelCosts;
             let baselineProfit = baselineRevenue - baselineCosts;
 
             let totalRevenue = totalOptimizedKm * pricePerKm;
-            let totalCosts = totalOptimizedKm * costPerKm + (activeDrivers.length * 2.5 * appData.settings.costs.personnelCostPerHour);
+            let totalCosts = totalOptimizedKm * costPerKm + dailyPersonnelCosts;
             let netProfit = totalRevenue - totalCosts;
 
             document.getElementById('kpi-profit').textContent = netProfit.toFixed(2) + ' €';
@@ -1133,7 +1146,7 @@
                     driverTbody.innerHTML += `
                         <tr>
                             <td>${d.id}</td>
-                            <td><strong>${d.name}</strong><br><small style="color:#718096">Passwort: ${d.password}</small></td>
+                            <td><strong>${d.name}</strong><br><small style="color:#718096">Vertrag: ${d.monthlyContractHours || 100}h/Monat</small></td>
                             <td>${d.assignedVehicle || 'Reserve'}</td>
                             <td>${activeCount} aktive Kinder</td>
                             <td>${getDriverStatusDisplay(d)}</td>
@@ -1161,7 +1174,7 @@
 
         function renderDriverPortal() {
             if (!currentLoggedInDriver) return;
-            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Reserve'}</strong> | Passwort: <code>${currentLoggedInDriver.password}</code>`;
+            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Reserve'}</strong>`;
             document.getElementById('driver-status-text').textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
 
             const myReqTbody = document.getElementById('driver-my-requests-tbody');

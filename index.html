@@ -298,7 +298,7 @@
     <header>
         <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Dispositionsleitstand – Max-Km & 60/90-Min-Zeitschranken</p>
+            <p>Dispositionsleitstand – Max-Km & 45/90-Min-Zeitschranken</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
@@ -385,7 +385,7 @@
             <!-- Max-Km & Zeitfenster-Optimierung Box -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
                 <h3 style="color: #6b46c1;">⚡ Max-Km & Zeitfenster-Optimierung</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Maximiert Abrechnungs-km unter strenger Einhaltung von max. 60 Min (Grundschule) & max. 90 Min (Sek 1) Fahrzeit:</p>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Maximiert Abrechnungs-km unter strenger Einhaltung von max. 45 Min (Grundschule) & 60–90 Min (Sek 1) Fahrzeit:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Optimierung starten</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v6';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v7';
 
         const appData = {
             settings: {
@@ -674,7 +674,6 @@
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
-                // Realistische vertragliche Monatsstunden (100h, 120h oder 43h für Reserve/Teilzeit)
                 let monthlyHours = isRes ? 43 : (i % 2 === 0 ? 120 : 100);
 
                 appData.drivers.push({
@@ -756,7 +755,6 @@
             let pricePerKm = appData.settings.costs.pricePerKm;
             let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
             
-            // Exakte Personalkosten-Berechnung basierend auf festen Monatsverträgen (geteilt auf ~21.5 Arbeitstage/Monat)
             let hourlyRate = appData.settings.costs.personnelCostPerHour;
             let dailyPersonnelCosts = 0;
             activeDrivers.forEach(d => {
@@ -874,7 +872,6 @@
             const now = new Date();
             document.getElementById('live-clock').textContent = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
 
-            // Automatische 07:00-Uhr-Prüfung für eingeteilte Fahrer
             if (now.getHours() === 7 && now.getMinutes() === 0) {
                 const todayStr = now.toDateString();
                 if (appData.lastMorningCheckDate !== todayStr) {

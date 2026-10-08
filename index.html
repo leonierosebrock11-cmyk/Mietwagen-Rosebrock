@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v8';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v9';
 
         const appData = {
             settings: {
@@ -691,6 +691,7 @@
 
             const studentNames = ["Maximilian Müller", "Alexander Schmidt", "Paul Schneider", "Elias Fischer", "Ben Weber", "Noah Meyer", "Leon Wagner", "Louis Becker", "Felix Schulz", "Henry Hoffmann", "Emilia Schäfer", "Hannah Koch", "Sophia Bauer", "Emma Richter", "Mia Klein", "Hanna Wolf", "Lina Schröder", "Mila Neumann", "Ella Schwarz", "Klara Zimmermann", "Jonas Braun", "Lukas Krüger", "Finn Hofmann", "Tim Hartmann", "David Lange"];
             const impairmentTypes = ["Keine Beeinträchtigung", "Körperliche Beeinträchtigung", "Geistige Beeinträchtigung", "Eingeschränkte Mobilität"];
+            const attendantSources = ["Extern (Schulbegleitung / Medizinisch)", "Intern (Zusätzliche Reservekraft)"];
             
             for (let i = 1; i <= 81; i++) {
                 let schoolObj = appData.schools[(i * 3) % appData.schools.length];
@@ -700,7 +701,8 @@
                 let lonOffset = (Math.cos(i) * 0.15);
 
                 let impairment = impairmentTypes[i % impairmentTypes.length];
-                let needsAttendant = (i % 10 === 0); // Jedes 10. Kind benötigt laut Profil eine Begleitperson
+                let needsAttendant = (i % 10 === 0); // Jedes 10. Kind benötigt Begleitperson
+                let attendantSource = needsAttendant ? attendantSources[i % attendantSources.length] : "Keine Begleitung erforderlich";
 
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
@@ -714,6 +716,7 @@
                     password: "eltern123",
                     impairment: impairment,
                     needsAttendant: needsAttendant,
+                    attendantSource: attendantSource,
                     transportToday: true
                 });
             }
@@ -747,15 +750,35 @@
             // 2. Garantiert höhere Max-Km-Optimierung (Umsatzfokus)
             let totalOptimizedKm = totalBaselineKm * 1.28;
 
-            // Schüler gleichmäßig auf aktive Fahrer verteilen, mit Schutz vor leerer Flotte
-            let driverIndex = 0;
-            let maxCap = 6;
+            // Dynamische Kapazitätsverteilung (Berücksichtigung von Begleitpersonen, die einen Sitzplatz belegen)
+            let currentDriverIdx = 0;
             if (activeDrivers.length > 0) {
-                for (let i = 0; i < activeStudents.length; i += maxCap) {
-                    if (driverIndex >= activeDrivers.length) driverIndex = 0;
-                    let batch = activeStudents.slice(i, i + maxCap);
-                    activeDrivers[driverIndex].assignedStudents = batch.map(s => s.id);
-                    driverIndex++;
+                let currentBatch = [];
+                let currentLoad = 0;
+
+                activeStudents.forEach(s => {
+                    let driver = activeDrivers[currentDriverIdx];
+                    let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
+                    
+                    // Jedes Kind = 1 Platz. Wenn Begleitperson anwesend, belegt diese einen weiteren Sitzplatz (+1).
+                    let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
+
+                    if (currentLoad + studentSeatLoad > vehicle.capacity && currentBatch.length > 0) {
+                        driver.assignedStudents = currentBatch.map(item => item.id);
+                        currentDriverIdx++;
+                        if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = 0;
+                        currentBatch = [];
+                        currentLoad = 0;
+                        driver = activeDrivers[currentDriverIdx];
+                        vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
+                    }
+
+                    currentBatch.push(s);
+                    currentLoad += studentSeatLoad;
+                });
+
+                if (currentBatch.length > 0 && currentDriverIdx < activeDrivers.length) {
+                    activeDrivers[currentDriverIdx].assignedStudents = currentBatch.map(item => item.id);
                 }
             }
 
@@ -795,10 +818,10 @@
                 `;
             }
 
-            logEvent(`Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} € (Wirtschaftlich optimal).`);
+            logEvent(`Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} € (Kapazitäts- und Begleitpersonen-gerecht berechnet).`);
             saveAppData();
             if (!isInitial) {
-                alert("Optimierung erfolgreich! Die Max-Km-Routen zeigen nun korrekt mehr Kilometer, mehr Umsatz und einen höheren Gewinn.");
+                alert("Optimierung erfolgreich! Sitzplatzkapazitäten inklusive Begleitpersonen wurden dynamisch berechnet.");
                 renderAdminDashboard();
             }
         }
@@ -831,7 +854,7 @@
                 
                 morningStops.push({
                     time: timeStr,
-                    name: cleanStudentName(s.name),
+                    name: cleanStudentName(s.name) + (s.needsAttendant ? " (inkl. Begleitung)" : ""),
                     address: s.address,
                     school: s.school,
                     duration: (schoolArrivalMinutes - pickupMinutes)

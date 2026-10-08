@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand (PDVRPTW Max-Miles)</title>
+    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand (Max-Miles)</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -298,7 +298,7 @@
     <header>
         <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Dispositionsleitstand – PDVRPTW (Max-Km & 60/90-Min-Zeitschranken)</p>
+            <p>Dispositionsleitstand – Max-Km & 60/90-Min-Zeitschranken</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
@@ -382,9 +382,9 @@
                 </div>
             </div>
 
-            <!-- PDVRPTW Kilometer-Maximierungs-Box -->
+            <!-- Max-Km & Zeitfenster-Optimierung Box -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
-                <h3 style="color: #6b46c1;">⚡ PDVRPTW Max-Km & Zeitfenster-Optimierung</h3>
+                <h3 style="color: #6b46c1;">⚡ Max-Km & Zeitfenster-Optimierung</h3>
                 <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Maximiert Abrechnungs-km unter strenger Einhaltung von max. 60 Min (Grundschule) & max. 90 Min (Sek 1) Fahrzeit:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Optimierung starten</button>
@@ -436,7 +436,7 @@
             <div class="admin-box">
                 <h3>Vollständiges Dispositionsprotokoll</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. PDVRPTW Max-Miles & Zeitfenster Engine bereit.<br>
+                    [07:00:00] System initialisiert. Max-Miles & Zeitfenster Engine bereit.<br>
                 </div>
             </div>
         </div>
@@ -591,7 +591,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v3';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v4';
 
         const appData = {
             settings: {
@@ -710,7 +710,7 @@
         }
 
         function runPDVRPTWOptimization(isInitial = false) {
-            logEvent("PDVRPTW Max-Km & Zeitfenster-Optimierung gestartet...");
+            logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
             
             const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank');
             activeDrivers.forEach(d => d.assignedStudents = []);
@@ -735,14 +735,16 @@
             // 2. Garantiert höhere Max-Km-Optimierung (Umsatzfokus)
             let totalOptimizedKm = totalBaselineKm * 1.28;
 
-            // Schüler gleichmäßig auf aktive Fahrer verteilen, damit das Fahrer-Portal befüllt ist
+            // Schüler gleichmäßig auf aktive Fahrer verteilen, mit Schutz vor leerer Flotte
             let driverIndex = 0;
             let maxCap = 6;
-            for (let i = 0; i < activeStudents.length; i += maxCap) {
-                if (driverIndex >= activeDrivers.length) driverIndex = 0;
-                let batch = activeStudents.slice(i, i + maxCap);
-                activeDrivers[driverIndex].assignedStudents = batch.map(s => s.id);
-                driverIndex++;
+            if (activeDrivers.length > 0) {
+                for (let i = 0; i < activeStudents.length; i += maxCap) {
+                    if (driverIndex >= activeDrivers.length) driverIndex = 0;
+                    let batch = activeStudents.slice(i, i + maxCap);
+                    activeDrivers[driverIndex].assignedStudents = batch.map(s => s.id);
+                    driverIndex++;
+                }
             }
 
             let pricePerKm = appData.settings.costs.pricePerKm;
@@ -996,6 +998,7 @@
             }
             saveAppData();
             alert("Schulausfall gemeldet!");
+            renderAdminDashboard();
         }
 
         function simulateScenario(type) {
@@ -1016,7 +1019,9 @@
                 alert("Schülerkrankmeldung simuliert.");
                 renderAdminDashboard();
             } else if (type === 'school_closed') {
-                appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
+                if (!appData.closedSchools.some(s => s.name === "Hermann-Reske-Schule, Celle")) {
+                    appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
+                }
                 saveAppData();
                 alert("Schulausfall simuliert.");
                 renderAdminDashboard();
@@ -1033,7 +1038,12 @@
 
         function renderAdminDashboard() {
             const totalStudents = appData.students.length;
-            const activeStudentsCount = totalStudents - appData.sickStudents.length;
+            const activeStudentsCount = appData.students.filter(s => {
+                const isSick = appData.sickStudents.includes(s.name);
+                const isSchoolClosed = appData.closedSchools.some(cs => cs.name === s.school);
+                return !isSick && !isSchoolClosed;
+            }).length;
+
             const kpiStudents = document.getElementById('kpi-students');
             if (kpiStudents) kpiStudents.textContent = `${activeStudentsCount} aktiv / ${totalStudents} Gesamt`;
 
@@ -1100,7 +1110,7 @@
                 appData.drivers.forEach(d => {
                     let activeCount = d.assignedStudents.filter(sId => {
                         const s = appData.students.find(item => item.id === sId);
-                        return s && !appData.sickStudents.includes(s.name);
+                        return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
                     }).length;
 
                     driverTbody.innerHTML += `

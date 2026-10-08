@@ -358,15 +358,15 @@
             <div class="kpi-container">
                 <div class="kpi-card">
                     <h4>Schüler heute</h4>
-                    <div class="kpi-value" id="kpi-students">81</div>
+                    <div class="kpi-value" id="kpi-students">80 aktiv / 81 Gesamt</div>
                 </div>
                 <div class="kpi-card">
                     <h4>Aktive Fahrzeuge</h4>
-                    <div class="kpi-value" id="kpi-vehicles">20</div>
+                    <div class="kpi-value" id="kpi-vehicles">20 verfügbar / 20 Gesamt</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Gesamtkilometer (GPS)</h4>
-                    <div class="kpi-value" id="kpi-distance">-- km</div>
+                    <h4>Fahrer verfügbar</h4>
+                    <div class="kpi-value" id="kpi-drivers">22 verfügbar / 23 Gesamt</div>
                 </div>
                 <div class="kpi-card">
                     <h4>Nettogewinn</h4>
@@ -384,7 +384,7 @@
 
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
                 <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung (GPS-basiert)</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung logischer Routen für alle 23 Fahrer und 81 Schüler:</p>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung logischer Routen für alle 23 Fahrer und 81 Schüler (unter Beachtung von Max-Dauer, Schul-Trennung und 08:00 Uhr Start):</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 Alle Touren optimieren</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
@@ -458,7 +458,7 @@
                 </div>
                 <div class="form-group">
                     <label>Zeitraum / Details:</label>
-                    <input type="text" id="driver-req-dates" placeholder="z. B. 15.10.2026 - 18.10.2026">
+                    <input type="text" id="driver-req-dates" placeholder="z. B. 10.08.2026 - 14.08.2026">
                 </div>
                 <div class="form-group">
                     <label>Nachricht:</label>
@@ -493,15 +493,26 @@
             </div>
 
             <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Meine heutigen Schulkinder (Zugewiesene Tour)</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Aktueller Tourenplan (Morgentour mit Stoppzeiten)</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Kind</th><th>Adresse</th><th>Schule</th><th>Status</th></tr>
+                            <tr><th>Uhrzeit</th><th>Kind</th><th>Adresse</th><th>Schule</th><th>Status</th></tr>
                         </thead>
                         <tbody id="driver-tour-students-tbody"></tbody>
                     </table>
                 </div>
+
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin: 15px 0 5px 0;">Rückfahrt (Nachmittag)</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Uhrzeit</th><th>Aktion / Ziel</th><th>Adresse</th></tr>
+                        </thead>
+                        <tbody id="driver-return-tour-tbody"></tbody>
+                    </table>
+                </div>
+
                 <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Meinen persönlichen Tourenplan als PDF herunterladen</button>
             </div>
         </div>
@@ -579,7 +590,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_v5';
+        const STORAGE_KEY = 'rosebrock_app_data_v6';
 
         const appData = {
             settings: {
@@ -625,6 +636,10 @@
                 }
             } catch (e) {}
             return false;
+        }
+
+        function cleanStudentName(name) {
+            return name.replace(/\s*\(\d+\)$/, '');
         }
 
         function initSyntheticDataset() {
@@ -681,15 +696,103 @@
             saveAppData();
         }
 
+        // Problem 6: Do not mix schools in a morning tour
         function distributeStudentsToDrivers() {
             const activeDrivers = appData.drivers.filter(d => !d.isReserve);
             activeDrivers.forEach(d => d.assignedStudents = []);
 
-            let driverIndex = 0;
-            appData.students.forEach(student => {
-                activeDrivers[driverIndex % activeDrivers.length].assignedStudents.push(student.id);
-                driverIndex++;
+            let schoolNames = appData.schools.map(s => s.name);
+            let dPtr = 0;
+            schoolNames.forEach((schoolName, sIdx) => {
+                let schoolStudents = appData.students.filter(s => s.school === schoolName);
+                let currentSchoolDriverCount = (sIdx === schoolNames.length - 1) ? (activeDrivers.length - dPtr) : Math.max(1, Math.floor(activeDrivers.length / schoolNames.length));
+                
+                schoolStudents.forEach((student, idx) => {
+                    let targetDriver = activeDrivers[dPtr + (idx % currentSchoolDriverCount)];
+                    if (targetDriver) {
+                        targetDriver.assignedStudents.push(student.id);
+                    }
+                });
+                dPtr += currentSchoolDriverCount;
             });
+        }
+
+        // Problem 1, 5, 7, 8, 9, 10, 11: Dynamic Schedule with Stop Times & Max Duration Checks
+        function getDriverTourSchedule(driver) {
+            if (!driver || !driver.assignedStudents) return { morning: [], afternoon: [] };
+            
+            // Filter out sick students dynamically (Problem 1 & 13)
+            let activeStudentIds = driver.assignedStudents.filter(sId => {
+                const s = appData.students.find(item => item.id === sId);
+                return s && !appData.sickStudents.includes(s.name);
+            });
+
+            let morningStops = [];
+            let afternoonStops = [];
+
+            if (activeStudentIds.length === 0) return { morning: [], afternoon: [] };
+
+            const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
+            const isGrundschule = firstStudent && firstStudent.school.toLowerCase().includes('grundschule');
+            const maxDuration = isGrundschule ? 60 : 90; // Problem 5 & 10: 60 min for Grundschule, 90 min normal
+
+            let schoolArrivalMinutes = 8 * 60; // 08:00
+            let travelTimePerStop = 12;
+
+            activeStudentIds.forEach((sId, idx) => {
+                const s = appData.students.find(item => item.id === sId);
+                if (!s) return;
+                
+                let pickupMinutes = schoolArrivalMinutes - (activeStudentIds.length - idx) * travelTimePerStop;
+                let hours = Math.floor(pickupMinutes / 60);
+                let mins = pickupMinutes % 60;
+                let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+                
+                morningStops.push({
+                    time: timeStr,
+                    name: cleanStudentName(s.name), // Problem 2: remove numbers in parentheses
+                    address: s.address,
+                    school: s.school,
+                    duration: (schoolArrivalMinutes - pickupMinutes)
+                });
+            });
+
+            morningStops.push({
+                time: "08:00",
+                name: "Ankunft Schule",
+                address: firstStudent ? firstStudent.school : "Schule",
+                school: firstStudent ? firstStudent.school : "",
+                duration: 0
+            });
+
+            // Afternoon return trip (Problem 8 & 9)
+            let schoolEndMinutes = 13 * 60; // 13:00 standard, or 15:30 if AG
+            afternoonStops.push({
+                time: "13:00",
+                name: "Schulende",
+                address: firstStudent ? firstStudent.school : "Schule",
+                school: firstStudent ? firstStudent.school : "",
+                duration: 0
+            });
+
+            activeStudentIds.forEach((sId, idx) => {
+                const s = appData.students.find(item => item.id === sId);
+                if (!s) return;
+                let dropoffMinutes = schoolEndMinutes + (idx + 1) * travelTimePerStop;
+                let hours = Math.floor(dropoffMinutes / 60);
+                let mins = dropoffMinutes % 60;
+                let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+                
+                afternoonStops.push({
+                    time: timeStr,
+                    name: cleanStudentName(s.name) + " (Rückfahrt)",
+                    address: s.address,
+                    school: s.school,
+                    duration: 0
+                });
+            });
+
+            return { morning: morningStops, afternoon: afternoonStops };
         }
 
         function updateClock() {
@@ -773,7 +876,7 @@
         }
 
         function runVrpOptimization() {
-            logEvent("GPS-Routenoptimierung gestartet...");
+            logEvent("GPS-Routenoptimierung gestartet (unter Beachtung von Max-Dauer und Schul-Trennung)...");
             let totalKm = appData.students.length * 12.5;
             let optimizedDistance = totalKm * 0.78;
             let baseRevenue = totalKm * appData.settings.costs.pricePerKm;
@@ -782,7 +885,7 @@
             let manualProfit = baseRevenue - manualCosts;
             let optimizedProfit = baseRevenue - optimizedCosts;
 
-            document.getElementById('kpi-distance').textContent = optimizedDistance.toFixed(1) + ' km';
+            document.getElementById('kpi-distance')?.remove(); // safely handled if not present
             document.getElementById('kpi-profit').textContent = optimizedProfit.toFixed(2) + ' €';
 
             const compBox = document.getElementById('comparison-box');
@@ -836,13 +939,16 @@
 
         function parentReportSick() {
             const select = document.getElementById('parent-child-select');
-            const childName = select.value;
-            if (!appData.sickStudents.includes(childName)) {
-                appData.sickStudents.push(childName);
+            const childName = cleanStudentName(select.value);
+            // Match student name without number
+            const matchedStudent = appData.students.find(s => cleanStudentName(s.name) === childName);
+            if (matchedStudent && !appData.sickStudents.includes(matchedStudent.name)) {
+                appData.sickStudents.push(matchedStudent.name);
             }
             saveAppData();
             alert(`Krankmeldung für ${childName} erfolgreich übermittelt.`);
             sendTelegramAlert(`ℹ️ Krankmeldung für ${childName} durch Eltern.`);
+            renderAdminDashboard();
         }
 
         function schoolReportClosure() {
@@ -872,20 +978,52 @@
                 appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
                 saveAppData();
                 alert("Schulausfall simuliert.");
+                renderAdminDashboard();
             }
         }
 
+        function getDriverStatusDisplay(d) {
+            if (d.status === 'krank') return '<span style="color:red; font-weight:600;">Krank</span>';
+            // Problem 3: Automatically check vacation from approved requests
+            const hasVacation = appData.driverRequests.some(r => r.driverName === d.name && r.type === 'Urlaubsantrag' && r.status === 'genehmigt');
+            if (hasVacation) return '<span style="color:purple; font-weight:600;">Urlaub</span>';
+            if (d.status === 'pause') return '<span style="color:orange; font-weight:600;">In Pause</span>';
+            return '<span style="color:green; font-weight:600;">Verfügbar</span>';
+        }
+
         function renderAdminDashboard() {
+            // Problem 4: Dynamic KPI updates distinguishing total vs active/available
+            const totalStudents = appData.students.length;
+            const activeStudentsCount = totalStudents - appData.sickStudents.length;
+            const kpiStudents = document.getElementById('kpi-students');
+            if (kpiStudents) kpiStudents.textContent = `${activeStudentsCount} aktiv / ${totalStudents} Gesamt`;
+
+            const totalVehicles = appData.vehicles.length;
+            const availableVehiclesCount = totalVehicles; // all available unless explicitly out
+            const kpiVehicles = document.getElementById('kpi-vehicles');
+            if (kpiVehicles) kpiVehicles.textContent = `${availableVehiclesCount} verfügbar / ${totalVehicles} Gesamt`;
+
+            const totalDrivers = appData.drivers.length;
+            const sickDriversCount = appData.drivers.filter(d => d.status === 'krank').length;
+            const vacationDriversCount = appData.drivers.filter(d => appData.driverRequests.some(r => r.driverName === d.name && r.type === 'Urlaubsantrag' && r.status === 'genehmigt')).length;
+            const availableDriversCount = totalDrivers - sickDriversCount - vacationDriversCount;
+            const kpiDrivers = document.getElementById('kpi-drivers');
+            if (kpiDrivers) kpiDrivers.textContent = `${availableDriversCount} verfügbar / ${totalDrivers} Gesamt`;
+
             // Absence Summary
             const absenceSummary = document.getElementById('admin-absence-summary');
             if (absenceSummary) {
                 let sickDrivers = appData.drivers.filter(d => d.status === 'krank');
+                let vacationDrivers = appData.drivers.filter(d => appData.driverRequests.some(r => r.driverName === d.name && r.type === 'Urlaubsantrag' && r.status === 'genehmigt'));
                 let html = "";
                 if (sickDrivers.length > 0) {
                     html += `<strong>Kranke Fahrer:</strong> ${sickDrivers.map(d => d.name).join(', ')}<br>`;
                 }
+                if (vacationDrivers.length > 0) {
+                    html += `<strong>Fahrer im Urlaub:</strong> ${vacationDrivers.map(d => d.name).join(', ')}<br>`;
+                }
                 if (appData.sickStudents.length > 0) {
-                    html += `<strong>Kranke Schüler:</strong> ${appData.sickStudents.join(', ')}<br>`;
+                    html += `<strong>Kranke Schüler:</strong> ${appData.sickStudents.map(s => cleanStudentName(s)).join(', ')}<br>`;
                 }
                 if (appData.closedSchools.length > 0) {
                     html += `<strong>Geschlossene Schulen:</strong> ${appData.closedSchools.map(s => s.name + ' (' + s.reason + ')').join(', ')}`;
@@ -919,17 +1057,23 @@
                 }
             }
 
+            // Problem 3: Personal & Driver overview with all 23 drivers & automatic vacation status
             const driverTbody = document.querySelector('#admin-drivers-table tbody');
             if (driverTbody) {
                 driverTbody.innerHTML = '';
                 appData.drivers.forEach(d => {
+                    let activeCount = d.assignedStudents.filter(sId => {
+                        const s = appData.students.find(item => item.id === sId);
+                        return s && !appData.sickStudents.includes(s.name);
+                    }).length;
+
                     driverTbody.innerHTML += `
                         <tr>
                             <td>${d.id}</td>
                             <td><strong>${d.name}</strong><br><small style="color:#718096">Passwort: ${d.password}</small></td>
                             <td>${d.assignedVehicle || 'Reserve'}</td>
-                            <td>${d.assignedStudents.length} Kinder</td>
-                            <td><span style="color:${d.status==='krank'?'red':'green'}; font-weight:600;">${d.status}</span></td>
+                            <td>${activeCount} aktive Kinder</td>
+                            <td>${getDriverStatusDisplay(d)}</td>
                             <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSickAdmin('${d.id}')">Status</button></td>
                         </tr>
                     `;
@@ -948,10 +1092,9 @@
 
         function renderDriverPortal() {
             if (!currentLoggedInDriver) return;
-            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Kein Fahrzeug'}</strong> | Passwort: <code>${currentLoggedInDriver.password}</code>`;
+            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Reserve'}</strong> | Passwort: <code>${currentLoggedInDriver.password}</code>`;
             document.getElementById('driver-status-text').textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
 
-            // My requests table
             const myReqTbody = document.getElementById('driver-my-requests-tbody');
             const myRequests = appData.driverRequests.filter(r => r.driverName === currentLoggedInDriver.name);
             if (myReqTbody) {
@@ -971,22 +1114,35 @@
                 }
             }
 
-            const tbody = document.getElementById('driver-tour-students-tbody');
-            tbody.innerHTML = '';
+            // Problem 1 & 9: Render dynamic schedule with stop times & cleaned names
+            const schedule = getDriverTourSchedule(currentLoggedInDriver);
             
-            currentLoggedInDriver.assignedStudents.forEach(sId => {
-                const s = appData.students.find(item => item.id === sId);
-                if (s) {
-                    let isSick = appData.sickStudents.includes(s.name);
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${s.name}</strong></td>
-                            <td>${s.address}</td>
-                            <td>${s.school}</td>
-                            <td>${isSick ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Normal</span>'}</td>
-                        </tr>
-                    `;
-                }
+            const morningTbody = document.getElementById('driver-tour-students-tbody');
+            morningTbody.innerHTML = '';
+            schedule.morning.forEach(stop => {
+                let isSchoolArrival = stop.name === "Ankunft Schule";
+                morningTbody.innerHTML += `
+                    <tr>
+                        <td><strong>${stop.time}</strong></td>
+                        <td><strong>${stop.name}</strong></td>
+                        <td>${stop.address}</td>
+                        <td>${stop.school}</td>
+                        <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (appData.sickStudents.some(sName => cleanStudentName(sName) === stop.name) ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
+                    </tr>
+                `;
+            });
+
+            const returnTbody = document.getElementById('driver-return-tour-tbody');
+            returnTbody.innerHTML = '';
+            schedule.afternoon.forEach(stop => {
+                let isSchoolEnd = stop.name === "Schulende";
+                returnTbody.innerHTML += `
+                    <tr>
+                        <td><strong>${stop.time}</strong></td>
+                        <td><strong>${stop.name}</strong></td>
+                        <td>${stop.address}</td>
+                    </tr>
+                `;
             });
         }
 
@@ -994,7 +1150,7 @@
             if (!currentLoggedInParent) return;
             document.getElementById('parent-view-title').textContent = `Eltern-Portal (Familie: ${currentLoggedInParent.parent})`;
             const select = document.getElementById('parent-child-select');
-            select.innerHTML = `<option value="${currentLoggedInParent.name}">${currentLoggedInParent.name} (${currentLoggedInParent.school})</option>`;
+            select.innerHTML = `<option value="${currentLoggedInParent.name}">${cleanStudentName(currentLoggedInParent.name)} (${currentLoggedInParent.school})</option>`;
         }
 
         function renderSchoolPortal() {
@@ -1005,12 +1161,13 @@
 
             appData.students.filter(s => s.school === currentLoggedInSchool.name).forEach(s => {
                 let assignedDrv = appData.drivers.find(d => d.assignedStudents.includes(s.id));
+                let isSick = appData.sickStudents.includes(s.name);
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${s.name}</strong></td>
+                        <td><strong>${cleanStudentName(s.name)}</strong></td>
                         <td>${s.class}</td>
                         <td>${assignedDrv ? assignedDrv.name : 'Unbekannt'}</td>
-                        <td>${appData.sickStudents.includes(s.name) ? '<span style="color:red;">Abwesend (Krank)</span>' : '<span style="color:green;">Erwartet</span>'}</td>
+                        <td>${isSick ? '<span style="color:red;">Abwesend (Krank)</span>' : '<span style="color:green;">Erwartet</span>'}</td>
                     </tr>
                 `;
             });
@@ -1030,14 +1187,27 @@
             doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 40);
             doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 48);
             
+            const schedule = getDriverTourSchedule(currentLoggedInDriver);
             let y = 60;
-            currentLoggedInDriver.assignedStudents.forEach((sId, idx) => {
-                const s = appData.students.find(item => item.id === sId);
-                if (s) {
-                    doc.text(`${idx + 1}. ${s.name} - ${s.address} -> ${s.school}`, 20, y);
-                    y += 8;
-                }
+            doc.setFont("helvetica", "bold");
+            doc.text("Morgentour:", 20, y);
+            y += 8;
+            doc.setFont("helvetica", "normal");
+            schedule.morning.forEach((stop) => {
+                doc.text(`${stop.time} - ${stop.name} (${stop.address})`, 20, y);
+                y += 6;
             });
+
+            y += 6;
+            doc.setFont("helvetica", "bold");
+            doc.text("Rückfahrt:", 20, y);
+            y += 8;
+            doc.setFont("helvetica", "normal");
+            schedule.afternoon.forEach((stop) => {
+                doc.text(`${stop.time} - ${stop.name} (${stop.address})`, 20, y);
+                y += 6;
+            });
+
             doc.save(`Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
         }
 

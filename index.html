@@ -305,8 +305,8 @@
 
     <header>
         <div>
-            <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Studienprojekt-Demonstrator: Digitale Schülerbeförderung & VRP-Disposition</p>
+            <h1>Mietwagenverkehr Rosebrock[cite: 2]</h1>
+            <p>Studienprojekt-Demonstrator: Digitale Schülerbeförderung & VRP-Disposition[cite: 2]</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
@@ -315,93 +315,93 @@
 
         <!-- STARTSEITE (4 Kacheln) -->
         <div id="home-view" class="view active">
-            <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals (Studien-Prototyp)</h2>
-            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Sichere Demo-Zugangsdaten (Admin: <strong>admin</strong> / <strong>demo123</strong>):</p>
+            <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals (Studien-Prototyp)[cite: 2]</h2>
+            <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Sichere Demo-Zugangsdaten (Admin: <strong>admin</strong> / <strong>demo123</strong>):[cite: 2]</p>
             
             <div class="portal-grid">
                 <!-- Inhaber -->
                 <div class="portal-card admin">
-                    <h3>Inhaber & Zentrale</h3>
-                    <p>Dispositionsleitstand, VRP-Optimierung, Stammdaten, Simulation.</p>
+                    <h3>Inhaber & Zentrale[cite: 2]</h3>
+                    <p>Dispositionsleitstand, VRP-Optimierung, Stammdaten, Simulation.[cite: 2]</p>
                     <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">
                     <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
+                    <button class="portal-btn" onclick="loginAdmin()">Admin-Login[cite: 2]</button>
                 </div>
 
                 <!-- Fahrer -->
                 <div class="portal-card driver">
-                    <h3>Fahrer-Portal</h3>
-                    <p>Dienststatus, Tour, Tourenplan-PDF & Ausfallmeldung.</p>
+                    <h3>Fahrer-Portal[cite: 2]</h3>
+                    <p>Dienststatus, Tour, Tourenplan-PDF & Ausfallmeldung.[cite: 2]</p>
                     <input type="text" class="portal-input" value="Hans Rosebrock" placeholder="Benutzername">
                     <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="showView('driver-view')">Fahrer-Login</button>
+                    <button class="portal-btn" onclick="showView('driver-view')">Fahrer-Login[cite: 2]</button>
                 </div>
 
                 <!-- Eltern -->
                 <div class="portal-card parent">
-                    <h3>Eltern-Portal</h3>
-                    <p>Kind-Krankmeldung & gefilterte Schulausfall-Informationen.</p>
+                    <h3>Eltern-Portal[cite: 2]</h3>
+                    <p>Kind-Krankmeldung & gefilterte Schulausfall-Informationen.[cite: 2]</p>
                     <input type="text" class="portal-input" value="Familie Müller" placeholder="Benutzername">
                     <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="showView('parent-view')">Eltern-Login</button>
+                    <button class="portal-btn" onclick="showView('parent-view')">Eltern-Login[cite: 2]</button>
                 </div>
 
                 <!-- Schule -->
                 <div class="portal-card school">
-                    <h3>Schul-Portal</h3>
-                    <p>Schüler-Übersicht & Schließungsmeldung direkt an Zentrale.</p>
+                    <h3>Schul-Portal[cite: 2]</h3>
+                    <p>Schüler-Übersicht & Schließungsmeldung direkt an Zentrale.[cite: 2]</p>
                     <input type="text" class="portal-input" value="Grundschule Altenhagen" placeholder="Benutzername">
                     <input type="password" class="portal-input" value="demo123" placeholder="Passwort">
-                    <button class="portal-btn" onclick="showView('school-view')">Schul-Login</button>
+                    <button class="portal-btn" onclick="showView('school-view')">Schul-Login[cite: 2]</button>
                 </div>
             </div>
         </div>
 
         <!-- ADMIN LEITSTAND -->
         <div id="admin-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Dispositionsleitstand (Admin & Zentrale)</h2>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
+            <h2 class="section-title">Dispositionsleitstand (Admin & Zentrale)[cite: 2]</h2>
 
             <!-- KPI Dashboard -->
             <div class="kpi-container">
                 <div class="kpi-card">
-                    <h4>Schüler heute</h4>
+                    <h4>Schüler heute[cite: 2]</h4>
                     <div class="kpi-value" id="kpi-students">81</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Aktive Fahrzeuge</h4>
+                    <h4>Aktive Fahrzeuge[cite: 2]</h4>
                     <div class="kpi-value" id="kpi-vehicles">20</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Gesamtkilometer (GPS)</h4>
+                    <h4>Gesamtkilometer (GPS)[cite: 2]</h4>
                     <div class="kpi-value" id="kpi-distance">-- km</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Nettogewinn (Deckungsbeitrag)</h4>
+                    <h4>Nettogewinn (Deckungsbeitrag)[cite: 2]</h4>
                     <div class="kpi-value" id="kpi-profit">-- €</div>
                 </div>
             </div>
 
             <!-- VRP Optimierungs- & Wirtschaftlichkeits-Leiste -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
-                <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung (GPS-basiert)</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung realer Entfernungen und Gewinnoptimierung auf Basis hinterlegter GPS-Koordinaten:</p>
+                <h3 style="color: #6b46c1;">⚡ VRP-Routenoptimierung (GPS-basiert)[cite: 2]</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Berechnung realer Entfernungen und Gewinnoptimierung auf Basis hinterlegter GPS-Koordinaten:[cite: 2]</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 GPS-Touren optimieren</button>
-                    <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
-                    <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank</button>
-                    <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall</button>
-                    <button class="btn btn-primary" onclick="resetSystemData()">🔄 Stammdaten zurücksetzen</button>
+                    <button class="btn btn-purple" onclick="runVrpOptimization()">🚀 GPS-Touren optimieren[cite: 2]</button>
+                    <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank[cite: 2]</button>
+                    <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank[cite: 2]</button>
+                    <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall[cite: 2]</button>
+                    <button class="btn btn-primary" onclick="resetSystemData()">🔄 Stammdaten zurücksetzen[cite: 2]</button>
                 </div>
             </div>
 
             <!-- Vorher / Nachher Vergleich Box -->
             <div class="admin-box" id="comparison-box" style="display: none; border-left: 4px solid #319795; background: #e6fffa;">
-                <h3 style="color: #234e52;">📊 GPS-Wirtschaftlichkeitsvergleich</h3>
+                <h3 style="color: #234e52;">📊 GPS-Wirtschaftlichkeitsvergleich[cite: 2]</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Metrik</th><th>Manuelle Ausgangsbasis</th><th>GPS-Optimierte Disposition</th><th>Effekt</th></tr>
+                            <tr><th>Metrik[cite: 2]</th><th>Manuelle Ausgangsbasis[cite: 2]</th><th>GPS-Optimierte Disposition[cite: 2]</th><th>Effekt[cite: 2]</th></tr>
                         </thead>
                         <tbody id="comparison-tbody">
                             <!-- Dynamisch -->
@@ -412,30 +412,30 @@
 
             <!-- Fahrer-Anliegen & Urlaubsanträge -->
             <div class="admin-box" style="border-left: 4px solid #38a169;">
-                <h3>Fahrer-Anliegen & Urlaubsanträge</h3>
+                <h3>Fahrer-Anliegen & Urlaubsanträge[cite: 2]</h3>
                 <div class="table-responsive">
                     <table id="admin-requests-table">
                         <thead>
-                            <tr><th>Fahrer</th><th>Art</th><th>Zeitraum / Details</th><th>Status</th><th>Aktion</th></tr>
+                            <tr><th>Fahrer[cite: 2]</th><th>Art[cite: 2]</th><th>Zeitraum / Details[cite: 2]</th><th>Status[cite: 2]</th><th>Aktion[cite: 2]</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>
+                            <tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Anträge.[cite: 2]</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- NEU: Abwesenheitskalender (Urlaub & Krank) -->
+            <!-- Abwesenheitskalender (Urlaub & Krank) -->
             <div class="admin-box" style="border-left: 4px solid #d69e2e; background: #fffaf0;">
-                <h3 style="color: #b7791f;">📅 Abwesenheitskalender (Urlaub & Krankheitsstand)</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Übersicht aller Fahrer, die aktuell im Urlaub eingetragen oder krankgemeldet sind:</p>
+                <h3 style="color: #b7791f;">📅 Abwesenheitskalender (Urlaub & Krankheitsstand)[cite: 2]</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Übersicht aller Fahrer, die aktuell im Urlaub eingetragen oder krankgemeldet sind:[cite: 2]</p>
                 <div class="table-responsive">
                     <table id="admin-absence-calendar-table">
                         <thead>
-                            <tr><th>Fahrer-ID</th><th>Name</th><th>Art der Abwesenheit</th><th>Zeitraum / Details</th></tr>
+                            <tr><th>Fahrer-ID[cite: 2]</th><th>Name[cite: 2]</th><th>Art der Abwesenheit[cite: 2]</th><th>Zeitraum / Details[cite: 2]</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="4" style="text-align: center; color: #718096;">Aktuell keine Abwesenheiten (alle Fahrer verfügbar).</td></tr>
+                            <tr><td colspan="4" style="text-align: center; color: #718096;">Aktuell keine Abwesenheiten (alle Fahrer verfügbar).[cite: 2]</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -443,11 +443,11 @@
 
             <!-- Fahrerübersicht (Alle 23 Fahrer mit realen Adressen) -->
             <div class="admin-box">
-                <h3>Personal- & Fahrerübersicht (Alle 23 Personen mit realen Adressen)</h3>
+                <h3>Personal- & Fahrerübersicht (Alle 23 Personen mit realen Adressen)[cite: 2]</h3>
                 <div class="table-responsive">
                     <table id="admin-drivers-table">
                         <thead>
-                            <tr><th>Personal-ID</th><th>Name</th><th>Wohnadresse (Reale Testdaten)</th><th>Rolle</th><th>Fahrzeug-Bindung</th><th>Status</th><th>Aktion</th></tr>
+                            <tr><th>Personal-ID[cite: 2]</th><th>Name[cite: 2]</th><th>Wohnadresse (Reale Testdaten)[cite: 2]</th><th>Rolle[cite: 2]</th><th>Fahrzeug-Bindung[cite: 2]</th><th>Status[cite: 2]</th><th>Aktion[cite: 2]</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -456,11 +456,11 @@
 
             <!-- Fahrzeugübersicht (Alle 20 Fahrzeuge) -->
             <div class="admin-box">
-                <h3>Fahrzeugbestand (Alle 20 Fahrzeuge mit Standort)</h3>
+                <h3>Fahrzeugbestand (Alle 20 Fahrzeuge mit Standort)[cite: 2]</h3>
                 <div class="table-responsive">
                     <table id="admin-vehicles-table">
                         <thead>
-                            <tr><th>Fahrzeug-ID</th><th>Bezeichnung</th><th>Typ</th><th>Kapazität</th><th>Rollstuhl</th><th>Standort</th><th>Status</th></tr>
+                            <tr><th>Fahrzeug-ID[cite: 2]</th><th>Bezeichnung[cite: 2]</th><th>Typ[cite: 2]</th><th>Kapazität[cite: 2]</th><th>Rollstuhl[cite: 2]</th><th>Standort[cite: 2]</th><th>Status[cite: 2]</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -469,11 +469,11 @@
 
             <!-- Live-Übersicht Krankmeldungen & Schulausfälle -->
             <div class="admin-box" style="border-left: 4px solid #e53e3e;">
-                <h3>Ereignisse & Schulausfälle</h3>
+                <h3>Ereignisse & Schulausfälle[cite: 2]</h3>
                 <div class="table-responsive">
                     <table id="admin-closed-schools-table">
                         <thead>
-                            <tr><th>Schule</th><th>Grund</th></tr>
+                            <tr><th>Schule[cite: 2]</th><th>Grund[cite: 2]</th></tr>
                         </thead>
                         <tbody id="admin-closed-schools-tbody">
                             <!-- Dynamisch -->
@@ -484,128 +484,128 @@
 
             <!-- Dispositionsprotokoll -->
             <div class="admin-box">
-                <h3>Vollständiges Dispositionsprotokoll (Ereignisse)</h3>
+                <h3>Vollständiges Dispositionsprotokoll (Ereignisse)[cite: 2]</h3>
                 <div class="log-box" id="dispatch-log">
                     [07:00:00] System initialisiert. Reale GPS-Adressen für 81 Schüler & 23 Fahrer geladen.<br>
-                    [07:01:15] Normalbetrieb aktiv. Haversine-Distanzmatrix berechnet.
+                    [07:01:15] Normalbetrieb aktiv. Haversine-Distanzmatrix berechnet.[cite: 2]
                 </div>
             </div>
         </div>
 
         <!-- FAHRER PORTAL -->
         <div id="driver-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 style="font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Fahrer-Portal</h2>
-            <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Eingeloggt als: <strong>Hans Rosebrock</strong> (Fahrzeug-Bindung: VW Caddy / V-01)</p>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
+            <h2 style="font-size: 1.15rem; font-weight: 700; color: #1a202c; margin-bottom: 8px;">Fahrer-Portal[cite: 2]</h2>
+            <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Eingeloggt als: <strong>Hans Rosebrock</strong> (Fahrzeug-Bindung: VW Caddy / V-01)[cite: 2]</p>
 
             <div id="driver-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Schulausfall-Meldung & betroffene Kinder für Ihre Tour!</h3>
+                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Schulausfall-Meldung & betroffene Kinder für Ihre Tour![cite: 2]</h3>
                 <p id="driver-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
             </div>
 
             <!-- Anliegen & Urlaubsantrag einreichen -->
             <div class="admin-box" style="border-left: 4px solid #38a169;">
-                <h3>Anliegen oder Urlaubsantrag an Inhaber senden</h3>
+                <h3>Anliegen oder Urlaubsantrag an Inhaber senden[cite: 2]</h3>
                 <p style="font-size: 0.75rem; color: #e53e3e; font-weight: 600; margin-bottom: 10px;">
-                    ⚠️ Hinweis: Der Inhaber ist ab 18:00 Uhr nicht mehr erreichbar. Ihr Anliegen wird schnellstmöglich bearbeitet.
+                    ⚠️ Hinweis: Der Inhaber ist ab 18:00 Uhr nicht mehr erreichbar. Ihr Anliegen wird schnellstmöglich bearbeitet.[cite: 2]
                 </p>
                 <div class="form-group">
-                    <label>Art des Antrags:</label>
+                    <label>Art des Antrags:[cite: 2]</label>
                     <select id="driver-req-type">
-                        <option value="Urlaubsantrag">Urlaubsantrag</option>
-                        <option value="Fahrzeugproblem">Fahrzeugproblem</option>
-                        <option value="Persönliche Angelegenheit">Persönliche Angelegenheit</option>
-                        <option value="Frage zur Tour">Frage zur Tour</option>
-                        <option value="Sonstiges">Sonstiges Anliegen</option>
+                        <option value="Urlaubsantrag">Urlaubsantrag[cite: 2]</option>
+                        <option value="Fahrzeugproblem">Fahrzeugproblem[cite: 2]</option>
+                        <option value="Persönliche Angelegenheit">Persönliche Angelegenheit[cite: 2]</option>
+                        <option value="Frage zur Tour">Frage zur Tour[cite: 2]</option>
+                        <option value="Sonstiges">Sonstiges Anliegen[cite: 2]</option>
                     </select>
                 </div>
                 <div class="form-group" id="driver-date-group">
-                    <label>Von Datum – Bis Datum (bei Urlaub):</label>
+                    <label>Von Datum – Bis Datum (bei Urlaub):[cite: 2]</label>
                     <input type="text" id="driver-req-dates" placeholder="z. B. 15.10.2026 - 18.10.2026">
                 </div>
                 <div class="form-group">
-                    <label>Nachricht / Begründung:</label>
+                    <label>Nachricht / Begründung:[cite: 2]</label>
                     <textarea id="driver-req-msg" placeholder="Beschreiben Sie Ihr Anliegen..." rows="2" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:4px;"></textarea>
                 </div>
-                <button class="btn btn-success" style="width: 100%;" onclick="submitDriverRequest()">Antrag absenden</button>
+                <button class="btn btn-success" style="width: 100%;" onclick="submitDriverRequest()">Antrag absenden[cite: 2]</button>
             </div>
 
             <!-- Eigene Anträge Status -->
             <div class="admin-box">
-                <h3>Meine eingereichten Anträge</h3>
+                <h3>Meine eingereichten Anträge[cite: 2]</h3>
                 <div class="table-responsive">
                     <table id="driver-my-requests-table">
                         <thead>
-                            <tr><th>Art</th><th>Details</th><th>Status</th></tr>
+                            <tr><th>Art[cite: 2]</th><th>Details[cite: 2]</th><th>Status[cite: 2]</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="3" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>
+                            <tr><td colspan="3" style="text-align: center; color: #718096;">Keine offenen Anträge.[cite: 2]</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 8px;">Schicht-Status</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 8px;">Schicht-Status[cite: 2]</h3>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-success" style="flex: 1;" onclick="setDriverStatus('Bereit')">🟢 Bereit</button>
-                    <button class="btn btn-warning" style="flex: 1;" onclick="setDriverStatus('In Pause')">🟡 Pause</button>
-                    <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank</button>
+                    <button class="btn btn-success" style="flex: 1;" onclick="setDriverStatus('Bereit')">🟢 Bereit[cite: 2]</button>
+                    <button class="btn btn-warning" style="flex: 1;" onclick="setDriverStatus('In Pause')">🟡 Pause[cite: 2]</button>
+                    <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank[cite: 2]</button>
                 </div>
-                <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit</p>
+                <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit[cite: 2]</p>
             </div>
 
             <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Heutige Tour & Schulkinder (Dynamischer Live-Status)</h3>
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Heutige Tour & Schulkinder (Dynamischer Live-Status)[cite: 2]</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Kind</th><th>Adresse</th><th>Schule</th><th>Beförderungs-Status</th></tr>
+                            <tr><th>Kind[cite: 2]</th><th>Adresse[cite: 2]</th><th>Schule[cite: 2]</th><th>Beförderungs-Status[cite: 2]</th></tr>
                         </thead>
                         <tbody id="driver-tour-students-tbody">
                             <!-- Dynamisch befüllt -->
                         </tbody>
                     </table>
                 </div>
-                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Aktuellen Tourenplan als PDF herunterladen</button>
+                <button class="btn btn-primary" style="margin-top: 10px; width: 100%;" onclick="generatePdfTourPlan()">📄 Aktuellen Tourenplan als PDF herunterladen[cite: 2]</button>
             </div>
         </div>
 
         <!-- ELTERN PORTAL -->
         <div id="parent-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title" id="parent-view-title">Eltern-Portal</h2>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
+            <h2 class="section-title" id="parent-view-title">Eltern-Portal[cite: 2]</h2>
 
             <div id="parent-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
-                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule Ihres Kindes</h3>
+                <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule Ihres Kindes[cite: 2]</h3>
                 <p id="parent-alert-text" style="font-size: 0.8rem; color: #742a2a; margin-bottom: 0;"></p>
             </div>
 
             <div class="admin-box">
-                <h3>Kind krankmelden</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Melden Sie Ihr Kind für die heutige Beförderung ab (aktualisiert sofort Tour & PDF):</p>
+                <h3>Kind krankmelden[cite: 2]</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Melden Sie Ihr Kind für die heutige Beförderung ab (aktualisiert sofort Tour & PDF):[cite: 2]</p>
                 <div class="form-group">
-                    <label>Grund:</label>
+                    <label>Grund:[cite: 2]</label>
                     <select id="parent-absence-reason">
-                        <option>Krankheit (Fahrt heute aussetzen)</option>
-                        <option>Arzttermin</option>
+                        <option>Krankheit (Fahrt heute aussetzen)[cite: 2]</option>
+                        <option>Arzttermin[cite: 2]</option>
                     </select>
                 </div>
-                <button class="btn btn-danger" style="width: 100%;" onclick="parentReportSick()">Krankmeldung absenden</button>
+                <button class="btn btn-danger" style="width: 100%;" onclick="parentReportSick()">Krankmeldung absenden[cite: 2]</button>
             </div>
         </div>
 
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
-            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title" id="school-view-title">Schul-Portal</h2>
+            <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht[cite: 2]</button>
+            <h2 class="section-title" id="school-view-title">Schul-Portal[cite: 2]</h2>
             
             <div class="admin-box">
-                <h3>Heutige Schulkinder-Ankünfte</h3>
+                <h3>Heutige Schulkinder-Ankünfte[cite: 2]</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
-                            <tr><th>Kind</th><th>Klasse</th><th>Status</th></tr>
+                            <tr><th>Kind[cite: 2]</th><th>Klasse[cite: 2]</th><th>Status[cite: 2]</th></tr>
                         </thead>
                         <tbody id="school-students-tbody">
                             <!-- Dynamisch befüllt mit echten Namen -->
@@ -615,17 +615,17 @@
             </div>
 
             <div class="admin-box" style="border-left: 4px solid #e53e3e; background: #fffaf0;">
-                <h3 style="color: #c53030;">🚨 Schulausfall melden</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Informieren Sie die Zentrale bei witterungsbedingten Schließungen:</p>
+                <h3 style="color: #c53030;">🚨 Schulausfall melden[cite: 2]</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Informieren Sie die Zentrale bei witterungsbedingten Schließungen:[cite: 2]</p>
                 <div class="form-group">
-                    <label>Grund:</label>
+                    <label>Grund:[cite: 2]</label>
                     <select id="school-closure-reason">
-                        <option>Unwetter / Sturm / Starkschnee</option>
-                        <option>Heizungsausfall</option>
-                        <option>Wasserschaden</option>
+                        <option>Unwetter / Sturm / Starkschnee[cite: 2]</option>
+                        <option>Heizungsausfall[cite: 2]</option>
+                        <option>Wasserschaden[cite: 2]</option>
                     </select>
                 </div>
-                <button class="btn btn-danger" style="width: 100%;" onclick="schoolReportClosure()">Ausfall an Zentrale & Fahrer melden</button>
+                <button class="btn btn-danger" style="width: 100%;" onclick="schoolReportClosure()">Ausfall an Zentrale & Fahrer melden[cite: 2]</button>
             </div>
         </div>
 
@@ -875,13 +875,10 @@
                 }
             });
 
-            let optimizedDistance = totalKm * 0.78; // Optimierte kürzere Strecke
+            let optimizedDistance = totalKm * 0.78;
             let emptyKm = optimizedDistance * 0.10;
 
-            // Fester vertraglicher Umsatz basierend auf der Ausgangsbasis (Pauschale bleibt voll erhalten)
             let baseRevenue = totalKm * appData.settings.costs.pricePerKm;
-
-            // Geringere Kosten durch optimierte Kilometer und geringeren Zeitaufwand
             let manualCosts = (totalKm * (appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm)) + (360 / 60 * appData.settings.costs.personnelCostPerHour);
             let optimizedCosts = (optimizedDistance * (appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm)) + (290 / 60 * appData.settings.costs.personnelCostPerHour);
             
@@ -1054,7 +1051,6 @@
                 }
             }
 
-            // NEU: Abwesenheitskalender befüllen (Urlaub & Krank)
             const absenceTbody = document.querySelector('#admin-absence-calendar-table tbody');
             if (absenceTbody) {
                 let absentDrivers = [];
@@ -1294,7 +1290,6 @@
             alert("Der Tourenplan mit echten Namen wurde als PDF generiert!");
         }
 
-        // Initialisierung beim Laden der Seite (mit Fallback auf synthetische Testdaten, falls kein Speicherstand existiert)
         if (!loadAppData()) {
             initSyntheticDataset();
         }

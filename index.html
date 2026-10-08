@@ -591,7 +591,7 @@
         <!-- ELTERN PORTAL -->
         <div id="parent-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Eltern-Portal (Kind: Schüler 3 – Schule: Hermann-Reske-Schule, Celle)</h2>
+            <h2 class="section-title" id="parent-view-title">Eltern-Portal</h2>
 
             <div id="parent-school-closure-alert" style="display: none; background-color: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
                 <h3 style="color: #c53030; font-size: 0.95rem; margin-bottom: 5px;">🚨 Wichtige Info zur Schule Ihres Kindes</h3>
@@ -615,7 +615,7 @@
         <!-- SCHUL PORTAL -->
         <div id="school-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
-            <h2 class="section-title">Schul-Portal (Hermann-Reske-Schule, Celle)</h2>
+            <h2 class="section-title" id="school-view-title">Schul-Portal</h2>
             
             <div class="admin-box">
                 <h3>Heutige Schulkinder-Ankünfte</h3>
@@ -624,9 +624,8 @@
                         <thead>
                             <tr><th>Kind</th><th>Klasse</th><th>Status</th></tr>
                         </thead>
-                        <tbody>
-                            <tr><td>Schüler 3 (Rollstuhl)</td><td>Klasse 2b</td><td><span style="color: #38a169;">Wird befördert</span></td></tr>
-                            <tr><td>Schüler 4</td><td>Klasse 4a</td><td><span style="color: #38a169;">Wird befördert</span></td></tr>
+                        <tbody id="school-students-tbody">
+                            <!-- Dynamisch befüllt mit echten Namen -->
                         </tbody>
                     </table>
                 </div>
@@ -673,7 +672,7 @@
          * HAVERSINE-FORMEL ZUR BERECHNUNG ECHTER GPS-DISTANZEN
          * ========================================================== */
         function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Erdradius in km
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = 
@@ -708,11 +707,14 @@
         };
 
         function initSyntheticDataset() {
-            // Reale Straßennamen für die Regionen
             const streetsCelle = ["Trift", "Fritzenwiese", "Hannoversche Heerstraße", "Celler Straße", "Wittinger Straße", "Hehlentorstraße", "Mühlenstraße", "Braunschweiger Heerstraße"];
             const streetsHannover = ["Lister Meile", "Hildesheimer Straße", "Vahrenwalder Straße", "Geibelstraße", "Goethestraße", "Eilenriedestraße", "Kröpcke", "Bischofsholer Damm"];
             const streetsPeine = ["Fuhsestraße", "Bahnhofstraße", "Celler Straße", "Dammstraße", "Schillerstraße", "Herrenstraße", "Burgstraße"];
             const streetsBraunschweig = ["Wendenstraße", "Damm", "Bohlweg", "Magnikirchstraße", "Schöppenstedter Straße", "Helmstedter Straße"];
+
+            // Vor- und Nachnamens-Pool für realistische Schülernamen
+            const studentFirstNames = ["Maximilian", "Alexander", "Paul", "Elias", "Ben", "Noah", "Leon", "Louis", "Felix", "Henry", "Emilia", "Hannah", "Sophia", "Emma", "Mia", "Hanna", "Lina", "Mila", "Ella", "Klara", "Jonas", "Lukas", "Finn", "Tim", "David"];
+            const studentLastNames = ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Braun", "Krüger", "Hofmann", "Hartmann", "Lange"];
 
             // 1. Fahrzeuge (20 Stk.)
             for (let i = 1; i <= 20; i++) {
@@ -735,7 +737,7 @@
                 });
             }
 
-            // 2. Fahrer (23 Stk.) mit realen Adressen in Hannover & Umgebung
+            // 2. Fahrer (23 Stk.)
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
             
@@ -754,7 +756,7 @@
                 });
             }
 
-            // 3. Schüler (81 Stk.) exakt nach Verkehrsbeziehungen & realen GPS-Zentralpunkten
+            // 3. Schüler (81 Stk.) mit realen Namen
             const wheelchairIndices = [3, 15, 32, 50, 70];
 
             for (let i = 1; i <= 81; i++) {
@@ -788,20 +790,21 @@
 
                 let isWc = wheelchairIndices.includes(i);
                 let street = streetList[i % streetList.length];
-                
-                // Leichter GPS-Offset zur Simulation echter Adressabstände
                 let latOffset = (i * 0.0012) % 0.05;
                 let lonOffset = (i * 0.0015) % 0.05;
 
+                let sFirstName = studentFirstNames[(i - 1) % studentFirstNames.length];
+                let sLastName = studentLastNames[(i * 7) % studentLastNames.length];
+
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
-                    name: `Schüler ${i}`,
+                    name: `${sFirstName} ${sLastName}`,
                     address: `${street} ${i}, ${city}`,
                     lat: baseLat + latOffset,
                     lon: baseLon + lonOffset,
                     school: schoolName,
                     class: `Klasse ${(i % 4) + 1}`,
-                    parent: `Eltern S-${i}`,
+                    parent: `Familie ${sLastName}`,
                     phone: `05141-88${i}`,
                     profile: isWc ? "Rollstuhl / körperliche Beeinträchtigung" : "Standard",
                     needsWheelchair: isWc,
@@ -824,6 +827,7 @@
             if (viewId === 'admin-view') renderAdminDashboard();
             if (viewId === 'driver-view') renderDriverPortal();
             if (viewId === 'parent-view') renderParentPortal();
+            if (viewId === 'school-view') renderSchoolPortal();
         }
 
         function loginAdmin() {
@@ -847,26 +851,21 @@
             appData.events.push({ time, msg });
         }
 
-        /* ==========================================================
-         * GPS-BASIERTE VRP-ROUTENOPTIMIERUNG & GEWINNBERECHNUNG
-         * ========================================================== */
         function runVrpOptimization() {
             logEvent("GPS-Routenoptimierung (Haversine-Berechnung) gestartet...");
             
-            // Berechne echte Gesamtdistanz aller aktiven Schüler zum Betriebshof / Schulen
             let totalKm = 0;
             appData.students.forEach(s => {
                 if (!appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school)) {
-                    // Distanz vom Depot zur Schule über Schüleradresse
                     let distDepotToStudent = calculateDistanceKm(appData.settings.depot.lat, appData.settings.depot.lon, s.lat, s.lon);
                     let schoolObj = appData.schools.find(sc => sc.name === s.school);
                     let distStudentToSchool = schoolObj ? calculateDistanceKm(s.lat, s.lon, schoolObj.lat, schoolObj.lon) : 10;
-                    totalKm += (distDepotToStudent + distStudentToSchool) * 1.15; // Faktor für Stadtverkehr
+                    totalKm += (distDepotToStudent + distStudentToSchool) * 1.15;
                 }
             });
 
-            let optimizedDistance = totalKm * 0.82; // 18% Optimierung durch VRP-Bündelung
-            let emptyKm = optimizedDistance * 0.12; // 12% Leerkilometer
+            let optimizedDistance = totalKm * 0.82;
+            let emptyKm = optimizedDistance * 0.12;
             let revenue = optimizedDistance * appData.settings.costs.pricePerKm;
             let costs = (optimizedDistance * (appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm)) + (315 / 60 * appData.settings.costs.personnelCostPerHour);
             let profit = revenue - costs;
@@ -950,14 +949,16 @@
                 alert("Testfall 2 & 4: Fahrerausfall simuliert!\nReservefahrer und Reservefahrzeug wurden eingeplant.");
                 renderAdminDashboard();
             } else if (type === 'student_sick') {
-                const sampleStudent = "Schüler 3";
-                if (!appData.sickStudents.includes(sampleStudent)) {
-                    appData.sickStudents.push(sampleStudent);
+                const sampleStudentName = appData.students[2].name; // Verwendet echten Namen des 3. Schülers
+                if (!appData.sickStudents.includes(sampleStudentName)) {
+                    appData.sickStudents.push(sampleStudentName);
                 }
-                logEvent(`SZENARIO: Schüler ${sampleStudent} (Rollstuhlbedarf) krankgemeldet.`);
-                sendTelegramAlert(`ℹ️ Schülerkrankmeldung: ${sampleStudent} (Rollstuhl) fällt heute aus.`);
-                alert("Testfall 5: Schülerkrankmeldung verarbeitet. Tour und PDF aktualisiert.");
+                logEvent(`SZENARIO: Schüler ${sampleStudentName} krankgemeldet.`);
+                sendTelegramAlert(`ℹ️ Schülerkrankmeldung: ${sampleStudentName} fällt heute aus.`);
+                alert(`Testfall: ${sampleStudentName} krankgemeldet. Tour und PDF aktualisiert.`);
                 renderAdminDashboard();
+                renderDriverPortal();
+                renderSchoolPortal();
             } else if (type === 'school_closed') {
                 const sampleSchool = "Hermann-Reske-Schule, Celle";
                 if (!appData.closedSchools.some(s => s.name === sampleSchool)) {
@@ -994,14 +995,15 @@
         }
 
         function parentReportSick() {
-            const childName = "Schüler 3";
+            const childName = appData.students[2].name; // Echter Name des Kindes
             if (!appData.sickStudents.includes(childName)) {
                 appData.sickStudents.push(childName);
             }
             logEvent(`Eltern-Portal: ${childName} wurde krankgemeldet.`);
-            sendTelegramAlert(`ℹ️ Eltern-Meldung: ${childName} wurde krankgemeldet.`);
-            alert("Krankmeldung erfolgreich übertragen!");
-            renderParentPortal();
+            sendTelegramAlert(`ℹ️ Eltern-Meldung (${appData.students[2].parent}): ${childName} wurde krankgemeldet.`);
+            alert(`Krankmeldung für ${childName} erfolgreich übertragen!`);
+            renderDriverPortal();
+            renderSchoolPortal();
         }
 
         function setDriverStatus(status) {
@@ -1061,7 +1063,6 @@
                 }
             }
 
-            // Alle 23 Fahrer mit realen Adressen rendern
             const driverTbody = document.querySelector('#admin-drivers-table tbody');
             if (driverTbody) {
                 driverTbody.innerHTML = '';
@@ -1082,7 +1083,6 @@
                 });
             }
 
-            // Alle 20 Fahrzeuge rendern
             const vehTbody = document.querySelector('#admin-vehicles-table tbody');
             if (vehTbody) {
                 vehTbody.innerHTML = '';
@@ -1141,11 +1141,11 @@
 
             const tbody = document.getElementById('driver-tour-students-tbody');
             if (tbody) {
-                // Beispielhafte Tour-Schüler mit echten Adressen
+                // Dynamisch die ersten Kinder aus dem echten Datensatz für die Tour verwenden
                 const tourStudents = [
-                    { name: "Schüler 3", address: "Trift 3, Celle", school: "Hermann-Reske-Schule, Celle", needsWc: true },
-                    { name: "Schüler 4", address: "Fritzenwiese 4, Celle", school: "Hermann-Reske-Schule, Celle", needsWc: false },
-                    { name: "Schüler 5", address: "Hannoversche Heerstraße 5, Celle", school: "Hermann-Reske-Schule, Celle", needsWc: false }
+                    appData.students[2], // z. B. Paul Hoffmann
+                    appData.students[3],
+                    appData.students[4]
                 ];
 
                 tbody.innerHTML = '';
@@ -1153,12 +1153,12 @@
                     let isSick = appData.sickStudents.includes(ts.name);
                     let statusHtml = '<span style="color: #38a169; font-weight:650;">🟢 Reguläre Beförderung</span>';
                     if (isSick) {
-                        statusHtml = `<span style="color: #d69e2e; font-weight:650;">⚠ AUSFALL (Kind krankgemeldet)</span>`;
+                        statusHtml = `<span style="color: #d69e2e; font-weight:650;">⚠ AUSFALL (${ts.name} krankgemeldet)</span>`;
                     }
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong>${ts.name}</strong> ${ts.needsWc ? '♿ (Rollstuhl)' : ''}</td>
+                            <td><strong>${ts.name}</strong> ${ts.needsWheelchair ? '♿ (Rollstuhl)' : ''}</td>
                             <td>${ts.address}</td>
                             <td>${ts.school}</td>
                             <td>${statusHtml}</td>
@@ -1168,7 +1168,35 @@
             }
         }
 
-        function renderParentPortal() {}
+        function renderParentPortal() {
+            const child = appData.students[2];
+            document.getElementById('parent-view-title').textContent = `Eltern-Portal (Kind: ${child.name} – Eltern: ${child.parent} – Schule: ${child.school})`;
+        }
+
+        function renderSchoolPortal() {
+            document.getElementById('school-view-title').textContent = `Schul-Portal (Hermann-Reske-Schule, Celle)`;
+            const schoolTbody = document.getElementById('school-students-tbody');
+            if (schoolTbody) {
+                const child1 = appData.students[2];
+                const child2 = appData.students[3];
+                
+                let isSick1 = appData.sickStudents.includes(child1.name);
+                let isSick2 = appData.sickStudents.includes(child2.name);
+
+                schoolTbody.innerHTML = `
+                    <tr>
+                        <td><strong>${child1.name}</strong> ${child1.needsWheelchair ? '♿ (Rollstuhl)' : ''}</td>
+                        <td>${child1.class}</td>
+                        <td>${isSick1 ? '<span style="color: #e53e3e;">Krankgemeldet</span>' : '<span style="color: #38a169;">Wird befördert</span>'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>${child2.name}</strong> ${child2.needsWheelchair ? '♿ (Rollstuhl)' : ''}</td>
+                        <td>${child2.class}</td>
+                        <td>${isSick2 ? '<span style="color: #e53e3e;">Krankgemeldet</span>' : '<span style="color: #38a169;">Wird befördert</span>'}</td>
+                    </tr>
+                `;
+            }
+        }
 
         function toggleDriverSick(id) {
             const d = appData.drivers.find(item => item.id === id);
@@ -1191,6 +1219,7 @@
             alert("Systemdaten erfolgreich auf Normalbetrieb zurückgesetzt.");
             renderAdminDashboard();
             renderDriverPortal();
+            renderSchoolPortal();
         }
 
         function generatePdfTourPlan() {
@@ -1202,7 +1231,7 @@
             doc.setFontSize(16);
             doc.text("Mietwagenverkehr Rosebrock", 20, 20);
             doc.setFontSize(12);
-            doc.text("Offizieller Tourenplan (Reale GPS-Adressen)", 20, 30);
+            doc.text("Offizieller Tourenplan (Reale GPS-Adressen & Namen)", 20, 30);
             
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
@@ -1212,13 +1241,13 @@
             doc.line(20, 54, 190, 54);
             
             let y = 64;
-            doc.text("Aktive Stopps & Schüler (GPS-Stand):", 20, y);
+            doc.text("Aktive Stopps & Schüler (Echtzeit-Stand):", 20, y);
             y += 10;
 
             const rawTourStudents = [
-                { name: "Schüler 3", address: "Trift 3, Celle", school: "Hermann-Reske-Schule, Celle" },
-                { name: "Schüler 4", address: "Fritzenwiese 4, Celle", school: "Hermann-Reske-Schule, Celle" },
-                { name: "Schüler 5", address: "Hannoversche Heerstraße 5, Celle", school: "Hermann-Reske-Schule, Celle" }
+                appData.students[2],
+                appData.students[3],
+                appData.students[4]
             ];
 
             let activeStops = rawTourStudents.filter(ts => !appData.sickStudents.includes(ts.name));
@@ -1236,13 +1265,14 @@
             doc.text(`Anzahl aktiver Kinder auf Tour: ${activeStops.length}`, 20, y);
             
             doc.save("Tourenplan_Hans_Rosebrock_GPS.pdf");
-            alert("Der Tourenplan mit realen Adressen wurde als PDF generiert!");
+            alert("Der Tourenplan mit echten Namen wurde als PDF generiert!");
         }
 
         initSyntheticDataset();
         renderAdminDashboard();
         renderDriverPortal();
         renderParentPortal();
+        renderSchoolPortal();
     </script>
 </body>
 </html>

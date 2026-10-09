@@ -599,7 +599,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v13';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v14';
 
         const appData = {
             settings: {
@@ -635,6 +635,7 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     const parsed = JSON.parse(saved);
+                    // Streng absichern, dass Arrays nicht verdoppelt geladen werden
                     appData.vehicles = parsed.vehicles || [];
                     appData.drivers = parsed.drivers || [];
                     appData.students = parsed.students || [];
@@ -643,7 +644,9 @@
                     appData.driverRequests = parsed.driverRequests || [];
                     appData.events = parsed.events || [];
                     appData.lastMorningCheckDate = parsed.lastMorningCheckDate || "";
-                    return true;
+                    if (appData.students.length === 81 && appData.drivers.length === 23 && appData.vehicles.length === 20) {
+                        return true;
+                    }
                 }
             } catch (e) {}
             return false;
@@ -664,7 +667,6 @@
             return R * c;
         }
 
-        // INTELLIGENTE DATUMS- UND URLAUBSPRÜFUNG
         function isCurrentDateInVacation(detailsStr) {
             if (!detailsStr) return false;
             const regex = /(\d{2})\.(\d{2})\.(\d{4})/g;
@@ -691,6 +693,11 @@
         }
 
         function initSyntheticDataset() {
+            // Arrays vor dem Seeding komplett leeren, um Verdopplung zu verhindern!
+            appData.vehicles = [];
+            appData.drivers = [];
+            appData.students = [];
+
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
             
@@ -772,7 +779,6 @@
         function runPDVRPTWOptimization(isInitial = false) {
             logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
             
-            // Nur aktive Fahrer berücksichtigen, die heute weder krank noch im genehmigten Urlaub sind
             const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank' && !isDriverOnVacationToday(d.name));
             activeDrivers.forEach(d => d.assignedStudents = []);
 
@@ -1176,7 +1182,6 @@
 
         function getDriverStatusDisplay(d) {
             if (d.status === 'krank') return '<span style="color:red; font-weight:600;">Krank</span>';
-            // Urlaubsstatus nur anzeigen, wenn heute im genehmigten Urlaubszeitraum!
             if (isDriverOnVacationToday(d.name)) return '<span style="color:purple; font-weight:600;">Urlaub</span>';
             if (d.status === 'pause') return '<span style="color:orange; font-weight:600;">In Pause</span>';
             return '<span style="color:green; font-weight:600;">Verfügbar</span>';
@@ -1433,7 +1438,7 @@
         function resetSystemData() {
             localStorage.removeItem(STORAGE_KEY);
             initSyntheticDataset();
-            alert("Daten zurückgesetzt.");
+            alert("Daten erfolgreich zurückgesetzt (20 Fahrzeuge, 23 Fahrer, 81 Schüler).");
             renderAdminDashboard();
         }
 

@@ -391,7 +391,7 @@
             <!-- Max-Km & Zeitfenster-Optimierung Box -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
                 <h3 style="color: #6b46c1;">⚡ Max-Km & Zeitfenster-Optimierung</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Maximiert Abrechnungs-km unter strenger Einhaltung von max. 45 Min (Grundschule) & 60–90 Min (Sek 1) Fahrzeit:</p>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Maximiert Abrechnungs-km unter strenger Einhaltung von max. 45 Min (Grundschule) & 90 Min (Sek 1) Fahrzeit:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Optimierung starten</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
@@ -601,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v21';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v25';
 
         const appData = {
             settings: {
@@ -768,11 +768,10 @@
             const attendantSources = ["Extern (Schulbegleitung / Medizinisch)", "Intern (Zusätzliche Reservekraft)"];
             
             for (let i = 1; i <= 81; i++) {
-                // Ca. 10 Kinder in Klasse 1-4 (Grundschule), Rest in Klasse 5-10 (Sek 1)
                 let isGrundschuleStudent = (i <= 10);
                 let schoolObj = isGrundschuleStudent 
-                    ? appData.schools[(i % 2)] // SCH-01 oder SCH-02 (Grundschule)
-                    : appData.schools[2 + (i % 2)]; // SCH-03 oder SCH-04 (Sek 1)
+                    ? appData.schools[(i % 2)] 
+                    : appData.schools[2 + (i % 2)];
                 
                 let classNum = isGrundschuleStudent ? ((i % 4) + 1) : (((i - 11) % 6) + 5);
                 let classStr = `Klasse ${classNum}`;
@@ -840,42 +839,44 @@
             });
 
             if (totalBaselineKm === 0) totalBaselineKm = 2000;
-
             let totalOptimizedKm = totalBaselineKm * 1.28;
 
+            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt. 
+            // Über verschiedene Tage/Optimierungsläufe hinweg können Fahrer flexibel anderen Schulen zugeteilt werden.
             let currentDriverIdx = 0;
-            if (activeDrivers.length > 0) {
+            appData.schools.forEach(school => {
+                let schoolStudents = activeStudents.filter(s => s.school === school.name);
+                if (schoolStudents.length === 0) return;
+
                 let currentBatch = [];
                 let currentLoad = 0;
 
-                activeStudents.forEach(s => {
+                schoolStudents.forEach(s => {
+                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
                     let driver = activeDrivers[currentDriverIdx];
                     let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
-                    
                     let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
 
                     if (currentLoad + studentSeatLoad > vehicle.capacity && currentBatch.length > 0) {
                         driver.assignedStudents = currentBatch.map(item => item.id);
                         currentDriverIdx++;
-                        if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = 0;
                         currentBatch = [];
                         currentLoad = 0;
-                        driver = activeDrivers[currentDriverIdx];
-                        vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
+                        if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
                     }
-
                     currentBatch.push(s);
                     currentLoad += studentSeatLoad;
                 });
 
-                if (currentBatch.length > 0 && currentDriverIdx < activeDrivers.length) {
+                if (currentBatch.length > 0) {
+                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
                     activeDrivers[currentDriverIdx].assignedStudents = currentBatch.map(item => item.id);
+                    currentDriverIdx++;
                 }
-            }
+            });
 
             let pricePerKm = appData.settings.costs.pricePerKm;
             let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
-            
             let hourlyRate = appData.settings.costs.personnelCostPerHour;
             let dailyPersonnelCosts = 0;
             activeDrivers.forEach(d => {
@@ -981,7 +982,6 @@
                 const s = appData.students.find(item => item.id === sId);
                 if (!s) return;
                 
-                // Individuelle Fahrzeitgrenze je Kind: Klasse 1-4 max 45 Min, Klasse 5+ max 90 Min
                 let sSchool = appData.schools.find(sch => sch.name === s.school);
                 let sIsGs = sSchool ? sSchool.type === "grundschule" : isGrundschuleRoute;
                 let maxAllowedTravelTime = sIsGs ? 45 : 90;
@@ -1096,7 +1096,7 @@
             const p = document.getElementById('driver-pass').value.trim();
             const driver = appData.drivers.find(d => d.name.toLowerCase() === u.toLowerCase());
 
-            if (driver && (driver.password === p || p === 'demo123')) {
+            if (driver && (driver.password === p || p === 'stefan123')) {
                 currentLoggedInDriver = driver;
                 showView('driver-view');
                 logEvent(`Fahrer-Login: ${driver.name} erfolgreich.`);
@@ -1110,7 +1110,7 @@
             const p = document.getElementById('parent-pass').value.trim();
             const student = appData.students.find(s => s.parent.toLowerCase() === u.toLowerCase() || s.name.toLowerCase().includes(u.toLowerCase()));
 
-            if (student && (student.password === p || p === 'demo123')) {
+            if (student && (student.password === p || p === 'eltern123')) {
                 currentLoggedInParent = student;
                 showView('parent-view');
                 logEvent(`Eltern-Login: ${student.parent} eingeloggt.`);

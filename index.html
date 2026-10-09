@@ -466,7 +466,7 @@
                 </div>
                 <div class="form-group">
                     <label>Zeitraum / Details:</label>
-                    <input type="text" id="driver-req-dates" placeholder="z. B. 12.11.2026 - 15.11.2026 oder 12.11.2026">
+                    <input type="text" id="driver-req-dates" placeholder="z. B. 09.10 - 15.10 oder 09.10.2026">
                 </div>
                 <div class="form-group">
                     <label>Nachricht:</label>
@@ -601,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v17';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v18';
 
         const appData = {
             settings: {
@@ -668,21 +668,30 @@
             return R * c;
         }
 
+        // Flexibler & robuster Datums-Parser (erkennt auch "9.10 - 15.10" ohne Jahresangabe)
         function isCurrentDateInActiveRange(detailsStr) {
             if (!detailsStr) return false;
-            const regex = /(\d{2})\.(\d{2})\.(\d{4})/g;
-            const matches = [...detailsStr.matchAll(regex)];
+            const regex = /(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?/g;
+            let match;
+            let dates = [];
+            const currentYear = new Date().getFullYear();
+
+            while ((match = regex.exec(detailsStr)) !== null) {
+                let day = parseInt(match[1]);
+                let month = parseInt(match[2]) - 1;
+                let year = match[3] ? parseInt(match[3]) : currentYear;
+                if (year < 100) year += 2000;
+                dates.push(new Date(year, month, day));
+            }
+
             const now = new Date();
-            
-            if (matches.length >= 2) {
-                const [_, d1, m1, y1] = matches[0];
-                const [__, d2, m2, y2] = matches[1];
-                const startDate = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1));
-                const endDate = new Date(parseInt(y2), parseInt(m2) - 1, parseInt(d2), 23, 59, 59);
+            if (dates.length >= 2) {
+                let startDate = dates[0];
+                let endDate = new Date(dates[1].getTime());
+                endDate.setHours(23, 59, 59, 999);
                 return now >= startDate && now <= endDate;
-            } else if (matches.length === 1) {
-                const [_, d1, m1, y1] = matches[0];
-                const targetDate = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1));
+            } else if (dates.length === 1) {
+                let targetDate = dates[0];
                 return now.toDateString() === targetDate.toDateString();
             }
             return false;

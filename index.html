@@ -599,7 +599,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v12';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v13';
 
         const appData = {
             settings: {
@@ -662,6 +662,32 @@
                       Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c;
+        }
+
+        // INTELLIGENTE DATUMS- UND URLAUBSPRÜFUNG
+        function isCurrentDateInVacation(detailsStr) {
+            if (!detailsStr) return false;
+            const regex = /(\d{2})\.(\d{2})\.(\d{4})/g;
+            const matches = [...detailsStr.matchAll(regex)];
+            if (matches.length >= 2) {
+                const [_, d1, m1, y1] = matches[0];
+                const [__, d2, m2, y2] = matches[1];
+                const startDate = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1));
+                const endDate = new Date(parseInt(y2), parseInt(m2) - 1, parseInt(d2), 23, 59, 59);
+                const now = new Date();
+                return now >= startDate && now <= endDate;
+            }
+            return false;
+        }
+
+        function isDriverOnVacationToday(driverName) {
+            const approvedVacations = appData.driverRequests.filter(r => r.driverName === driverName && r.type === 'Urlaubsantrag' && r.status === 'genehmigt');
+            for (let req of approvedVacations) {
+                if (isCurrentDateInVacation(req.details)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         function initSyntheticDataset() {
@@ -746,7 +772,8 @@
         function runPDVRPTWOptimization(isInitial = false) {
             logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
             
-            const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank');
+            // Nur aktive Fahrer berücksichtigen, die heute weder krank noch im genehmigten Urlaub sind
+            const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank' && !isDriverOnVacationToday(d.name));
             activeDrivers.forEach(d => d.assignedStudents = []);
 
             let activeStudents = appData.students.filter(s => {
@@ -836,7 +863,7 @@
             logEvent(`Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €.`);
             saveAppData();
             if (!isInitial) {
-                alert("Optimierung erfolgreich! Routen, Zeitschranken (Grundschule max. 45 Min / Sek 1 bis 90 Min) und Routenlinks wurden aktualisiert.");
+                alert("Optimierung erfolgreich!");
                 renderAdminDashboard();
             }
         }
@@ -881,7 +908,6 @@
             return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${depot.lat},${depot.lon}&waypoints=${reverseWaypoints}&travelmode=driving`;
         }
 
-        // INTELLIGENTE SCHEDULING-LOGIK: Grundschule max 45 Min (später abholen), Sek 1 bis zu 90 Min (max Streckung für Max-Km Umsatz)
         function getDriverTourSchedule(driver) {
             if (!driver || !driver.assignedStudents) return { morning: [], afternoon: [] };
             
@@ -899,9 +925,7 @@
             let schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
             let isGrundschule = schoolObj.type === "grundschule";
 
-            let schoolArrivalMinutes = 8 * 60; // 08:00 Uhr
-            
-            // Restriktion: Grundschule max 45 Minuten, Sekundarstufe 1 bis zu 90 Minuten (Max-Km Ausnutzung)
+            let schoolArrivalMinutes = 8 * 60;
             let maxAllowedTravelTime = isGrundschule ? 45 : 90;
             let timePerStop = isGrundschule ? Math.min(8, Math.floor(45 / Math.max(1, activeStudentIds.length))) : Math.min(18, Math.floor(85 / Math.max(1, activeStudentIds.length)));
 
@@ -934,7 +958,7 @@
                 duration: 0
             });
 
-            let schoolEndMinutes = 13 * 60; // 13:00 Uhr
+            let schoolEndMinutes = 13 * 60;
             afternoonStops.push({
                 time: "13:00",
                 name: "Schulende",
@@ -1152,8 +1176,8 @@
 
         function getDriverStatusDisplay(d) {
             if (d.status === 'krank') return '<span style="color:red; font-weight:600;">Krank</span>';
-            const hasVacation = appData.driverRequests.some(r => r.driverName === d.name && r.type === 'Urlaubsantrag' && r.status === 'genehmigt');
-            if (hasVacation) return '<span style="color:purple; font-weight:600;">Urlaub</span>';
+            // Urlaubsstatus nur anzeigen, wenn heute im genehmigten Urlaubszeitraum!
+            if (isDriverOnVacationToday(d.name)) return '<span style="color:purple; font-weight:600;">Urlaub</span>';
             if (d.status === 'pause') return '<span style="color:orange; font-weight:600;">In Pause</span>';
             return '<span style="color:green; font-weight:600;">Verfügbar</span>';
         }
@@ -1175,7 +1199,7 @@
 
             const totalDrivers = appData.drivers.length;
             const sickDriversCount = appData.drivers.filter(d => d.status === 'krank').length;
-            const vacationDriversCount = appData.drivers.filter(d => appData.driverRequests.some(r => r.driverName === d.name && r.type === 'Urlaubsantrag' && r.status === 'genehmigt')).length;
+            const vacationDriversCount = appData.drivers.filter(d => isDriverOnVacationToday(d.name)).length;
             const availableDriversCount = totalDrivers - sickDriversCount - vacationDriversCount;
             const kpiDrivers = document.getElementById('kpi-drivers');
             if (kpiDrivers) kpiDrivers.textContent = `${availableDriversCount} verfügbar / ${totalDrivers} Gesamt`;
@@ -1183,13 +1207,13 @@
             const absenceSummary = document.getElementById('admin-absence-summary');
             if (absenceSummary) {
                 let sickDrivers = appData.drivers.filter(d => d.status === 'krank');
-                let vacationDrivers = appData.drivers.filter(d => appData.driverRequests.some(r => r.driverName === d.name && r.type === 'Urlaubsantrag' && r.status === 'genehmigt'));
+                let vacationDrivers = appData.drivers.filter(d => isDriverOnVacationToday(d.name));
                 let html = "";
                 if (sickDrivers.length > 0) {
                     html += `<strong>Kranke Fahrer:</strong> ${sickDrivers.map(d => d.name).join(', ')}<br>`;
                 }
                 if (vacationDrivers.length > 0) {
-                    html += `<strong>Fahrer im Urlaub:</strong> ${vacationDrivers.map(d => d.name).join(', ')}<br>`;
+                    html += `<strong>Fahrer heute im Urlaub:</strong> ${vacationDrivers.map(d => d.name).join(', ')}<br>`;
                 }
                 if (appData.sickStudents.length > 0) {
                     html += `<strong>Kranke Schüler:</strong> ${appData.sickStudents.map(s => cleanStudentName(s)).join(', ')}<br>`;

@@ -601,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v20';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v21';
 
         const appData = {
             settings: {
@@ -768,7 +768,15 @@
             const attendantSources = ["Extern (Schulbegleitung / Medizinisch)", "Intern (Zusätzliche Reservekraft)"];
             
             for (let i = 1; i <= 81; i++) {
-                let schoolObj = appData.schools[(i * 3) % appData.schools.length];
+                // Ca. 10 Kinder in Klasse 1-4 (Grundschule), Rest in Klasse 5-10 (Sek 1)
+                let isGrundschuleStudent = (i <= 10);
+                let schoolObj = isGrundschuleStudent 
+                    ? appData.schools[(i % 2)] // SCH-01 oder SCH-02 (Grundschule)
+                    : appData.schools[2 + (i % 2)]; // SCH-03 oder SCH-04 (Sek 1)
+                
+                let classNum = isGrundschuleStudent ? ((i % 4) + 1) : (((i - 11) % 6) + 5);
+                let classStr = `Klasse ${classNum}`;
+
                 let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
                 let famName = "Familie " + sName.split(" ")[1];
                 
@@ -789,7 +797,7 @@
                     lat: 52.3759 + latOffset,
                     lon: 9.7320 + lonOffset,
                     school: schoolObj.name,
-                    class: `Klasse ${(i % 4) + 1}`,
+                    class: classStr,
                     parent: famName,
                     password: "eltern123",
                     impairment: impairment,
@@ -964,16 +972,20 @@
 
             const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
             let schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
-            let isGrundschule = schoolObj.type === "grundschule";
+            let isGrundschuleRoute = schoolObj.type === "grundschule";
 
             let schoolArrivalMinutes = 8 * 60;
-            let maxAllowedTravelTime = isGrundschule ? 45 : 90;
-            let timePerStop = isGrundschule ? Math.min(8, Math.floor(45 / Math.max(1, activeStudentIds.length))) : Math.min(18, Math.floor(85 / Math.max(1, activeStudentIds.length)));
+            let timePerStop = isGrundschuleRoute ? Math.min(8, Math.floor(45 / Math.max(1, activeStudentIds.length))) : Math.min(15, Math.floor(85 / Math.max(1, activeStudentIds.length)));
 
             activeStudentIds.forEach((sId, idx) => {
                 const s = appData.students.find(item => item.id === sId);
                 if (!s) return;
                 
+                // Individuelle Fahrzeitgrenze je Kind: Klasse 1-4 max 45 Min, Klasse 5+ max 90 Min
+                let sSchool = appData.schools.find(sch => sch.name === s.school);
+                let sIsGs = sSchool ? sSchool.type === "grundschule" : isGrundschuleRoute;
+                let maxAllowedTravelTime = sIsGs ? 45 : 90;
+
                 let travelTime = (activeStudentIds.length - idx) * timePerStop;
                 if (travelTime > maxAllowedTravelTime) travelTime = maxAllowedTravelTime;
                 
@@ -984,7 +996,7 @@
                 
                 morningStops.push({
                     time: timeStr,
-                    name: cleanStudentName(s.name) + (s.needsAttendant ? " (inkl. Begleitung)" : ""),
+                    name: cleanStudentName(s.name) + ` (${s.class})` + (s.needsAttendant ? " (inkl. Begleitung)" : ""),
                     address: s.address,
                     school: s.school,
                     duration: travelTime
@@ -1018,7 +1030,7 @@
                 
                 afternoonStops.push({
                     time: timeStr,
-                    name: cleanStudentName(s.name) + " (Heimfahrt)",
+                    name: cleanStudentName(s.name) + ` (${s.class})` + " (Heimfahrt)",
                     address: s.address,
                     school: s.school,
                     duration: 0
@@ -1427,7 +1439,7 @@
             if (!currentLoggedInParent) return;
             document.getElementById('parent-view-title').textContent = `Eltern-Portal (Familie: ${currentLoggedInParent.parent})`;
             const select = document.getElementById('parent-child-select');
-            select.innerHTML = `<option value="${currentLoggedInParent.name}">${cleanStudentName(currentLoggedInParent.name)} (${currentLoggedInParent.school})</option>`;
+            select.innerHTML = `<option value="${currentLoggedInParent.name}">${cleanStudentName(currentLoggedInParent.name)} (${currentLoggedInParent.school}, ${currentLoggedInParent.class})</option>`;
         }
 
         function renderSchoolPortal() {

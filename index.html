@@ -414,14 +414,14 @@
             </div>
 
             <div class="admin-box" style="border-left: 4px solid #38a169;">
-                <h3>Fahrer-Anliegen & Urlaubsanträge</h3>
+                <h3>Fahrer-Meldungen & Anträge</h3>
                 <div class="table-responsive">
                     <table id="admin-requests-table">
                         <thead>
                             <tr><th>Fahrer</th><th>Art</th><th>Zeitraum / Details</th><th>Status</th><th>Aktion</th></tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>
+                            <tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Meldungen.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -454,36 +454,38 @@
             <p style="font-size: 0.85rem; color: #2d3748; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;" id="driver-header-info">Eingeloggt als: -</p>
 
             <div class="admin-box" style="border-left: 4px solid #38a169;">
-                <h3>Anliegen oder Urlaubsantrag an Inhaber senden</h3>
+                <h3>Meldung oder Antrag an Zentrale senden</h3>
                 <div class="form-group">
-                    <label>Art des Antrags:</label>
+                    <label>Art der Meldung:</label>
                     <select id="driver-req-type">
-                        <option value="Urlaubsantrag">Urlaubsantrag</option>
+                        <option value="Krankmeldung (Zeitraum)">Krankmeldung (für Datum / Zeitraum)</option>
+                        <option value="Urlaubsantrag">Urlaubsantrag (Genehmigung erforderlich)</option>
                         <option value="Fahrzeugproblem">Fahrzeugproblem</option>
                         <option value="Persönliche Angelegenheit">Persönliche Angelegenheit</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Zeitraum / Details:</label>
-                    <input type="text" id="driver-req-dates" placeholder="z. B. 10.08.2026 - 14.08.2026">
+                    <input type="text" id="driver-req-dates" placeholder="z. B. 12.11.2026 - 15.11.2026 oder 12.11.2026">
                 </div>
                 <div class="form-group">
                     <label>Nachricht:</label>
                     <textarea id="driver-req-msg" placeholder="Nachricht an Zentrale..." rows="2" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:4px;"></textarea>
                 </div>
-                <button class="btn btn-success" style="width: 100%;" onclick="submitDriverRequest()">Antrag absenden</button>
+                <button class="btn btn-success" style="width: 100%;" onclick="submitDriverRequest()">Meldung / Antrag absenden</button>
+                <p style="font-size: 0.75rem; color: #718096; margin-top: 6px; text-align: center;">Hinweis: Der Inhaber ist ab 18 Uhr nicht erreichbar.</p>
             </div>
 
-            <!-- Eigene Anträge & Status -->
+            <!-- Eigene Meldungen & Status -->
             <div class="admin-box" style="border-left: 4px solid #319795;">
-                <h3>Meine Anträge & Status</h3>
+                <h3>Meine Meldungen & Anträge</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
                             <tr><th>Art</th><th>Details</th><th>Status</th></tr>
                         </thead>
                         <tbody id="driver-my-requests-tbody">
-                            <tr><td colspan="3" style="text-align: center; color: #718096;">Keine Anträge gestellt.</td></tr>
+                            <tr><td colspan="3" style="text-align: center; color: #718096;">Keine Meldungen vorhanden.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -494,7 +496,7 @@
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                     <button class="btn btn-success" style="flex: 1;" onclick="setDriverStatus('Bereit')">🟢 Bereit</button>
                     <button class="btn btn-warning" style="flex: 1;" onclick="setDriverStatus('In Pause')">🟡 Pause</button>
-                    <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank</button>
+                    <button class="btn btn-danger" style="flex: 1;" onclick="setDriverStatus('Krank')">🔴 Krank (heute)</button>
                 </div>
                 <p style="font-size: 0.9rem; font-weight: 500; color: #2d3748;" id="driver-status-text">Status: Bereit</p>
             </div>
@@ -599,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v14';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v17';
 
         const appData = {
             settings: {
@@ -635,7 +637,6 @@
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     const parsed = JSON.parse(saved);
-                    // Streng absichern, dass Arrays nicht verdoppelt geladen werden
                     appData.vehicles = parsed.vehicles || [];
                     appData.drivers = parsed.drivers || [];
                     appData.students = parsed.students || [];
@@ -667,25 +668,37 @@
             return R * c;
         }
 
-        function isCurrentDateInVacation(detailsStr) {
+        function isCurrentDateInActiveRange(detailsStr) {
             if (!detailsStr) return false;
             const regex = /(\d{2})\.(\d{2})\.(\d{4})/g;
             const matches = [...detailsStr.matchAll(regex)];
+            const now = new Date();
+            
             if (matches.length >= 2) {
                 const [_, d1, m1, y1] = matches[0];
                 const [__, d2, m2, y2] = matches[1];
                 const startDate = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1));
                 const endDate = new Date(parseInt(y2), parseInt(m2) - 1, parseInt(d2), 23, 59, 59);
-                const now = new Date();
                 return now >= startDate && now <= endDate;
+            } else if (matches.length === 1) {
+                const [_, d1, m1, y1] = matches[0];
+                const targetDate = new Date(parseInt(y1), parseInt(m1) - 1, parseInt(d1));
+                return now.toDateString() === targetDate.toDateString();
             }
             return false;
         }
 
-        function isDriverOnVacationToday(driverName) {
-            const approvedVacations = appData.driverRequests.filter(r => r.driverName === driverName && r.type === 'Urlaubsantrag' && r.status === 'genehmigt');
-            for (let req of approvedVacations) {
-                if (isCurrentDateInVacation(req.details)) {
+        function isDriverUnavailableToday(driverName) {
+            const driver = appData.drivers.find(d => d.name === driverName);
+            if (driver && driver.status === 'krank') return true;
+
+            const relevantRequests = appData.driverRequests.filter(r => 
+                r.driverName === driverName && 
+                (r.type === 'Urlaubsantrag' || r.type.includes('Krankmeldung')) && 
+                r.status.includes('genehmigt')
+            );
+            for (let req of relevantRequests) {
+                if (isCurrentDateInActiveRange(req.details)) {
                     return true;
                 }
             }
@@ -693,10 +706,12 @@
         }
 
         function initSyntheticDataset() {
-            // Arrays vor dem Seeding komplett leeren, um Verdopplung zu verhindern!
             appData.vehicles = [];
             appData.drivers = [];
             appData.students = [];
+            appData.sickStudents = [];
+            appData.closedSchools = [];
+            appData.driverRequests = [];
 
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
@@ -779,7 +794,7 @@
         function runPDVRPTWOptimization(isInitial = false) {
             logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
             
-            const activeDrivers = appData.drivers.filter(d => !d.isReserve && d.status !== 'krank' && !isDriverOnVacationToday(d.name));
+            const activeDrivers = appData.drivers.filter(d => !d.isReserve && !isDriverUnavailableToday(d.name));
             activeDrivers.forEach(d => d.assignedStudents = []);
 
             let activeStudents = appData.students.filter(s => {
@@ -997,17 +1012,21 @@
             const now = new Date();
             document.getElementById('live-clock').textContent = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
 
+            const todayStr = now.toDateString();
+            if (appData.lastMorningCheckDate !== todayStr) {
+                appData.lastMorningCheckDate = todayStr;
+                appData.sickStudents = [];
+                appData.closedSchools = [];
+                saveAppData();
+                runPDVRPTWOptimization(true);
+            }
+
             if (now.getHours() === 7 && now.getMinutes() === 0) {
-                const todayStr = now.toDateString();
-                if (appData.lastMorningCheckDate !== todayStr) {
-                    appData.lastMorningCheckDate = todayStr;
-                    saveAppData();
-                    const unreportedDrivers = appData.drivers.filter(d => !d.isReserve && d.assignedStudents && d.assignedStudents.length > 0 && d.status !== 'bereit' && d.status !== 'krank');
-                    if (unreportedDrivers.length > 0) {
-                        unreportedDrivers.forEach(d => {
-                            sendTelegramAlert(`🚨 *Meldepflicht-Alarm*: Fahrer *${d.name}* (eingeteilt) hat sich bis 07:00 Uhr morgens nicht gemeldet!`);
-                        });
-                    }
+                const unreportedDrivers = appData.drivers.filter(d => !d.isReserve && d.assignedStudents && d.assignedStudents.length > 0 && d.status !== 'bereit' && d.status !== 'krank' && !isDriverUnavailableToday(d.name));
+                if (unreportedDrivers.length > 0) {
+                    unreportedDrivers.forEach(d => {
+                        sendTelegramAlert(`🚨 *Meldepflicht-Alarm*: Fahrer *${d.name}* (eingeteilt) hat sich bis 07:00 Uhr morgens nicht gemeldet!`);
+                    });
                 }
             }
         }
@@ -1094,15 +1113,27 @@
 
             if (!currentLoggedInDriver) return;
 
+            const isSickReport = type.includes('Krankmeldung');
+            const reqStatus = isSickReport ? "genehmigt (Meldung)" : "offen";
+
             appData.driverRequests.push({
                 id: Date.now(),
                 driverName: currentLoggedInDriver.name,
                 type: type,
                 details: dates ? `${dates} - ${msg}` : msg,
-                status: "offen"
+                status: reqStatus
             });
+
+            if (isSickReport) {
+                sendTelegramAlert(`🚨 Krankmeldung eingegangen: *${currentLoggedInDriver.name}* hat sich für den Zeitraum "${dates}" krankgemeldet.`);
+                logEvent(`Krankmeldung von ${currentLoggedInDriver.name} (${dates}) eingetragen.`);
+            } else {
+                logEvent(`Antrag (${type}) von ${currentLoggedInDriver.name} eingereicht.`);
+            }
+
             saveAppData();
-            alert("Antrag erfolgreich an Inhaber gesendet!");
+            runPDVRPTWOptimization(true);
+            alert(isSickReport ? "Krankmeldung erfolgreich im System vermerkt. Gute Besserung!" : "Antrag erfolgreich an Inhaber gesendet!");
             renderDriverPortal();
         }
 
@@ -1111,6 +1142,7 @@
             if (req) {
                 req.status = newStatus;
                 saveAppData();
+                runPDVRPTWOptimization(true);
                 renderAdminDashboard();
             }
         }
@@ -1181,8 +1213,7 @@
         }
 
         function getDriverStatusDisplay(d) {
-            if (d.status === 'krank') return '<span style="color:red; font-weight:600;">Krank</span>';
-            if (isDriverOnVacationToday(d.name)) return '<span style="color:purple; font-weight:600;">Urlaub</span>';
+            if (d.status === 'krank' || isDriverUnavailableToday(d.name)) return '<span style="color:red; font-weight:600;">Abwesend / Krank / Urlaub</span>';
             if (d.status === 'pause') return '<span style="color:orange; font-weight:600;">In Pause</span>';
             return '<span style="color:green; font-weight:600;">Verfügbar</span>';
         }
@@ -1203,22 +1234,17 @@
             if (kpiVehicles) kpiVehicles.textContent = `${totalVehicles} verfügbar / ${totalVehicles} Gesamt`;
 
             const totalDrivers = appData.drivers.length;
-            const sickDriversCount = appData.drivers.filter(d => d.status === 'krank').length;
-            const vacationDriversCount = appData.drivers.filter(d => isDriverOnVacationToday(d.name)).length;
-            const availableDriversCount = totalDrivers - sickDriversCount - vacationDriversCount;
+            const unavailableDriversCount = appData.drivers.filter(d => d.status === 'krank' || isDriverUnavailableToday(d.name)).length;
+            const availableDriversCount = totalDrivers - unavailableDriversCount;
             const kpiDrivers = document.getElementById('kpi-drivers');
             if (kpiDrivers) kpiDrivers.textContent = `${availableDriversCount} verfügbar / ${totalDrivers} Gesamt`;
 
             const absenceSummary = document.getElementById('admin-absence-summary');
             if (absenceSummary) {
-                let sickDrivers = appData.drivers.filter(d => d.status === 'krank');
-                let vacationDrivers = appData.drivers.filter(d => isDriverOnVacationToday(d.name));
+                let unavailableDrivers = appData.drivers.filter(d => d.status === 'krank' || isDriverUnavailableToday(d.name));
                 let html = "";
-                if (sickDrivers.length > 0) {
-                    html += `<strong>Kranke Fahrer:</strong> ${sickDrivers.map(d => d.name).join(', ')}<br>`;
-                }
-                if (vacationDrivers.length > 0) {
-                    html += `<strong>Fahrer heute im Urlaub:</strong> ${vacationDrivers.map(d => d.name).join(', ')}<br>`;
+                if (unavailableDrivers.length > 0) {
+                    html += `<strong>Abwesende/Kranke Fahrer:</strong> ${unavailableDrivers.map(d => d.name).join(', ')}<br>`;
                 }
                 if (appData.sickStudents.length > 0) {
                     html += `<strong>Kranke Schüler:</strong> ${appData.sickStudents.map(s => cleanStudentName(s)).join(', ')}<br>`;
@@ -1235,19 +1261,22 @@
             const reqTbody = document.querySelector('#admin-requests-table tbody');
             if (reqTbody) {
                 if (appData.driverRequests.length === 0) {
-                    reqTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Anträge.</td></tr>`;
+                    reqTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Meldungen.</td></tr>`;
                 } else {
                     reqTbody.innerHTML = '';
                     appData.driverRequests.forEach(r => {
+                        let isSickMsg = r.type.includes('Krankmeldung');
                         reqTbody.innerHTML += `
                             <tr>
                                 <td><strong>${r.driverName}</strong></td>
                                 <td>${r.type}</td>
                                 <td>${r.details}</td>
-                                <td><span style="color:orange; font-weight:600;">${r.status}</span></td>
+                                <td><span style="color:${isSickMsg?'red':'orange'}; font-weight:600;">${r.status}</span></td>
                                 <td>
-                                    <button class="btn btn-success" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'genehmigt')">Genehmigen</button>
-                                    <button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'abgelehnt')">Ablehnen</button>
+                                    ${isSickMsg ? '<span style="color:#718096; font-size:0.75rem;"> Automatisch aktiv</span>' : `
+                                        <button class="btn btn-success" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'genehmigt')">Genehmigen</button>
+                                        <button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'abgelehnt')">Ablehnen</button>
+                                    `}
                                 </td>
                             </tr>
                         `;
@@ -1302,7 +1331,7 @@
             const myRequests = appData.driverRequests.filter(r => r.driverName === currentLoggedInDriver.name);
             if (myReqTbody) {
                 if (myRequests.length === 0) {
-                    myReqTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Keine Anträge gestellt.</td></tr>`;
+                    myReqTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Keine Meldungen vorhanden.</td></tr>`;
                 } else {
                     myReqTbody.innerHTML = '';
                     myRequests.forEach(r => {
@@ -1310,7 +1339,7 @@
                             <tr>
                                 <td>${r.type}</td>
                                 <td>${r.details}</td>
-                                <td><span style="font-weight:600; color:${r.status==='genehmigt'?'green':r.status==='abgelehnt'?'red':'orange'}">${r.status}</span></td>
+                                <td><span style="font-weight:600; color:${r.status.includes('genehmigt')?'green':r.status==='abgelehnt'?'red':'orange'}">${r.status}</span></td>
                             </tr>
                         `;
                     });
@@ -1438,7 +1467,8 @@
         function resetSystemData() {
             localStorage.removeItem(STORAGE_KEY);
             initSyntheticDataset();
-            alert("Daten erfolgreich zurückgesetzt (20 Fahrzeuge, 23 Fahrer, 81 Schüler).");
+            runPDVRPTWOptimization(true);
+            alert("Daten erfolgreich zurückgesetzt (Krankmeldungen, Schulausfälle und Testdaten wurden bereinigt).");
             renderAdminDashboard();
         }
 

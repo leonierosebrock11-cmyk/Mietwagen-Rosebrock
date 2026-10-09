@@ -805,7 +805,6 @@
         function runPDVRPTWOptimization(isInitial = false) {
             logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
             
-            // Primär reguläre verfügbare Fahrer nutzen. Reservefahrer nur als Fallback bei Ausfällen.
             let activeDrivers = appData.drivers.filter(d => !d.isReserve && !isDriverUnavailableToday(d.name));
             let unavailableRegularCount = appData.drivers.filter(d => !d.isReserve && isDriverUnavailableToday(d.name)).length;
             

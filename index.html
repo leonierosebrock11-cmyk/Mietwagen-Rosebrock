@@ -601,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v18';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v20';
 
         const appData = {
             settings: {
@@ -668,10 +668,9 @@
             return R * c;
         }
 
-        // Flexibler & robuster Datums-Parser (erkennt auch "9.10 - 15.10" ohne Jahresangabe)
         function isCurrentDateInActiveRange(detailsStr) {
             if (!detailsStr) return false;
-            const regex = /(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?/g;
+            const regex = /\b(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?\b/g;
             let match;
             let dates = [];
             const currentYear = new Date().getFullYear();
@@ -681,7 +680,10 @@
                 let month = parseInt(match[2]) - 1;
                 let year = match[3] ? parseInt(match[3]) : currentYear;
                 if (year < 100) year += 2000;
-                dates.push(new Date(year, month, day));
+                
+                if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+                    dates.push(new Date(year, month, day));
+                }
             }
 
             const now = new Date();
@@ -803,7 +805,17 @@
         function runPDVRPTWOptimization(isInitial = false) {
             logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
             
-            const activeDrivers = appData.drivers.filter(d => !d.isReserve && !isDriverUnavailableToday(d.name));
+            // Primär reguläre verfügbare Fahrer nutzen. Reservefahrer nur als Fallback bei Ausfällen.
+            let activeDrivers = appData.drivers.filter(d => !d.isReserve && !isDriverUnavailableToday(d.name));
+            let unavailableRegularCount = appData.drivers.filter(d => !d.isReserve && isDriverUnavailableToday(d.name)).length;
+            
+            if (unavailableRegularCount > 0) {
+                let availableReserves = appData.drivers.filter(d => d.isReserve && !isDriverUnavailableToday(d.name));
+                for (let i = 0; i < Math.min(unavailableRegularCount, availableReserves.length); i++) {
+                    activeDrivers.push(availableReserves[i]);
+                }
+            }
+
             activeDrivers.forEach(d => d.assignedStudents = []);
 
             let activeStudents = appData.students.filter(s => {
@@ -1026,6 +1038,11 @@
                 appData.lastMorningCheckDate = todayStr;
                 appData.sickStudents = [];
                 appData.closedSchools = [];
+                appData.drivers.forEach(d => {
+                    if (d.status === 'krank' && !isDriverUnavailableToday(d.name)) {
+                        d.status = 'verfügbar';
+                    }
+                });
                 saveAppData();
                 runPDVRPTWOptimization(true);
             }

@@ -500,11 +500,8 @@
             </div>
 
             <div>
-                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Max-Km Tourenplan (Morgentour mit exakten Abholzeiten)</h3>
-                
-                <!-- Dynamischer Google Maps Navigations-Link mit Waypoints -->
-                <a id="driver-gmaps-link" href="#" target="_blank" class="btn btn-success" style="margin-bottom: 12px; width: 100%; display: none; background-color: #2b6cb0;">🗺️ Optimierte Max-Km Route in Google Maps öffnen</a>
-
+                <h3 style="font-size: 0.95rem; color: #1a202c; margin-bottom: 5px;">Morgentour (Hinweg zur Schule)</h3>
+                <a id="driver-gmaps-morning-link" href="#" target="_blank" class="btn btn-success" style="margin-bottom: 8px; width: 100%; display: none; background-color: #2b6cb0;">🗺️ Hin-Route in Google Maps öffnen</a>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -515,6 +512,7 @@
                 </div>
 
                 <h3 style="font-size: 0.95rem; color: #1a202c; margin: 15px 0 5px 0;">Rückfahrt (Nachmittag)</h3>
+                <a id="driver-gmaps-return-link" href="#" target="_blank" class="btn btn-success" style="margin-bottom: 8px; width: 100%; display: none; background-color: #319795;">🗺️ Rück-Route in Google Maps öffnen</a>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -601,7 +599,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v10';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v12';
 
         const appData = {
             settings: {
@@ -669,6 +667,13 @@
         function initSyntheticDataset() {
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
+            
+            const streetNames = [
+                "Lister Meile 14", "Kröpcke 3", "Goseriede 8", "Schillerstraße 12", "Celler Straße 22", 
+                "Braunschweiger Straße 5", "Hildesheimer Straße 104", "Vahrenwalder Straße 55", "Georgstraße 18",
+                "Erich-Kästner-Weg 4", "Theodor-Storm-Straße 7", "Goethestraße 21", "Schillerstraße 9", "Bahnhofstraße 45",
+                "Fritzenwiese 12", "Mühlenstraße 8", "Ackerstraße 3", "Klaus-Groth-Weg 11", "Triftstraße 19"
+            ];
 
             for (let i = 1; i <= 20; i++) {
                 let type = i >= 14 && i <= 18 ? "Rollstuhlfahrzeug" : "Kleinbus";
@@ -707,8 +712,12 @@
                 let schoolObj = appData.schools[(i * 3) % appData.schools.length];
                 let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
                 let famName = "Familie " + sName.split(" ")[1];
-                let latOffset = (Math.sin(i) * 0.15);
-                let lonOffset = (Math.cos(i) * 0.15);
+                
+                let latOffset = (Math.sin(i) * 0.035);
+                let lonOffset = (Math.cos(i) * 0.035);
+
+                let street = streetNames[(i - 1) % streetNames.length];
+                let address = `${street}, Region Hannover`;
 
                 let impairment = impairmentTypes[i % impairmentTypes.length];
                 let needsAttendant = (i % 10 === 0);
@@ -717,7 +726,7 @@
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
                     name: sName,
-                    address: `Wohnadresse ${i}, Region Hannover`,
+                    address: address,
                     lat: 52.3759 + latOffset,
                     lon: 9.7320 + lonOffset,
                     school: schoolObj.name,
@@ -827,13 +836,12 @@
             logEvent(`Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €.`);
             saveAppData();
             if (!isInitial) {
-                alert("Optimierung erfolgreich! Sitzplätze, Begleitpersonen und Google-Maps-Routen wurden neu berechnet.");
+                alert("Optimierung erfolgreich! Routen, Zeitschranken (Grundschule max. 45 Min / Sek 1 bis 90 Min) und Routenlinks wurden aktualisiert.");
                 renderAdminDashboard();
             }
         }
 
-        // NEU: Dynamische Generierung des Google Maps Navigations-Links mit fixen Zwischenstationen (Waypoints)
-        function getGoogleMapsNavigationUrl(driver) {
+        function getGoogleMapsMorningUrl(driver) {
             if (!driver || !driver.assignedStudents) return null;
             let activeStudentIds = driver.assignedStudents.filter(sId => {
                 const s = appData.students.find(item => item.id === sId);
@@ -853,6 +861,27 @@
             return `https://www.google.com/maps/dir/?api=1&origin=${depot.lat},${depot.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
         }
 
+        function getGoogleMapsReturnUrl(driver) {
+            if (!driver || !driver.assignedStudents) return null;
+            let activeStudentIds = driver.assignedStudents.filter(sId => {
+                const s = appData.students.find(item => item.id === sId);
+                return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
+            });
+            if (activeStudentIds.length === 0) return null;
+
+            const depot = appData.settings.depot;
+            const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
+            const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
+
+            let reverseWaypoints = [...activeStudentIds].reverse().map(sId => {
+                const s = appData.students.find(item => item.id === sId);
+                return `${s.lat},${s.lon}`;
+            }).join('|');
+
+            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${depot.lat},${depot.lon}&waypoints=${reverseWaypoints}&travelmode=driving`;
+        }
+
+        // INTELLIGENTE SCHEDULING-LOGIK: Grundschule max 45 Min (später abholen), Sek 1 bis zu 90 Min (max Streckung für Max-Km Umsatz)
         function getDriverTourSchedule(driver) {
             if (!driver || !driver.assignedStudents) return { morning: [], afternoon: [] };
             
@@ -867,14 +896,23 @@
             if (activeStudentIds.length === 0) return { morning: [], afternoon: [] };
 
             const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
-            let schoolArrivalMinutes = 8 * 60;
-            let travelTimePerStop = 10;
+            let schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
+            let isGrundschule = schoolObj.type === "grundschule";
+
+            let schoolArrivalMinutes = 8 * 60; // 08:00 Uhr
+            
+            // Restriktion: Grundschule max 45 Minuten, Sekundarstufe 1 bis zu 90 Minuten (Max-Km Ausnutzung)
+            let maxAllowedTravelTime = isGrundschule ? 45 : 90;
+            let timePerStop = isGrundschule ? Math.min(8, Math.floor(45 / Math.max(1, activeStudentIds.length))) : Math.min(18, Math.floor(85 / Math.max(1, activeStudentIds.length)));
 
             activeStudentIds.forEach((sId, idx) => {
                 const s = appData.students.find(item => item.id === sId);
                 if (!s) return;
                 
-                let pickupMinutes = schoolArrivalMinutes - (activeStudentIds.length - idx) * travelTimePerStop;
+                let travelTime = (activeStudentIds.length - idx) * timePerStop;
+                if (travelTime > maxAllowedTravelTime) travelTime = maxAllowedTravelTime;
+                
+                let pickupMinutes = schoolArrivalMinutes - travelTime;
                 let hours = Math.floor(pickupMinutes / 60);
                 let mins = pickupMinutes % 60;
                 let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
@@ -884,7 +922,7 @@
                     name: cleanStudentName(s.name) + (s.needsAttendant ? " (inkl. Begleitung)" : ""),
                     address: s.address,
                     school: s.school,
-                    duration: (schoolArrivalMinutes - pickupMinutes)
+                    duration: travelTime
                 });
             });
 
@@ -896,7 +934,7 @@
                 duration: 0
             });
 
-            let schoolEndMinutes = 13 * 60;
+            let schoolEndMinutes = 13 * 60; // 13:00 Uhr
             afternoonStops.push({
                 time: "13:00",
                 name: "Schulende",
@@ -908,7 +946,7 @@
             activeStudentIds.forEach((sId, idx) => {
                 const s = appData.students.find(item => item.id === sId);
                 if (!s) return;
-                let dropoffMinutes = schoolEndMinutes + (idx + 1) * travelTimePerStop;
+                let dropoffMinutes = schoolEndMinutes + (idx + 1) * timePerStop;
                 let hours = Math.floor(dropoffMinutes / 60);
                 let mins = dropoffMinutes % 60;
                 let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
@@ -1250,15 +1288,25 @@
                 }
             }
 
-            // Google Maps Navigations-Link aktualisieren
-            const gmapsUrl = getGoogleMapsNavigationUrl(currentLoggedInDriver);
-            const gmapsBtn = document.getElementById('driver-gmaps-link');
-            if (gmapsBtn) {
-                if (gmapsUrl) {
-                    gmapsBtn.href = gmapsUrl;
-                    gmapsBtn.style.display = 'block';
+            const morningUrl = getGoogleMapsMorningUrl(currentLoggedInDriver);
+            const morningBtn = document.getElementById('driver-gmaps-morning-link');
+            if (morningBtn) {
+                if (morningUrl) {
+                    morningBtn.href = morningUrl;
+                    morningBtn.style.display = 'block';
                 } else {
-                    gmapsBtn.style.display = 'none';
+                    morningBtn.style.display = 'none';
+                }
+            }
+
+            const returnUrl = getGoogleMapsReturnUrl(currentLoggedInDriver);
+            const returnBtn = document.getElementById('driver-gmaps-return-link');
+            if (returnBtn) {
+                if (returnUrl) {
+                    returnBtn.href = returnUrl;
+                    returnBtn.style.display = 'block';
+                } else {
+                    returnBtn.style.display = 'none';
                 }
             }
 
@@ -1330,27 +1378,28 @@
             doc.text(`Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
-            doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 40);
-            doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 48);
+            doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 38);
+            doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 44);
             
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
-            let y = 60;
+            let y = 54;
+            
             doc.setFont("helvetica", "bold");
-            doc.text("Morgentour (Zeitfenster geprüft):", 20, y);
-            y += 8;
+            doc.text("1. Morgentour (Hinweg zur Schule):", 20, y);
+            y += 7;
             doc.setFont("helvetica", "normal");
             schedule.morning.forEach((stop) => {
-                doc.text(`${stop.time} - ${stop.name} (${stop.address})`, 20, y);
+                doc.text(`${stop.time} - ${stop.name} | ${stop.address}`, 20, y);
                 y += 6;
             });
 
             y += 6;
             doc.setFont("helvetica", "bold");
-            doc.text("Rückfahrt (Nachmittag):", 20, y);
-            y += 8;
+            doc.text("2. Rückfahrt (Nachmittag):", 20, y);
+            y += 7;
             doc.setFont("helvetica", "normal");
             schedule.afternoon.forEach((stop) => {
-                doc.text(`${stop.time} - ${stop.name} (${stop.address})`, 20, y);
+                doc.text(`${stop.time} - ${stop.name} | ${stop.address}`, 20, y);
                 y += 6;
             });
 

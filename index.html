@@ -654,7 +654,7 @@
         }
 
         function cleanStudentName(name) {
-            return name.replace(/\s*\(\d+\)$/, '');
+            return name.replace(/\s*\(\d+\)$/, '').replace(" (Rollstuhl)", "");
         }
 
         function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
@@ -756,7 +756,7 @@
                     password: drvName.toLowerCase().split(" ")[0] + "123",
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
-                    assignedVehicle: isRes ? null : `V-${i.toString().padStart(2, '0')}`,
+                    assignedVehicle: i <= 20 ? `V-${i.toString().padStart(2, '0')}` : "Reserve",
                     isReserve: isRes,
                     monthlyContractHours: monthlyHours,
                     assignedStudents: []
@@ -788,10 +788,11 @@
                 let impairment = impairmentTypes[i % impairmentTypes.length];
                 let needsAttendant = (i % 10 === 0);
                 let attendantSource = needsAttendant ? attendantSources[i % attendantSources.length] : "Keine Begleitung erforderlich";
+                let needsWheelchair = (i <= 5); // Erste 5 Schüler mit Rollstuhlbedarf
 
                 appData.students.push({
                     id: `S-${i.toString().padStart(2, '0')}`,
-                    name: sName,
+                    name: sName + (needsWheelchair ? " (Rollstuhl)" : ""),
                     address: address,
                     lat: 52.3759 + latOffset,
                     lon: 9.7320 + lonOffset,
@@ -800,6 +801,7 @@
                     parent: famName,
                     password: "eltern123",
                     impairment: impairment,
+                    needsWheelchair: needsWheelchair,
                     needsAttendant: needsAttendant,
                     attendantSource: attendantSource,
                     transportToday: true
@@ -830,6 +832,61 @@
                 return !isSick && !isSchoolClosed;
             });
 
+            // Separiere Rollstuhl-Schüler und Standard-Schüler
+            let wheelchairStudents = activeStudents.filter(s => s.needsWheelchair);
+            let standardStudents = activeStudents.filter(s => !s.needsWheelchair);
+
+            let wheelchairVehicles = appData.vehicles.filter(v => v.type === "Rollstuhlfahrzeug" && v.status === "verfügbar");
+            let standardVehicles = appData.vehicles.filter(v => v.type !== "Rollstuhlfahrzeug" && v.status === "verfügbar");
+
+            // Zuordnung der Rollstuhl-Schüler auf Rollstuhlfahrzeuge (V-14 bis V-18)
+            let wcDriverMap = {};
+            wheelchairVehicles.forEach((v, idx) => {
+                let drv = activeDrivers.find(d => d.assignedVehicle === v.id);
+                if (drv) {
+                    let assignedToThisVehicle = wheelchairStudents.filter((_, sIdx) => sIdx % wheelchairVehicles.length === idx);
+                    drv.assignedStudents = assignedToThisVehicle.map(s => s.id);
+                }
+            });
+
+            // Übrige reguläre Schüler auf normale Fahrzeuge verteilen
+            let currentDriverIdx = 0;
+            let regularActiveDrivers = activeDrivers.filter(d => !wheelchairVehicles.some(v => v.id === d.assignedVehicle));
+            
+            appData.schools.forEach(school => {
+                let schoolStudents = standardStudents.filter(s => s.school === school.name);
+                if (schoolStudents.length === 0) return;
+
+                let currentBatch = [];
+                let currentLoad = 0;
+
+                schoolStudents.forEach(s => {
+                    if (regularActiveDrivers.length === 0) return;
+                    if (currentDriverIdx >= regularActiveDrivers.length) currentDriverIdx = 0;
+                    let driver = regularActiveDrivers[currentDriverIdx];
+                    let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
+                    let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
+
+                    if (currentLoad + studentSeatLoad > vehicle.capacity && currentBatch.length > 0) {
+                        driver.assignedStudents = driver.assignedStudents.concat(currentBatch.map(item => item.id));
+                        currentDriverIdx++;
+                        currentBatch = [];
+                        currentLoad = 0;
+                        if (currentDriverIdx >= regularActiveDrivers.length) currentDriverIdx = 0;
+                        driver = regularActiveDrivers[currentDriverIdx];
+                    }
+                    currentBatch.push(s);
+                    currentLoad += studentSeatLoad;
+                });
+
+                if (currentBatch.length > 0 && regularActiveDrivers.length > 0) {
+                    if (currentDriverIdx >= regularActiveDrivers.length) currentDriverIdx = 0;
+                    let driver = regularActiveDrivers[currentDriverIdx];
+                    driver.assignedStudents = driver.assignedStudents.concat(currentBatch.map(item => item.id));
+                    currentDriverIdx++;
+                }
+            });
+
             let totalBaselineKm = 0;
             activeStudents.forEach(s => {
                 let schObj = appData.schools.find(sch => sch.name === s.school) || appData.schools[0];
@@ -840,40 +897,6 @@
 
             if (totalBaselineKm === 0) totalBaselineKm = 2000;
             let totalOptimizedKm = totalBaselineKm * 1.28;
-
-            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt. 
-            // Über verschiedene Tage/Optimierungsläufe hinweg können Fahrer flexibel anderen Schulen zugeteilt werden.
-            let currentDriverIdx = 0;
-            appData.schools.forEach(school => {
-                let schoolStudents = activeStudents.filter(s => s.school === school.name);
-                if (schoolStudents.length === 0) return;
-
-                let currentBatch = [];
-                let currentLoad = 0;
-
-                schoolStudents.forEach(s => {
-                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    let driver = activeDrivers[currentDriverIdx];
-                    let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
-                    let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
-
-                    if (currentLoad + studentSeatLoad > vehicle.capacity && currentBatch.length > 0) {
-                        driver.assignedStudents = currentBatch.map(item => item.id);
-                        currentDriverIdx++;
-                        currentBatch = [];
-                        currentLoad = 0;
-                        if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    }
-                    currentBatch.push(s);
-                    currentLoad += studentSeatLoad;
-                });
-
-                if (currentBatch.length > 0) {
-                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    activeDrivers[currentDriverIdx].assignedStudents = currentBatch.map(item => item.id);
-                    currentDriverIdx++;
-                }
-            });
 
             let pricePerKm = appData.settings.costs.pricePerKm;
             let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
@@ -893,7 +916,8 @@
             let totalCosts = totalOptimizedKm * costPerKm + dailyPersonnelCosts;
             let netProfit = totalRevenue - totalCosts;
 
-            document.getElementById('kpi-profit').textContent = netProfit.toFixed(2) + ' €';
+            const profitElem = document.getElementById('kpi-profit');
+            if (profitElem) profitElem.textContent = netProfit.toFixed(2) + ' €';
 
             const compBox = document.getElementById('comparison-box');
             const compTbody = document.getElementById('comparison-tbody');
@@ -1042,7 +1066,10 @@
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('live-clock').textContent = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) {
+                clockEl.textContent = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
+            }
 
             const todayStr = now.toDateString();
             if (appData.lastMorningCheckDate !== todayStr) {
@@ -1072,7 +1099,8 @@
 
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+            const targetView = document.getElementById(viewId);
+            if (targetView) targetView.classList.add('active');
             window.scrollTo(0, 0);
             if (viewId === 'admin-view') renderAdminDashboard();
             if (viewId === 'driver-view') renderDriverPortal();
@@ -1188,7 +1216,8 @@
             if (currentLoggedInDriver) {
                 const prevStatus = currentLoggedInDriver.status;
                 currentLoggedInDriver.status = status.toLowerCase();
-                document.getElementById('driver-status-text').textContent = `Status: ${status}`;
+                const statusTextEl = document.getElementById('driver-status-text');
+                if (statusTextEl) statusTextEl.textContent = `Status: ${status}`;
                 saveAppData();
                 
                 if (status.toLowerCase() === 'krank' && prevStatus !== 'krank') {
@@ -1202,6 +1231,7 @@
 
         function parentReportSick() {
             const select = document.getElementById('parent-child-select');
+            if (!select) return;
             const childName = cleanStudentName(select.value);
             const matchedStudent = appData.students.find(s => cleanStudentName(s.name) === childName);
             if (matchedStudent && !appData.sickStudents.includes(matchedStudent.name)) {
@@ -1213,7 +1243,8 @@
         }
 
         function schoolReportClosure() {
-            const reason = document.getElementById('school-closure-reason').value;
+            const reasonElem = document.getElementById('school-closure-reason');
+            const reason = reasonElem ? reasonElem.value : "Unwetter";
             if (currentLoggedInSchool && !appData.closedSchools.some(s => s.name === currentLoggedInSchool.name)) {
                 appData.closedSchools.push({ name: currentLoggedInSchool.name, reason: reason });
             }
@@ -1361,8 +1392,14 @@
 
         function renderDriverPortal() {
             if (!currentLoggedInDriver) return;
-            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Reserve'}</strong>`;
-            document.getElementById('driver-status-text').textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
+            const headerInfo = document.getElementById('driver-header-info');
+            if (headerInfo) {
+                headerInfo.innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Reserve'}</strong>`;
+            }
+            const statusText = document.getElementById('driver-status-text');
+            if (statusText) {
+                statusText.textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
+            }
 
             const myReqTbody = document.getElementById('driver-my-requests-tbody');
             const myRequests = appData.driverRequests.filter(r => r.driverName === currentLoggedInDriver.name);
@@ -1408,58 +1445,68 @@
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
             
             const morningTbody = document.getElementById('driver-tour-students-tbody');
-            morningTbody.innerHTML = '';
-            schedule.morning.forEach(stop => {
-                let isSchoolArrival = stop.name.includes("Ankunft Schule");
-                morningTbody.innerHTML += `
-                    <tr>
-                        <td><strong>${stop.time}</strong></td>
-                        <td><strong>${stop.name}</strong></td>
-                        <td>${stop.address}</td>
-                        <td>${stop.school}</td>
-                        <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (appData.sickStudents.some(sName => cleanStudentName(sName) === stop.name) ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
-                    </tr>
-                `;
-            });
+            if (morningTbody) {
+                morningTbody.innerHTML = '';
+                schedule.morning.forEach(stop => {
+                    let isSchoolArrival = stop.name.includes("Ankunft Schule");
+                    morningTbody.innerHTML += `
+                        <tr>
+                            <td><strong>${stop.time}</strong></td>
+                            <td><strong>${stop.name}</strong></td>
+                            <td>${stop.address}</td>
+                            <td>${stop.school}</td>
+                            <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (appData.sickStudents.some(sName => cleanStudentName(sName) === stop.name) ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
+                        </tr>
+                    `;
+                });
+            }
 
             const returnTbody = document.getElementById('driver-return-tour-tbody');
-            returnTbody.innerHTML = '';
-            schedule.afternoon.forEach(stop => {
-                returnTbody.innerHTML += `
-                    <tr>
-                        <td><strong>${stop.time}</strong></td>
-                        <td><strong>${stop.name}</strong></td>
-                        <td>${stop.address}</td>
-                    </tr>
-                `;
-            });
+            if (returnTbody) {
+                returnTbody.innerHTML = '';
+                schedule.afternoon.forEach(stop => {
+                    returnTbody.innerHTML += `
+                        <tr>
+                            <td><strong>${stop.time}</strong></td>
+                            <td><strong>${stop.name}</strong></td>
+                            <td>${stop.address}</td>
+                        </tr>
+                    `;
+                });
+            }
         }
 
         function renderParentPortal() {
             if (!currentLoggedInParent) return;
-            document.getElementById('parent-view-title').textContent = `Eltern-Portal (Familie: ${currentLoggedInParent.parent})`;
+            const titleElem = document.getElementById('parent-view-title');
+            if (titleElem) titleElem.textContent = `Eltern-Portal (Familie: ${currentLoggedInParent.parent})`;
             const select = document.getElementById('parent-child-select');
-            select.innerHTML = `<option value="${currentLoggedInParent.name}">${cleanStudentName(currentLoggedInParent.name)} (${currentLoggedInParent.school}, ${currentLoggedInParent.class})</option>`;
+            if (select) {
+                select.innerHTML = `<option value="${currentLoggedInParent.name}">${cleanStudentName(currentLoggedInParent.name)} (${currentLoggedInParent.school}, ${currentLoggedInParent.class})</option>`;
+            }
         }
 
         function renderSchoolPortal() {
             if (!currentLoggedInSchool) return;
-            document.getElementById('school-view-title').textContent = `Schul-Portal (${currentLoggedInSchool.name})`;
+            const titleElem = document.getElementById('school-view-title');
+            if (titleElem) titleElem.textContent = `Schul-Portal (${currentLoggedInSchool.name})`;
             const tbody = document.getElementById('school-students-tbody');
-            tbody.innerHTML = '';
+            if (tbody) {
+                tbody.innerHTML = '';
 
-            appData.students.filter(s => s.school === currentLoggedInSchool.name).forEach(s => {
-                let assignedDrv = appData.drivers.find(d => d.assignedStudents.includes(s.id));
-                let isSick = appData.sickStudents.includes(s.name);
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${cleanStudentName(s.name)}</strong></td>
-                        <td>${s.class}</td>
-                        <td>${assignedDrv ? assignedDrv.name : 'Unbekannt'}</td>
-                        <td>${isSick ? '<span style="color:red;">Abwesend (Krank)</span>' : '<span style="color:green;">Erwartet</span>'}</td>
-                    </tr>
-                `;
-            });
+                appData.students.filter(s => s.school === currentLoggedInSchool.name).forEach(s => {
+                    let assignedDrv = appData.drivers.find(d => d.assignedStudents.includes(s.id));
+                    let isSick = appData.sickStudents.includes(s.name);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${cleanStudentName(s.name)}</strong></td>
+                            <td>${s.class}</td>
+                            <td>${assignedDrv ? assignedDrv.name : 'Unbekannt'}</td>
+                            <td>${isSick ? '<span style="color:red;">Abwesend (Krank)</span>' : '<span style="color:green;">Erwartet</span>'}</td>
+                        </tr>
+                    `;
+                });
+            }
         }
 
         function generatePdfTourPlan() {

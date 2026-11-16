@@ -601,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v26';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v27';
 
         const appData = {
             settings: {
@@ -653,20 +653,7 @@
             return false;
         }
 
-        function cleanStudentName(name) {
-            return name.replace(/\s*\(\d+\)$/, '');
-        }
-
-        function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
+        const depot = { lat: 52.3759, lon: 9.7320 };
 
         function initSyntheticDataset() {
             appData.vehicles = [];
@@ -698,9 +685,9 @@
                 });
             }
 
-            // 23 Fahrer (P-22 & P-23 sind Reservekräfte)
+            // 23 Fahrer (Exakt P-22 & P-23 sind Reservekräfte mit 43h)
             for (let i = 1; i <= 23; i++) {
-                let isRes = i > 21;
+                let isRes = i > 20; 
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
                 let monthlyHours = isRes ? 43 : (i % 2 === 0 ? 120 : 100);
 
@@ -720,7 +707,7 @@
             for (let i = 1; i <= 81; i++) {
                 let sFirst = studentFirst[(i * 3) % studentFirst.length];
                 let sLast = studentLast[(i * 7) % studentLast.length];
-                let isWheelchair = i <= 5; // Die ersten 5 Kinder sind Rollstuhlkinder
+                let isWheelchair = i <= 5; 
                 let school = appData.schools[(i * 2) % appData.schools.length];
                 let street = streetNames[(i * 5) % streetNames.length];
 
@@ -740,15 +727,11 @@
             saveAppData();
         }
 
-        const depot = { lat: 52.3759, lon: 9.7320 };
-
-        // Optimierungs-Engine mit garantiertem Matching aller Fahrzeuge
         function runPDVRPTWOptimization() {
             let activeVehicles = appData.vehicles.filter(v => v.status === "verfügbar");
             let activeDrivers = appData.drivers.filter(d => d.status !== "krank");
             let activeStudents = appData.students.filter(s => !appData.sickStudents.includes(s.id));
 
-            // Zuerst Rollstuhlkinder fest auf V-14 bis V-18 verteilen
             let wheelchairStudents = activeStudents.filter(s => s.wheelchair);
             let wheelchairVehicles = activeVehicles.filter(v => v.type === "Rollstuhlfahrzeug");
 
@@ -761,7 +744,6 @@
                 }
             });
 
-            // Übrige Kinder auf normale Kleinbusse verteilen
             let normalStudents = activeStudents.filter(s => !s.wheelchair);
             let normalVehicles = activeVehicles.filter(v => v.type === "Kleinbus");
 
@@ -774,7 +756,7 @@
 
             saveAppData();
             updateAdminDashboard();
-            logDispatch("Max-Km & PDVRPTW Optimierung erfolgreich durchgeführt. Alle Kapazitäten neu berechnet.");
+            logDispatch("Max-Km & PDVRPTW Optimierung erfolgreich durchgeführt.");
         }
 
         function logDispatch(msg) {
@@ -786,7 +768,6 @@
             }
         }
 
-        // Admin-Tabelle rendern mit direkt angezeigten Kindernamen
         function updateAdminDashboard() {
             const tbody = document.querySelector('#admin-drivers-table tbody');
             if (!tbody) return;
@@ -809,7 +790,6 @@
                 tbody.appendChild(row);
             });
 
-            // KPIs aktualisieren
             document.getElementById('kpi-students').innerText = `${appData.students.length - appData.sickStudents.length} aktiv / ${appData.students.length} Gesamt`;
             document.getElementById('kpi-vehicles').innerText = `${appData.vehicles.length} verfügbar / 20 Gesamt`;
             document.getElementById('kpi-drivers').innerText = `${appData.drivers.filter(d => d.status !== 'krank').length} verfügbar / 23 Gesamt`;
@@ -888,7 +868,7 @@
                 saveAppData();
                 runPDVRPTWOptimization();
                 alert("Krankmeldung erfolgreich an die Zentrale übertragen!");
-                sendTelegramAlert(`Kind ${studentId} wurde von den Eltern krankgemeldet.`);
+                sendTelegramAlert(`Kind ${studentId} wurde krankgemeldet.`);
             }
         }
 
@@ -906,22 +886,20 @@
 
         function schoolReportClosure() {
             alert("Schulausfall gemeldet. Alle Touren wurden neu berechnet.");
-            sendTelegramAlert("Schulausfall gemeldet! Touren wurden angepasst.");
+            sendTelegramAlert("Schulausfall gemeldet!");
         }
 
         function resetSystemData() {
             initSyntheticDataset();
             runPDVRPTWOptimization();
-            alert("Systemdaten wurden auf Werkseinstellungen zurückgesetzt!");
+            alert("Systemdaten wurden zurückgesetzt!");
         }
 
-        // Live Uhrzeit im Header
         setInterval(() => {
             const now = new Date();
             document.getElementById('live-clock').innerText = now.toLocaleDateString('de-DE') + ", " + now.toLocaleTimeString('de-DE');
         }, 1000);
 
-        // Initialisierung beim Start
         window.onload = function() {
             if (!loadAppData() || appData.students.length === 0) {
                 initSyntheticDataset();

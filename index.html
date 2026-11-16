@@ -601,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v25';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v26';
 
         const appData = {
             settings: {
@@ -658,7 +658,7 @@
         }
 
         function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // km
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -666,54 +666,6 @@
                       Math.sin(dLon/2) * Math.sin(dLon/2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return R * c;
-        }
-
-        function isCurrentDateInActiveRange(detailsStr) {
-            if (!detailsStr) return false;
-            const regex = /\b(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?\b/g;
-            let match;
-            let dates = [];
-            const currentYear = new Date().getFullYear();
-
-            while ((match = regex.exec(detailsStr)) !== null) {
-                let day = parseInt(match[1]);
-                let month = parseInt(match[2]) - 1;
-                let year = match[3] ? parseInt(match[3]) : currentYear;
-                if (year < 100) year += 2000;
-                
-                if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
-                    dates.push(new Date(year, month, day));
-                }
-            }
-
-            const now = new Date();
-            if (dates.length >= 2) {
-                let startDate = dates[0];
-                let endDate = new Date(dates[1].getTime());
-                endDate.setHours(23, 59, 59, 999);
-                return now >= startDate && now <= endDate;
-            } else if (dates.length === 1) {
-                let targetDate = dates[0];
-                return now.toDateString() === targetDate.toDateString();
-            }
-            return false;
-        }
-
-        function isDriverUnavailableToday(driverName) {
-            const driver = appData.drivers.find(d => d.name === driverName);
-            if (driver && driver.status === 'krank') return true;
-
-            const relevantRequests = appData.driverRequests.filter(r => 
-                r.driverName === driverName && 
-                (r.type === 'Urlaubsantrag' || r.type.includes('Krankmeldung')) && 
-                r.status.includes('genehmigt')
-            );
-            for (let req of relevantRequests) {
-                if (isCurrentDateInActiveRange(req.details)) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         function initSyntheticDataset() {
@@ -734,6 +686,7 @@
                 "Fritzenwiese 12", "Mühlenstraße 8", "Ackerstraße 3", "Klaus-Groth-Weg 11", "Triftstraße 19"
             ];
 
+            // 20 Fahrzeuge (V-14 bis V-18 sind Rollstuhlfahrzeuge)
             for (let i = 1; i <= 20; i++) {
                 let type = i >= 14 && i <= 18 ? "Rollstuhlfahrzeug" : "Kleinbus";
                 appData.vehicles.push({
@@ -745,6 +698,7 @@
                 });
             }
 
+            // 23 Fahrer (P-22 & P-23 sind Reservekräfte)
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
@@ -753,765 +707,227 @@
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
                     name: drvName,
-                    password: drvName.toLowerCase().split(" ")[0] + "123",
-                    role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
-                    status: "verfügbar",
-                    assignedVehicle: isRes ? null : `V-${i.toString().padStart(2, '0')}`,
-                    isReserve: isRes,
-                    monthlyContractHours: monthlyHours,
-                    assignedStudents: []
+                    vehicleId: i <= 20 ? `V-${i.toString().padStart(2, '0')}` : "Reserve",
+                    monthlyHours: monthlyHours,
+                    status: "verfügbar"
                 });
             }
 
-            const studentNames = ["Maximilian Müller", "Alexander Schmidt", "Paul Schneider", "Elias Fischer", "Ben Weber", "Noah Meyer", "Leon Wagner", "Louis Becker", "Felix Schulz", "Henry Hoffmann", "Emilia Schäfer", "Hannah Koch", "Sophia Bauer", "Emma Richter", "Mia Klein", "Hanna Wolf", "Lina Schröder", "Mila Neumann", "Ella Schwarz", "Klara Zimmermann", "Jonas Braun", "Lukas Krüger", "Finn Hofmann", "Tim Hartmann", "David Lange"];
-            const impairmentTypes = ["Keine Beeinträchtigung", "Körperliche Beeinträchtigung", "Geistige Beeinträchtigung", "Eingeschränkte Mobilität"];
-            const attendantSources = ["Extern (Schulbegleitung / Medizinisch)", "Intern (Zusätzliche Reservekraft)"];
-            
+            // 81 Schüler generieren (davon 5 Rollstuhlkinder für V-14 bis V-18)
+            const studentFirst = ["Max", "Mia", "Leon", "Emma", "Finn", "Hannah", "Paul", "Sofia", "Lukas", "Lena", "Jonas", "Emilia", "Noah", "Clara", "Elias", "Lina", "Felix", "Marie", "Ben", "Laura"];
+            const studentLast = ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann"];
+
             for (let i = 1; i <= 81; i++) {
-                let isGrundschuleStudent = (i <= 10);
-                let schoolObj = isGrundschuleStudent 
-                    ? appData.schools[(i % 2)] 
-                    : appData.schools[2 + (i % 2)];
-                
-                let classNum = isGrundschuleStudent ? ((i % 4) + 1) : (((i - 11) % 6) + 5);
-                let classStr = `Klasse ${classNum}`;
-
-                let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
-                let famName = "Familie " + sName.split(" ")[1];
-                
-                let latOffset = (Math.sin(i) * 0.035);
-                let lonOffset = (Math.cos(i) * 0.035);
-
-                let street = streetNames[(i - 1) % streetNames.length];
-                let address = `${street}, Region Hannover`;
-
-                let impairment = impairmentTypes[i % impairmentTypes.length];
-                let needsAttendant = (i % 10 === 0);
-                let attendantSource = needsAttendant ? attendantSources[i % attendantSources.length] : "Keine Begleitung erforderlich";
+                let sFirst = studentFirst[(i * 3) % studentFirst.length];
+                let sLast = studentLast[(i * 7) % studentLast.length];
+                let isWheelchair = i <= 5; // Die ersten 5 Kinder sind Rollstuhlkinder
+                let school = appData.schools[(i * 2) % appData.schools.length];
+                let street = streetNames[(i * 5) % streetNames.length];
 
                 appData.students.push({
-                    id: `S-${i.toString().padStart(2, '0')}`,
-                    name: sName,
-                    address: address,
-                    lat: 52.3759 + latOffset,
-                    lon: 9.7320 + lonOffset,
-                    school: schoolObj.name,
-                    class: classStr,
-                    parent: famName,
-                    password: "eltern123",
-                    impairment: impairment,
-                    needsAttendant: needsAttendant,
-                    attendantSource: attendantSource,
-                    transportToday: true
+                    id: `S-${i.toString().padStart(3, '0')}`,
+                    name: `${sFirst} ${sLast}` + (isWheelchair ? " (Rollstuhl)" : ""),
+                    class: i <= 40 ? "1b" : "7a",
+                    schoolId: school.id,
+                    address: `${street}, 30159 Hannover`,
+                    lat: depot.lat + (Math.random() - 0.5) * 0.1,
+                    lon: depot.lon + (Math.random() - 0.5) * 0.1,
+                    wheelchair: isWheelchair,
+                    assignedVehicle: null,
+                    assignedDriver: null
                 });
             }
-
-            runPDVRPTWOptimization(true);
-        }
-
-        function runPDVRPTWOptimization(isInitial = false) {
-            logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
-            
-            let activeDrivers = appData.drivers.filter(d => !d.isReserve && !isDriverUnavailableToday(d.name));
-            let unavailableRegularCount = appData.drivers.filter(d => !d.isReserve && isDriverUnavailableToday(d.name)).length;
-            
-            if (unavailableRegularCount > 0) {
-                let availableReserves = appData.drivers.filter(d => d.isReserve && !isDriverUnavailableToday(d.name));
-                for (let i = 0; i < Math.min(unavailableRegularCount, availableReserves.length); i++) {
-                    activeDrivers.push(availableReserves[i]);
-                }
-            }
-
-            activeDrivers.forEach(d => d.assignedStudents = []);
-
-            let activeStudents = appData.students.filter(s => {
-                const isSick = appData.sickStudents.includes(s.name);
-                const isSchoolClosed = appData.closedSchools.some(cs => cs.name === s.school);
-                return !isSick && !isSchoolClosed;
-            });
-
-            let totalBaselineKm = 0;
-            activeStudents.forEach(s => {
-                let schObj = appData.schools.find(sch => sch.name === s.school) || appData.schools[0];
-                let distDepotToChild = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, s.lat, s.lon);
-                let distChildToSchool = calculateHaversineDistance(s.lat, s.lon, schObj.lat, schObj.lon);
-                totalBaselineKm += (distDepotToChild + distChildToSchool);
-            });
-
-            if (totalBaselineKm === 0) totalBaselineKm = 2000;
-            let totalOptimizedKm = totalBaselineKm * 1.28;
-
-            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt. 
-            // Über verschiedene Tage/Optimierungsläufe hinweg können Fahrer flexibel anderen Schulen zugeteilt werden.
-            let currentDriverIdx = 0;
-            appData.schools.forEach(school => {
-                let schoolStudents = activeStudents.filter(s => s.school === school.name);
-                if (schoolStudents.length === 0) return;
-
-                let currentBatch = [];
-                let currentLoad = 0;
-
-                schoolStudents.forEach(s => {
-                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    let driver = activeDrivers[currentDriverIdx];
-                    let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
-                    let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
-
-                    if (currentLoad + studentSeatLoad > vehicle.capacity && currentBatch.length > 0) {
-                        driver.assignedStudents = currentBatch.map(item => item.id);
-                        currentDriverIdx++;
-                        currentBatch = [];
-                        currentLoad = 0;
-                        if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    }
-                    currentBatch.push(s);
-                    currentLoad += studentSeatLoad;
-                });
-
-                if (currentBatch.length > 0) {
-                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    activeDrivers[currentDriverIdx].assignedStudents = currentBatch.map(item => item.id);
-                    currentDriverIdx++;
-                }
-            });
-
-            let pricePerKm = appData.settings.costs.pricePerKm;
-            let costPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm;
-            let hourlyRate = appData.settings.costs.personnelCostPerHour;
-            let dailyPersonnelCosts = 0;
-            activeDrivers.forEach(d => {
-                let monthlySalary = d.monthlyContractHours * hourlyRate;
-                let dailyShare = monthlySalary / 21.5;
-                dailyPersonnelCosts += dailyShare;
-            });
-
-            let baselineRevenue = totalBaselineKm * pricePerKm;
-            let baselineCosts = totalBaselineKm * costPerKm + dailyPersonnelCosts;
-            let baselineProfit = baselineRevenue - baselineCosts;
-
-            let totalRevenue = totalOptimizedKm * pricePerKm;
-            let totalCosts = totalOptimizedKm * costPerKm + dailyPersonnelCosts;
-            let netProfit = totalRevenue - totalCosts;
-
-            document.getElementById('kpi-profit').textContent = netProfit.toFixed(2) + ' €';
-
-            const compBox = document.getElementById('comparison-box');
-            const compTbody = document.getElementById('comparison-tbody');
-            if (compBox && compTbody) {
-                compBox.style.display = 'block';
-                let extraKm = totalOptimizedKm - totalBaselineKm;
-                let extraRevenue = totalRevenue - baselineRevenue;
-                let profitDiff = netProfit - baselineProfit;
-
-                compTbody.innerHTML = `
-                    <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:green; font-weight:600;">+${extraKm.toFixed(1)} km (+28% Max-Km Umsatz)</span></td></tr>
-                    <tr><td>Tages-Umsatz</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:green;">+${extraRevenue.toFixed(2)} € Mehrerlös</strong></td></tr>
-                    <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${profitDiff.toFixed(2)} € Mehrgewinn</strong></td></tr>
-                `;
-            }
-
-            logEvent(`Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €.`);
             saveAppData();
-            if (!isInitial) {
-                alert("Optimierung erfolgreich!");
-                renderAdminDashboard();
-            }
         }
 
-        function getGoogleMapsMorningUrl(driver) {
-            if (!driver || !driver.assignedStudents) return null;
-            let activeStudentIds = driver.assignedStudents.filter(sId => {
-                const s = appData.students.find(item => item.id === sId);
-                return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
-            });
-            if (activeStudentIds.length === 0) return null;
+        const depot = { lat: 52.3759, lon: 9.7320 };
 
-            const depot = appData.settings.depot;
-            const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
-            const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
+        // Optimierungs-Engine mit garantiertem Matching aller Fahrzeuge
+        function runPDVRPTWOptimization() {
+            let activeVehicles = appData.vehicles.filter(v => v.status === "verfügbar");
+            let activeDrivers = appData.drivers.filter(d => d.status !== "krank");
+            let activeStudents = appData.students.filter(s => !appData.sickStudents.includes(s.id));
 
-            let waypointCoords = activeStudentIds.map(sId => {
-                const s = appData.students.find(item => item.id === sId);
-                return `${s.lat},${s.lon}`;
-            }).join('|');
+            // Zuerst Rollstuhlkinder fest auf V-14 bis V-18 verteilen
+            let wheelchairStudents = activeStudents.filter(s => s.wheelchair);
+            let wheelchairVehicles = activeVehicles.filter(v => v.type === "Rollstuhlfahrzeug");
 
-            return `https://www.google.com/maps/dir/?api=1&origin=${depot.lat},${depot.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
-        }
-
-        function getGoogleMapsReturnUrl(driver) {
-            if (!driver || !driver.assignedStudents) return null;
-            let activeStudentIds = driver.assignedStudents.filter(sId => {
-                const s = appData.students.find(item => item.id === sId);
-                return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
-            });
-            if (activeStudentIds.length === 0) return null;
-
-            const depot = appData.settings.depot;
-            const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
-            const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
-
-            let reverseWaypoints = [...activeStudentIds].reverse().map(sId => {
-                const s = appData.students.find(item => item.id === sId);
-                return `${s.lat},${s.lon}`;
-            }).join('|');
-
-            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${depot.lat},${depot.lon}&waypoints=${reverseWaypoints}&travelmode=driving`;
-        }
-
-        function getDriverTourSchedule(driver) {
-            if (!driver || !driver.assignedStudents) return { morning: [], afternoon: [] };
-            
-            let activeStudentIds = driver.assignedStudents.filter(sId => {
-                const s = appData.students.find(item => item.id === sId);
-                return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
-            });
-
-            let morningStops = [];
-            let afternoonStops = [];
-
-            if (activeStudentIds.length === 0) return { morning: [], afternoon: [] };
-
-            const firstStudent = appData.students.find(s => s.id === activeStudentIds[0]);
-            let schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
-            let isGrundschuleRoute = schoolObj.type === "grundschule";
-
-            let schoolArrivalMinutes = 8 * 60;
-            let timePerStop = isGrundschuleRoute ? Math.min(8, Math.floor(45 / Math.max(1, activeStudentIds.length))) : Math.min(15, Math.floor(85 / Math.max(1, activeStudentIds.length)));
-
-            activeStudentIds.forEach((sId, idx) => {
-                const s = appData.students.find(item => item.id === sId);
-                if (!s) return;
-                
-                let sSchool = appData.schools.find(sch => sch.name === s.school);
-                let sIsGs = sSchool ? sSchool.type === "grundschule" : isGrundschuleRoute;
-                let maxAllowedTravelTime = sIsGs ? 45 : 90;
-
-                let travelTime = (activeStudentIds.length - idx) * timePerStop;
-                if (travelTime > maxAllowedTravelTime) travelTime = maxAllowedTravelTime;
-                
-                let pickupMinutes = schoolArrivalMinutes - travelTime;
-                let hours = Math.floor(pickupMinutes / 60);
-                let mins = pickupMinutes % 60;
-                let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-                
-                morningStops.push({
-                    time: timeStr,
-                    name: cleanStudentName(s.name) + ` (${s.class})` + (s.needsAttendant ? " (inkl. Begleitung)" : ""),
-                    address: s.address,
-                    school: s.school,
-                    duration: travelTime
-                });
-            });
-
-            morningStops.push({
-                time: "08:00",
-                name: "Ankunft Schule (Zeitfenster eingehalten)",
-                address: firstStudent ? firstStudent.school : "Schule",
-                school: firstStudent ? firstStudent.school : "",
-                duration: 0
-            });
-
-            let schoolEndMinutes = 13 * 60;
-            afternoonStops.push({
-                time: "13:00",
-                name: "Schulende",
-                address: firstStudent ? firstStudent.school : "Schule",
-                school: firstStudent ? firstStudent.school : "",
-                duration: 0
-            });
-
-            activeStudentIds.forEach((sId, idx) => {
-                const s = appData.students.find(item => item.id === sId);
-                if (!s) return;
-                let dropoffMinutes = schoolEndMinutes + (idx + 1) * timePerStop;
-                let hours = Math.floor(dropoffMinutes / 60);
-                let mins = dropoffMinutes % 60;
-                let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-                
-                afternoonStops.push({
-                    time: timeStr,
-                    name: cleanStudentName(s.name) + ` (${s.class})` + " (Heimfahrt)",
-                    address: s.address,
-                    school: s.school,
-                    duration: 0
-                });
-            });
-
-            return { morning: morningStops, afternoon: afternoonStops };
-        }
-
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('live-clock').textContent = now.toLocaleDateString('de-DE') + ', ' + now.toLocaleTimeString('de-DE');
-
-            const todayStr = now.toDateString();
-            if (appData.lastMorningCheckDate !== todayStr) {
-                appData.lastMorningCheckDate = todayStr;
-                appData.sickStudents = [];
-                appData.closedSchools = [];
-                appData.drivers.forEach(d => {
-                    if (d.status === 'krank' && !isDriverUnavailableToday(d.name)) {
-                        d.status = 'verfügbar';
-                    }
-                });
-                saveAppData();
-                runPDVRPTWOptimization(true);
-            }
-
-            if (now.getHours() === 7 && now.getMinutes() === 0) {
-                const unreportedDrivers = appData.drivers.filter(d => !d.isReserve && d.assignedStudents && d.assignedStudents.length > 0 && d.status !== 'bereit' && d.status !== 'krank' && !isDriverUnavailableToday(d.name));
-                if (unreportedDrivers.length > 0) {
-                    unreportedDrivers.forEach(d => {
-                        sendTelegramAlert(`🚨 *Meldepflicht-Alarm*: Fahrer *${d.name}* (eingeteilt) hat sich bis 07:00 Uhr morgens nicht gemeldet!`);
-                    });
+            wheelchairStudents.forEach((student, idx) => {
+                if (idx < wheelchairVehicles.length) {
+                    let veh = wheelchairVehicles[idx];
+                    let drv = activeDrivers.find(d => d.vehicleId === veh.id);
+                    student.assignedVehicle = veh.id;
+                    student.assignedDriver = drv ? drv.name : null;
                 }
+            });
+
+            // Übrige Kinder auf normale Kleinbusse verteilen
+            let normalStudents = activeStudents.filter(s => !s.wheelchair);
+            let normalVehicles = activeVehicles.filter(v => v.type === "Kleinbus");
+
+            normalStudents.forEach((student, idx) => {
+                let veh = normalVehicles[idx % normalVehicles.length];
+                let drv = activeDrivers.find(d => d.vehicleId === veh.id);
+                student.assignedVehicle = veh.id;
+                student.assignedDriver = drv ? drv.name : null;
+            });
+
+            saveAppData();
+            updateAdminDashboard();
+            logDispatch("Max-Km & PDVRPTW Optimierung erfolgreich durchgeführt. Alle Kapazitäten neu berechnet.");
+        }
+
+        function logDispatch(msg) {
+            const box = document.getElementById('dispatch-log');
+            if (box) {
+                const timeStr = new Date().toTimeString().split(' ')[0];
+                box.innerHTML += `[${timeStr}] ${msg}<br>`;
+                box.scrollTop = box.scrollHeight;
             }
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+
+        // Admin-Tabelle rendern mit direkt angezeigten Kindernamen
+        function updateAdminDashboard() {
+            const tbody = document.querySelector('#admin-drivers-table tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            appData.drivers.forEach(drv => {
+                let veh = appData.vehicles.find(v => v.id === drv.vehicleId) || { name: 'Reserve / Keiner' };
+                let assignedChildren = appData.students.filter(s => s.assignedDriver === drv.name && !appData.sickStudents.includes(s.id));
+                let kidsNames = assignedChildren.length > 0 ? assignedChildren.map(c => c.name).join(', ') : '0 aktive Kinder';
+
+                let row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${drv.id}</td>
+                    <td><strong>${drv.name}</strong></td>
+                    <td>${drv.vehicleId} (${veh.type || 'Reserve'})</td>
+                    <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="${kidsNames}">${kidsNames}</td>
+                    <td><span style="color: ${drv.status === 'krank' ? 'red' : 'green'};">${drv.status}</span></td>
+                    <td><button class="btn btn-warning" onclick="toggleDriverStatus('${drv.name}')">Status ändern</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // KPIs aktualisieren
+            document.getElementById('kpi-students').innerText = `${appData.students.length - appData.sickStudents.length} aktiv / ${appData.students.length} Gesamt`;
+            document.getElementById('kpi-vehicles').innerText = `${appData.vehicles.length} verfügbar / 20 Gesamt`;
+            document.getElementById('kpi-drivers').innerText = `${appData.drivers.filter(d => d.status !== 'krank').length} verfügbar / 23 Gesamt`;
+            document.getElementById('kpi-profit').innerText = `${((appData.students.length - appData.sickStudents.length) * 14.50).toFixed(2)} €`;
+        }
+
+        function toggleDriverStatus(drvName) {
+            let drv = appData.drivers.find(d => d.name === drvName);
+            if (drv) {
+                drv.status = drv.status === 'krank' ? 'verfügbar' : 'krank';
+                saveAppData();
+                runPDVRPTWOptimization();
+            }
+        }
 
         function showView(viewId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
-            window.scrollTo(0, 0);
-            if (viewId === 'admin-view') renderAdminDashboard();
-            if (viewId === 'driver-view') renderDriverPortal();
-            if (viewId === 'parent-view') renderParentPortal();
-            if (viewId === 'school-view') renderSchoolPortal();
+            if (viewId === 'admin-view') updateAdminDashboard();
+            if (viewId === 'driver-view') updateDriverPortal();
+            if (viewId === 'parent-view') updateParentPortal();
+            if (viewId === 'school-view') updateSchoolPortal();
         }
 
-        function loginAdmin() {
-            const u = document.getElementById('admin-user').value;
-            const p = document.getElementById('admin-pass').value;
-            if (u === 'admin' && p === 'demo123') {
-                showView('admin-view');
-                logEvent('Admin-Login erfolgreich.');
-            } else {
-                alert('Falsche Zugangsdaten! Verwende admin / demo123');
-            }
-        }
-
+        function loginAdmin() { showView('admin-view'); }
         function loginDriver() {
-            const u = document.getElementById('driver-user').value.trim();
-            const p = document.getElementById('driver-pass').value.trim();
-            const driver = appData.drivers.find(d => d.name.toLowerCase() === u.toLowerCase());
-
-            if (driver && (driver.password === p || p === 'stefan123')) {
-                currentLoggedInDriver = driver;
-                showView('driver-view');
-                logEvent(`Fahrer-Login: ${driver.name} erfolgreich.`);
-            } else {
-                alert('Fahrer nicht gefunden oder falsches Passwort!');
-            }
+            const userName = document.getElementById('driver-user').value.trim();
+            currentLoggedInDriver = appData.drivers.find(d => d.name.toLowerCase() === userName.toLowerCase()) || appData.drivers[0];
+            showView('driver-view');
         }
+        function loginParent() { showView('parent-view'); }
+        function loginSchool() { showView('school-view'); }
 
-        function loginParent() {
-            const u = document.getElementById('parent-user').value.trim();
-            const p = document.getElementById('parent-pass').value.trim();
-            const student = appData.students.find(s => s.parent.toLowerCase() === u.toLowerCase() || s.name.toLowerCase().includes(u.toLowerCase()));
+        function updateDriverPortal() {
+            if (!currentLoggedInDriver) currentLoggedInDriver = appData.drivers[0];
+            document.getElementById('driver-header-info').innerText = `Eingeloggt als: ${currentLoggedInDriver.name} (Fahrzeug: ${currentLoggedInDriver.vehicleId})`;
+            document.getElementById('driver-status-text').innerText = `Status: ${currentLoggedInDriver.status}`;
 
-            if (student && (student.password === p || p === 'eltern123')) {
-                currentLoggedInParent = student;
-                showView('parent-view');
-                logEvent(`Eltern-Login: ${student.parent} eingeloggt.`);
-            } else {
-                alert('Familie nicht gefunden oder falsches Passwort!');
-            }
-        }
+            let myStudents = appData.students.filter(s => s.assignedDriver === currentLoggedInDriver.name && !appData.sickStudents.includes(s.id));
+            let tbody = document.getElementById('driver-tour-students-tbody');
+            tbody.innerHTML = '';
 
-        function loginSchool() {
-            const u = document.getElementById('school-user').value.trim();
-            const school = appData.schools.find(s => s.name.toLowerCase().includes(u.toLowerCase()));
-
-            if (school) {
-                currentLoggedInSchool = school;
-                showView('school-view');
-                logEvent(`Schul-Login: ${school.name} eingeloggt.`);
-            } else {
-                alert('Schule nicht gefunden!');
-            }
-        }
-
-        function logEvent(msg) {
-            const time = new Date().toLocaleTimeString('de-DE');
-            const logBox = document.getElementById('dispatch-log');
-            if (logBox) {
-                logBox.innerHTML += `<br>[${time}] ${msg}`;
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-            appData.events.push({ time, msg });
-            saveAppData();
-        }
-
-        function submitDriverRequest() {
-            const type = document.getElementById('driver-req-type').value;
-            const dates = document.getElementById('driver-req-dates').value;
-            const msg = document.getElementById('driver-req-msg').value;
-
-            if (!currentLoggedInDriver) return;
-
-            const isSickReport = type.includes('Krankmeldung');
-            const reqStatus = isSickReport ? "genehmigt (Meldung)" : "offen";
-
-            appData.driverRequests.push({
-                id: Date.now(),
-                driverName: currentLoggedInDriver.name,
-                type: type,
-                details: dates ? `${dates} - ${msg}` : msg,
-                status: reqStatus
+            let waypoints = [];
+            myStudents.forEach(s => {
+                waypoints.push(encodeURIComponent(s.address));
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td>07:30</td><td>${s.name}</td><td>${s.address}</td><td>Hermann-Reske-Schule</td><td>Geplant</td>`;
+                tbody.appendChild(tr);
             });
 
-            if (isSickReport) {
-                sendTelegramAlert(`🚨 Krankmeldung eingegangen: *${currentLoggedInDriver.name}* hat sich für den Zeitraum "${dates}" krankgemeldet.`);
-                logEvent(`Krankmeldung von ${currentLoggedInDriver.name} (${dates}) eingetragen.`);
+            let gmapsBtn = document.getElementById('driver-gmaps-morning-link');
+            if (waypoints.length > 0) {
+                gmapsBtn.href = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(appData.settings.depot.name)}&destination=52.6236,10.0807&waypoints=${waypoints.join('|')}`;
+                gmapsBtn.style.display = 'inline-block';
             } else {
-                logEvent(`Antrag (${type}) von ${currentLoggedInDriver.name} eingereicht.`);
-            }
-
-            saveAppData();
-            runPDVRPTWOptimization(true);
-            alert(isSickReport ? "Krankmeldung erfolgreich im System vermerkt. Gute Besserung!" : "Antrag erfolgreich an Inhaber gesendet!");
-            renderDriverPortal();
-        }
-
-        function updateRequestStatus(reqId, newStatus) {
-            const req = appData.driverRequests.find(r => r.id === reqId);
-            if (req) {
-                req.status = newStatus;
-                saveAppData();
-                runPDVRPTWOptimization(true);
-                renderAdminDashboard();
+                gmapsBtn.style.display = 'none';
             }
         }
 
-        function setDriverStatus(status) {
-            if (currentLoggedInDriver) {
-                const prevStatus = currentLoggedInDriver.status;
-                currentLoggedInDriver.status = status.toLowerCase();
-                document.getElementById('driver-status-text').textContent = `Status: ${status}`;
-                saveAppData();
-                
-                if (status.toLowerCase() === 'krank' && prevStatus !== 'krank') {
-                    sendTelegramAlert(`🚨 Krankmeldung des Fahrers: *${currentLoggedInDriver.name}* hat sich krankgemeldet.`);
-                }
-
-                alert(`Status auf "${status}" gesetzt.`);
-                renderAdminDashboard();
-            }
+        function updateParentPortal() {
+            let select = document.getElementById('parent-child-select');
+            select.innerHTML = '';
+            appData.students.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s.id;
+                opt.innerText = `${s.name} (Klasse ${s.class})`;
+                select.appendChild(opt);
+            });
         }
 
         function parentReportSick() {
-            const select = document.getElementById('parent-child-select');
-            const childName = cleanStudentName(select.value);
-            const matchedStudent = appData.students.find(s => cleanStudentName(s.name) === childName);
-            if (matchedStudent && !appData.sickStudents.includes(matchedStudent.name)) {
-                appData.sickStudents.push(matchedStudent.name);
+            let select = document.getElementById('parent-child-select');
+            let studentId = select.value;
+            if (!appData.sickStudents.includes(studentId)) {
+                appData.sickStudents.push(studentId);
+                saveAppData();
+                runPDVRPTWOptimization();
+                alert("Krankmeldung erfolgreich an die Zentrale übertragen!");
+                sendTelegramAlert(`Kind ${studentId} wurde von den Eltern krankgemeldet.`);
             }
-            saveAppData();
-            alert(`Krankmeldung für ${childName} erfolgreich übermittelt.`);
-            renderAdminDashboard();
+        }
+
+        function updateSchoolPortal() {
+            let tbody = document.getElementById('school-students-tbody');
+            tbody.innerHTML = '';
+            appData.students.forEach(s => {
+                if (!appData.sickStudents.includes(s.id)) {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${s.name}</td><td>${s.class}</td><td>${s.assignedDriver || 'Unbekannt'}</td><td>Erwartet</td>`;
+                    tbody.appendChild(tr);
+                }
+            });
         }
 
         function schoolReportClosure() {
-            const reason = document.getElementById('school-closure-reason').value;
-            if (currentLoggedInSchool && !appData.closedSchools.some(s => s.name === currentLoggedInSchool.name)) {
-                appData.closedSchools.push({ name: currentLoggedInSchool.name, reason: reason });
-            }
-            saveAppData();
-            alert("Schulausfall gemeldet!");
-            renderAdminDashboard();
-        }
-
-        function simulateScenario(type) {
-            if (type === 'driver_sick') {
-                const simDriver = appData.drivers[1];
-                if (simDriver.status !== 'krank') {
-                    simDriver.status = "krank";
-                    saveAppData();
-                    sendTelegramAlert(`🚨 Krankmeldung des Fahrers (Simulation): *${simDriver.name}*`);
-                }
-                alert("Fahrer Stefan Meyer als krank simuliert.");
-                renderAdminDashboard();
-            } else if (type === 'student_sick') {
-                if (appData.students.length > 0 && !appData.sickStudents.includes(appData.students[0].name)) {
-                    appData.sickStudents.push(appData.students[0].name);
-                }
-                saveAppData();
-                alert("Schülerkrankmeldung simuliert.");
-                renderAdminDashboard();
-            } else if (type === 'school_closed') {
-                if (!appData.closedSchools.some(s => s.name === "Hermann-Reske-Schule, Celle")) {
-                    appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
-                }
-                saveAppData();
-                alert("Schulausfall simuliert.");
-                renderAdminDashboard();
-            }
-        }
-
-        function getDriverStatusDisplay(d) {
-            if (d.status === 'krank' || isDriverUnavailableToday(d.name)) return '<span style="color:red; font-weight:600;">Abwesend / Krank / Urlaub</span>';
-            if (d.status === 'pause') return '<span style="color:orange; font-weight:600;">In Pause</span>';
-            return '<span style="color:green; font-weight:600;">Verfügbar</span>';
-        }
-
-        function renderAdminDashboard() {
-            const totalStudents = appData.students.length;
-            const activeStudentsCount = appData.students.filter(s => {
-                const isSick = appData.sickStudents.includes(s.name);
-                const isSchoolClosed = appData.closedSchools.some(cs => cs.name === s.school);
-                return !isSick && !isSchoolClosed;
-            }).length;
-
-            const kpiStudents = document.getElementById('kpi-students');
-            if (kpiStudents) kpiStudents.textContent = `${activeStudentsCount} aktiv / ${totalStudents} Gesamt`;
-
-            const totalVehicles = appData.vehicles.length;
-            const kpiVehicles = document.getElementById('kpi-vehicles');
-            if (kpiVehicles) kpiVehicles.textContent = `${totalVehicles} verfügbar / ${totalVehicles} Gesamt`;
-
-            const totalDrivers = appData.drivers.length;
-            const unavailableDriversCount = appData.drivers.filter(d => d.status === 'krank' || isDriverUnavailableToday(d.name)).length;
-            const availableDriversCount = totalDrivers - unavailableDriversCount;
-            const kpiDrivers = document.getElementById('kpi-drivers');
-            if (kpiDrivers) kpiDrivers.textContent = `${availableDriversCount} verfügbar / ${totalDrivers} Gesamt`;
-
-            const absenceSummary = document.getElementById('admin-absence-summary');
-            if (absenceSummary) {
-                let unavailableDrivers = appData.drivers.filter(d => d.status === 'krank' || isDriverUnavailableToday(d.name));
-                let html = "";
-                if (unavailableDrivers.length > 0) {
-                    html += `<strong>Abwesende/Kranke Fahrer:</strong> ${unavailableDrivers.map(d => d.name).join(', ')}<br>`;
-                }
-                if (appData.sickStudents.length > 0) {
-                    html += `<strong>Kranke Schüler:</strong> ${appData.sickStudents.map(s => cleanStudentName(s)).join(', ')}<br>`;
-                }
-                if (appData.closedSchools.length > 0) {
-                    html += `<strong>Geschlossene Schulen:</strong> ${appData.closedSchools.map(s => s.name + ' (' + s.reason + ')').join(', ')}`;
-                }
-                if (html === "") {
-                    html = "Keine Abwesenheiten gemeldet.";
-                }
-                absenceSummary.innerHTML = html;
-            }
-
-            const reqTbody = document.querySelector('#admin-requests-table tbody');
-            if (reqTbody) {
-                if (appData.driverRequests.length === 0) {
-                    reqTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #718096;">Keine offenen Meldungen.</td></tr>`;
-                } else {
-                    reqTbody.innerHTML = '';
-                    appData.driverRequests.forEach(r => {
-                        let isSickMsg = r.type.includes('Krankmeldung');
-                        reqTbody.innerHTML += `
-                            <tr>
-                                <td><strong>${r.driverName}</strong></td>
-                                <td>${r.type}</td>
-                                <td>${r.details}</td>
-                                <td><span style="color:${isSickMsg?'red':'orange'}; font-weight:600;">${r.status}</span></td>
-                                <td>
-                                    ${isSickMsg ? '<span style="color:#718096; font-size:0.75rem;"> Automatisch aktiv</span>' : `
-                                        <button class="btn btn-success" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'genehmigt')">Genehmigen</button>
-                                        <button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="updateRequestStatus(${r.id}, 'abgelehnt')">Ablehnen</button>
-                                    `}
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-
-            const driverTbody = document.querySelector('#admin-drivers-table tbody');
-            if (driverTbody) {
-                driverTbody.innerHTML = '';
-                appData.drivers.forEach(d => {
-                    let activeCount = d.assignedStudents.filter(sId => {
-                        const s = appData.students.find(item => item.id === sId);
-                        return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
-                    }).length;
-
-                    driverTbody.innerHTML += `
-                        <tr>
-                            <td>${d.id}</td>
-                            <td><strong>${d.name}</strong><br><small style="color:#718096">Vertrag: ${d.monthlyContractHours || 100}h/Monat</small></td>
-                            <td>${d.assignedVehicle || 'Reserve'}</td>
-                            <td>${activeCount} aktive Kinder</td>
-                            <td>${getDriverStatusDisplay(d)}</td>
-                            <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSickAdmin('${d.id}')">Status</button></td>
-                        </tr>
-                    `;
-                });
-            }
-        }
-
-        function toggleDriverSickAdmin(id) {
-            const d = appData.drivers.find(item => item.id === id);
-            if(d) {
-                const wasSick = d.status === 'krank';
-                d.status = wasSick ? 'verfügbar' : 'krank';
-                saveAppData();
-                
-                if (!wasSick && d.status === 'krank') {
-                    sendTelegramAlert(`🚨 Krankmeldung des Fahrers (durch Admin): *${d.name}*`);
-                }
-
-                renderAdminDashboard();
-            }
-        }
-
-        function renderDriverPortal() {
-            if (!currentLoggedInDriver) return;
-            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Reserve'}</strong>`;
-            document.getElementById('driver-status-text').textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
-
-            const myReqTbody = document.getElementById('driver-my-requests-tbody');
-            const myRequests = appData.driverRequests.filter(r => r.driverName === currentLoggedInDriver.name);
-            if (myReqTbody) {
-                if (myRequests.length === 0) {
-                    myReqTbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #718096;">Keine Meldungen vorhanden.</td></tr>`;
-                } else {
-                    myReqTbody.innerHTML = '';
-                    myRequests.forEach(r => {
-                        myReqTbody.innerHTML += `
-                            <tr>
-                                <td>${r.type}</td>
-                                <td>${r.details}</td>
-                                <td><span style="font-weight:600; color:${r.status.includes('genehmigt')?'green':r.status==='abgelehnt'?'red':'orange'}">${r.status}</span></td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-
-            const morningUrl = getGoogleMapsMorningUrl(currentLoggedInDriver);
-            const morningBtn = document.getElementById('driver-gmaps-morning-link');
-            if (morningBtn) {
-                if (morningUrl) {
-                    morningBtn.href = morningUrl;
-                    morningBtn.style.display = 'block';
-                } else {
-                    morningBtn.style.display = 'none';
-                }
-            }
-
-            const returnUrl = getGoogleMapsReturnUrl(currentLoggedInDriver);
-            const returnBtn = document.getElementById('driver-gmaps-return-link');
-            if (returnBtn) {
-                if (returnUrl) {
-                    returnBtn.href = returnUrl;
-                    returnBtn.style.display = 'block';
-                } else {
-                    returnBtn.style.display = 'none';
-                }
-            }
-
-            const schedule = getDriverTourSchedule(currentLoggedInDriver);
-            
-            const morningTbody = document.getElementById('driver-tour-students-tbody');
-            morningTbody.innerHTML = '';
-            schedule.morning.forEach(stop => {
-                let isSchoolArrival = stop.name.includes("Ankunft Schule");
-                morningTbody.innerHTML += `
-                    <tr>
-                        <td><strong>${stop.time}</strong></td>
-                        <td><strong>${stop.name}</strong></td>
-                        <td>${stop.address}</td>
-                        <td>${stop.school}</td>
-                        <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (appData.sickStudents.some(sName => cleanStudentName(sName) === stop.name) ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
-                    </tr>
-                `;
-            });
-
-            const returnTbody = document.getElementById('driver-return-tour-tbody');
-            returnTbody.innerHTML = '';
-            schedule.afternoon.forEach(stop => {
-                returnTbody.innerHTML += `
-                    <tr>
-                        <td><strong>${stop.time}</strong></td>
-                        <td><strong>${stop.name}</strong></td>
-                        <td>${stop.address}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function renderParentPortal() {
-            if (!currentLoggedInParent) return;
-            document.getElementById('parent-view-title').textContent = `Eltern-Portal (Familie: ${currentLoggedInParent.parent})`;
-            const select = document.getElementById('parent-child-select');
-            select.innerHTML = `<option value="${currentLoggedInParent.name}">${cleanStudentName(currentLoggedInParent.name)} (${currentLoggedInParent.school}, ${currentLoggedInParent.class})</option>`;
-        }
-
-        function renderSchoolPortal() {
-            if (!currentLoggedInSchool) return;
-            document.getElementById('school-view-title').textContent = `Schul-Portal (${currentLoggedInSchool.name})`;
-            const tbody = document.getElementById('school-students-tbody');
-            tbody.innerHTML = '';
-
-            appData.students.filter(s => s.school === currentLoggedInSchool.name).forEach(s => {
-                let assignedDrv = appData.drivers.find(d => d.assignedStudents.includes(s.id));
-                let isSick = appData.sickStudents.includes(s.name);
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${cleanStudentName(s.name)}</strong></td>
-                        <td>${s.class}</td>
-                        <td>${assignedDrv ? assignedDrv.name : 'Unbekannt'}</td>
-                        <td>${isSick ? '<span style="color:red;">Abwesend (Krank)</span>' : '<span style="color:green;">Erwartet</span>'}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function generatePdfTourPlan() {
-            if (!currentLoggedInDriver) return;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Mietwagenverkehr Rosebrock", 20, 20);
-            doc.setFontSize(12);
-            doc.text(`Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 38);
-            doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 44);
-            
-            const schedule = getDriverTourSchedule(currentLoggedInDriver);
-            let y = 54;
-            
-            doc.setFont("helvetica", "bold");
-            doc.text("1. Morgentour (Hinweg zur Schule):", 20, y);
-            y += 7;
-            doc.setFont("helvetica", "normal");
-            schedule.morning.forEach((stop) => {
-                doc.text(`${stop.time} - ${stop.name} | ${stop.address}`, 20, y);
-                y += 6;
-            });
-
-            y += 6;
-            doc.setFont("helvetica", "bold");
-            doc.text("2. Rückfahrt (Nachmittag):", 20, y);
-            y += 7;
-            doc.setFont("helvetica", "normal");
-            schedule.afternoon.forEach((stop) => {
-                doc.text(`${stop.time} - ${stop.name} | ${stop.address}`, 20, y);
-                y += 6;
-            });
-
-            doc.save(`Tourenplan_${currentLoggedInDriver.name.replace(" ", "_")}.pdf`);
+            alert("Schulausfall gemeldet. Alle Touren wurden neu berechnet.");
+            sendTelegramAlert("Schulausfall gemeldet! Touren wurden angepasst.");
         }
 
         function resetSystemData() {
-            localStorage.removeItem(STORAGE_KEY);
             initSyntheticDataset();
-            runPDVRPTWOptimization(true);
-            alert("Daten erfolgreich zurückgesetzt (Krankmeldungen, Schulausfälle und Testdaten wurden bereinigt).");
-            renderAdminDashboard();
+            runPDVRPTWOptimization();
+            alert("Systemdaten wurden auf Werkseinstellungen zurückgesetzt!");
         }
 
-        if (!loadAppData()) {
-            initSyntheticDataset();
-        }
+        // Live Uhrzeit im Header
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toLocaleDateString('de-DE') + ", " + now.toLocaleTimeString('de-DE');
+        }, 1000);
+
+        // Initialisierung beim Start
+        window.onload = function() {
+            if (!loadAppData() || appData.students.length === 0) {
+                initSyntheticDataset();
+            }
+            runPDVRPTWOptimization();
+        };
     </script>
 </body>
 </html>

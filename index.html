@@ -716,6 +716,25 @@
             return ordered;
         }
 
+        function getDriverHomeCoords(driver) {
+            if (driver && typeof driver.homeLat === "number" && typeof driver.homeLon === "number") {
+                return {
+                    lat: driver.homeLat,
+                    lon: driver.homeLon,
+                    address: driver.homeAddress || `Zuhause (${driver.name})`,
+                    label: `Zuhause (${driver.name})`
+                };
+            }
+            const idx = driver ? Math.max(0, appData.drivers.findIndex(d => d.id === driver.id)) : 0;
+            const angle = idx * 0.65;
+            return {
+                lat: appData.settings.depot.lat + Math.sin(angle) * 0.02,
+                lon: appData.settings.depot.lon + Math.cos(angle) * 0.02,
+                address: driver && driver.homeAddress ? driver.homeAddress : "Zuhause Fahrer",
+                label: driver ? `Zuhause (${driver.name})` : "Zuhause Fahrer"
+            };
+        }
+
         function getOrderedActiveStudentsForDriver(driver) {
             if (!driver || !driver.assignedStudents) return [];
             let activeStudents = driver.assignedStudents
@@ -724,10 +743,10 @@
 
             if (activeStudents.length <= 1) return activeStudents;
 
-            // Gruppen nach Schule trennen, damit innerhalb des Fahrers keine Schulen vermischt werden
+            const home = getDriverHomeCoords(driver);
             let orderedAll = [];
-            let curLat = appData.settings.depot.lat;
-            let curLon = appData.settings.depot.lon;
+            let curLat = home.lat;
+            let curLon = home.lon;
 
             appData.schools.forEach(sch => {
                 const group = activeStudents.filter(s => s.school === sch.name);
@@ -740,7 +759,6 @@
                 }
             });
 
-            // Falls Schüler einer nicht in appData.schools gelisteten Schule angehören
             const knownSchoolNames = new Set(appData.schools.map(sch => sch.name));
             const remainingStudents = activeStudents.filter(s => !knownSchoolNames.has(s.school));
             if (remainingStudents.length > 0) {
@@ -754,10 +772,9 @@
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return 0;
 
-            const depot = appData.settings.depot;
+            const home = getDriverHomeCoords(driver);
             let totalKm = 0;
 
-            // Gruppen nach Schule berechnen, damit Hin- und Rückfahrt schulbezogen sauber erfasst werden
             const schoolGroups = [];
             appData.schools.forEach(sch => {
                 const grp = orderedStudents.filter(s => s.school === sch.name);
@@ -769,11 +786,11 @@
                 schoolGroups.push({ school: appData.schools[0], students: extraStudents });
             }
 
-            let curLat = depot.lat;
-            let curLon = depot.lon;
+            let curLat = home.lat;
+            let curLon = home.lon;
 
             schoolGroups.forEach(grp => {
-                // Morgentour: Betriebshof/aktuelle Position -> Schüler -> Schule
+                // Morgentour: Zuhause des Fahrers -> Schüler -> Schule
                 const morningSeq = orderStudentsFromOrigin(grp.students, curLat, curLon, grp.school.lat, grp.school.lon, 0.35);
                 let mLat = curLat;
                 let mLon = curLon;
@@ -784,8 +801,8 @@
                 });
                 totalKm += calculateHaversineDistance(mLat, mLon, grp.school.lat, grp.school.lon) * 1.25;
 
-                // Nachmittagstour: Schule -> neu optimierte Heimfahrt-Reihenfolge
-                const afternoonSeq = orderStudentsFromOrigin(grp.students, grp.school.lat, grp.school.lon, depot.lat, depot.lon, 0.2);
+                // Nachmittagstour: Schule -> Schüler -> zurück nach Hause zum Fahrer
+                const afternoonSeq = orderStudentsFromOrigin(grp.students, grp.school.lat, grp.school.lon, home.lat, home.lon, 0.25);
                 let aLat = grp.school.lat;
                 let aLon = grp.school.lon;
                 afternoonSeq.forEach(st => {
@@ -793,13 +810,12 @@
                     aLat = st.lat;
                     aLon = st.lon;
                 });
+                totalKm += calculateHaversineDistance(aLat, aLon, home.lat, home.lon) * 1.25;
 
-                curLat = aLat;
-                curLon = aLon;
+                curLat = home.lat;
+                curLon = home.lon;
             });
 
-            // Rückfahrt vom letzten Halt zum Betriebshof
-            totalKm += calculateHaversineDistance(curLat, curLon, depot.lat, depot.lon) * 1.25;
             return totalKm;
         }
 
@@ -880,14 +896,44 @@
                 });
             }
 
+            const driverHomes = [
+                { address: "Leimenweg 15, 38112 Braunschweig", lat: 52.2985, lon: 10.5255 },
+                { address: "Celler Straße 48, 38114 Braunschweig", lat: 52.275, lon: 10.531 },
+                { address: "Hildesheimer Straße 82, 30169 Hannover", lat: 52.358, lon: 9.749 },
+                { address: "Vahrenwalder Straße 110, 30165 Hannover", lat: 52.392, lon: 9.738 },
+                { address: "Berliner Ring 19, 31224 Peine", lat: 52.323, lon: 10.233 },
+                { address: "Hannoversche Straße 64, 29221 Celle", lat: 52.618, lon: 10.072 },
+                { address: "Bahnhofstraße 14, 31162 Bad Salzdetfurth", lat: 52.067, lon: 10.015 },
+                { address: "Gifhorner Straße 27, 38112 Braunschweig", lat: 52.291, lon: 10.538 },
+                { address: "Lister Meile 51, 30161 Hannover", lat: 52.382, lon: 9.744 },
+                { address: "Breite Straße 33, 31224 Peine", lat: 52.3205, lon: 10.231 },
+                { address: "Wittinger Straße 18, 29223 Celle", lat: 52.634, lon: 10.089 },
+                { address: "Mühlenstraße 9, 31162 Bad Salzdetfurth", lat: 52.065, lon: 10.019 },
+                { address: "Kastanienallee 41, 38102 Braunschweig", lat: 52.268, lon: 10.542 },
+                { address: "Podbielskistraße 132, 30177 Hannover", lat: 52.387, lon: 9.766 },
+                { address: "Woltorfer Straße 7, 31224 Peine", lat: 52.317, lon: 10.228 },
+                { address: "Immenweg 23, 29227 Celle", lat: 52.612, lon: 10.064 },
+                { address: "Steinstraße 16, 31162 Bad Salzdetfurth", lat: 52.0685, lon: 10.012 },
+                { address: "Wolfenbütteler Straße 88, 38102 Braunschweig", lat: 52.251, lon: 10.526 },
+                { address: "Limmerstraße 63, 30451 Hannover", lat: 52.373, lon: 9.708 },
+                { address: "Sundernstraße 11, 31224 Peine", lat: 52.3255, lon: 10.237 },
+                { address: "Blumlage 29, 29221 Celle", lat: 52.624, lon: 10.078 },
+                { address: "Schützenplatz 5, 31162 Bad Salzdetfurth", lat: 52.064, lon: 10.014 },
+                { address: "Bültenweg 36, 38106 Braunschweig", lat: 52.2735, lon: 10.548 }
+            ];
+
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
                 let monthlyHours = isRes ? 43 : (i % 2 === 0 ? 120 : 100);
+                const homeInfo = driverHomes[(i - 1) % driverHomes.length];
 
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
                     name: drvName,
+                    homeAddress: homeInfo.address,
+                    homeLat: homeInfo.lat,
+                    homeLon: homeInfo.lon,
                     password: drvName.toLowerCase().split(" ")[0] + "123",
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
@@ -944,12 +990,13 @@
             runPDVRPTWOptimization(true);
         }
 
-        function estimateBatchTravelMinutes(batchStudents, school) {
+        function estimateBatchTravelMinutes(batchStudents, school, driver = null) {
             if (!batchStudents || batchStudents.length === 0) return 0;
+            const startPoint = getDriverHomeCoords(driver);
             const ordered = orderStudentsFromOrigin(
                 batchStudents,
-                appData.settings.depot.lat,
-                appData.settings.depot.lon,
+                startPoint.lat,
+                startPoint.lon,
                 school.lat,
                 school.lon,
                 0.35
@@ -991,76 +1038,104 @@
                 return !isSick && !isSchoolClosed;
             });
 
-            // Basis-Direktstrecke (einzelne Direktfahrten Betriebshof -> Schüler -> Schule -> Rückweg)
+            // Basis-Direktstrecke (einzelne Direktfahrten Zuhause/Start -> Schüler -> Schule -> Rückweg)
             let totalBaselineKm = 0;
             activeStudents.forEach(s => {
+                const assignedDrv = activeDrivers.find(d => (d.assignedStudents || []).includes(s.id)) || activeDrivers[0];
+                const startPt = getDriverHomeCoords(assignedDrv);
                 let schObj = appData.schools.find(sch => sch.name === s.school) || appData.schools[0];
-                let distDepotToChild = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, s.lat, s.lon) * 1.25;
+                let distStartToChild = calculateHaversineDistance(startPt.lat, startPt.lon, s.lat, s.lon) * 1.25;
                 let distChildToSchool = calculateHaversineDistance(s.lat, s.lon, schObj.lat, schObj.lon) * 1.25;
-                totalBaselineKm += (distDepotToChild + distChildToSchool) * 1.2;
+                totalBaselineKm += (distStartToChild + distChildToSchool) * 2;
+            });
+            const baselinePersonnelCosts = activeDrivers.filter(d => computeActualRouteKmForDriver(d) > 0).length * (2.5 * hourlyRate);
+
+            // STRIKTE KAPAZITÄTS-, FAHRZEUGTYP- & ZEITFENSTER-ZUWEISUNG
+            // Kein Fahrer erhält mehr Plätze (Schüler + Begleitung), als sein Fahrzeug Kapazität besitzt.
+            // Kinder mit Mobilitätseinschränkung kommen nur in Rollstuhlfahrzeuge.
+            const driverLoadMap = new Map();
+            const driverSchoolStudentsMap = new Map();
+            activeDrivers.forEach(d => {
+                driverLoadMap.set(d.id, 0);
+                driverSchoolStudentsMap.set(d.id, new Map()); // schoolName -> array of students
             });
 
-            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt.
-            // Fahrzeugtyp (Rollstuhlfahrzeug bei Mobilitätseinschränkung), Kapazität und 45/90-Min-Zeitfenster werden geprüft.
-            let currentDriverIdx = 0;
-            const pickDriverForStudent = (student, startIdx) => {
+            const getDriverSeatLoad = (drv) => driverLoadMap.get(drv.id) || 0;
+
+            const canAssignStudentToDriver = (drv, student, school, extraBatchForSchool = []) => {
+                const veh = appData.vehicles.find(v => v.id === drv.assignedVehicle);
+                if (!veh) return false;
+                if (!isVehicleCompatibleWithStudent(veh, student)) return false;
+
+                const seatLoad = 1 + (student.needsAttendant ? 1 : 0);
+                const currentTotalLoad = getDriverSeatLoad(drv);
+                if (currentTotalLoad + seatLoad > veh.capacity) return false;
+
+                const schoolMap = driverSchoolStudentsMap.get(drv.id);
+                const existingForSchool = schoolMap.get(school.name) || [];
+                const candidateSchoolStudents = [...existingForSchool, ...extraBatchForSchool, student];
+                const maxAllowedMin = school.type === "grundschule" ? 45 : 90;
+                const estMin = estimateBatchTravelMinutes(candidateSchoolStudents, school, drv);
+                if (estMin > maxAllowedMin) return false;
+
+                return true;
+            };
+
+            const commitStudentToDriver = (drv, student, school) => {
+                const seatLoad = 1 + (student.needsAttendant ? 1 : 0);
+                driverLoadMap.set(drv.id, getDriverSeatLoad(drv) + seatLoad);
+                const schoolMap = driverSchoolStudentsMap.get(drv.id);
+                const list = schoolMap.get(school.name) || [];
+                list.push(student);
+                schoolMap.set(school.name, list);
+                if (!drv.assignedStudents.includes(student.id)) {
+                    drv.assignedStudents.push(student.id);
+                }
+            };
+
+            // Erst Rollstuhl-Schüler gezielt auf Rollstuhlfahrzeuge verteilen, dann restliche Schüler
+            const orderedByNeed = [
+                ...activeStudents.filter(s => requiresWheelchairVehicle(s)),
+                ...activeStudents.filter(s => !requiresWheelchairVehicle(s))
+            ];
+
+            let rrIdx = 0;
+            orderedByNeed.forEach(student => {
+                const school = appData.schools.find(sch => sch.name === student.school) || appData.schools[0];
+                let placed = false;
+
                 for (let offset = 0; offset < activeDrivers.length; offset++) {
-                    const idx = (startIdx + offset) % activeDrivers.length;
+                    const idx = (rrIdx + offset) % activeDrivers.length;
                     const cand = activeDrivers[idx];
-                    const veh = appData.vehicles.find(v => v.id === cand.assignedVehicle) || { capacity: 8, type: "Kleinbus" };
-                    if (isVehicleCompatibleWithStudent(veh, student)) {
-                        return idx;
+                    if (canAssignStudentToDriver(cand, student, school)) {
+                        commitStudentToDriver(cand, student, school);
+                        rrIdx = (idx + 1) % activeDrivers.length;
+                        placed = true;
+                        break;
                     }
                 }
-                return Math.min(startIdx, Math.max(0, activeDrivers.length - 1));
-            };
 
-            const assignBatchToDriver = (batchStudents, targetIdx) => {
-                if (!batchStudents || batchStudents.length === 0 || activeDrivers.length === 0) return;
-                const safeIdx = Math.min(targetIdx, activeDrivers.length - 1);
-                const targetDriver = activeDrivers[safeIdx];
-                const existingIds = new Set(targetDriver.assignedStudents || []);
-                batchStudents.forEach(item => existingIds.add(item.id));
-                targetDriver.assignedStudents = Array.from(existingIds);
-            };
-
-            appData.schools.forEach(school => {
-                let schoolStudents = activeStudents.filter(s => s.school === school.name);
-                if (schoolStudents.length === 0 || activeDrivers.length === 0) return;
-
-                let maxAllowedMin = school.type === "grundschule" ? 45 : 90;
-                let currentBatch = [];
-                let currentLoad = 0;
-                let batchDriverIdx = pickDriverForStudent(schoolStudents[0], currentDriverIdx);
-
-                schoolStudents.forEach(s => {
-                    let driver = activeDrivers[batchDriverIdx] || activeDrivers[activeDrivers.length - 1];
-                    let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8, type: "Kleinbus" };
-                    let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
-
-                    const compatible = isVehicleCompatibleWithStudent(vehicle, s);
-                    const exceedsCapacity = (currentLoad + studentSeatLoad) > vehicle.capacity;
-                    const candidateBatch = [...currentBatch, s];
-                    const estimatedBatchMin = estimateBatchTravelMinutes(candidateBatch, school);
-                    const exceedsTime = estimatedBatchMin > maxAllowedMin;
-
-                    if ((!compatible || exceedsCapacity || exceedsTime) && currentBatch.length > 0) {
-                        assignBatchToDriver(currentBatch, batchDriverIdx);
-                        currentDriverIdx = (batchDriverIdx + 1) % activeDrivers.length;
-                        batchDriverIdx = pickDriverForStudent(s, currentDriverIdx);
-                        currentBatch = [];
-                        currentLoad = 0;
-                    } else if (!compatible && currentBatch.length === 0) {
-                        batchDriverIdx = pickDriverForStudent(s, currentDriverIdx);
+                // Fallback nur bzgl. Zeitfenster, falls alle kompatiblen Fahrzeuge voll oder knapp sind,
+                // aber NIEMALS über die Fahrzeugkapazität oder gegen Rollstuhlpflicht!
+                if (!placed) {
+                    const veh = null;
+                    for (let offset = 0; offset < activeDrivers.length; offset++) {
+                        const idx = (rrIdx + offset) % activeDrivers.length;
+                        const cand = activeDrivers[idx];
+                        const cVeh = appData.vehicles.find(v => v.id === cand.assignedVehicle);
+                        if (!cVeh || !isVehicleCompatibleWithStudent(cVeh, student)) continue;
+                        const seatLoad = 1 + (student.needsAttendant ? 1 : 0);
+                        if (getDriverSeatLoad(cand) + seatLoad <= cVeh.capacity) {
+                            commitStudentToDriver(cand, student, school);
+                            rrIdx = (idx + 1) % activeDrivers.length;
+                            placed = true;
+                            break;
+                        }
                     }
+                }
 
-                    currentBatch.push(s);
-                    currentLoad += studentSeatLoad;
-                });
-
-                if (currentBatch.length > 0) {
-                    assignBatchToDriver(currentBatch, batchDriverIdx);
-                    currentDriverIdx = (batchDriverIdx + 1) % activeDrivers.length;
+                if (!placed) {
+                    logEvent(`WARNUNG: Für Schüler ${cleanStudentName(student.name)} (${student.impairment}) konnte kein Fahrzeug mit freier Kapazität zugewiesen werden.`);
                 }
             });
 
@@ -1075,13 +1150,16 @@
             let hourlyRate = appData.settings.costs.personnelCostPerHour;
             let dailyPersonnelCosts = 0;
             activeDrivers.forEach(d => {
-                let monthlySalary = d.monthlyContractHours * hourlyRate;
-                let dailyShare = monthlySalary / 21.5;
-                dailyPersonnelCosts += dailyShare;
+                const kmDrv = computeActualRouteKmForDriver(d);
+                if (kmDrv > 0) {
+                    // Realistische tägliche Einsatzzeit für Hin- und Rücktour (~38 km/h inkl. Haltezeiten + 0,5h Rüstzeit)
+                    const activeShiftHours = Math.min(6.0, Math.max(1.5, (kmDrv / 38) + 0.5));
+                    dailyPersonnelCosts += activeShiftHours * hourlyRate;
+                }
             });
 
             let baselineRevenue = totalBaselineKm * pricePerKm;
-            let baselineCosts = totalBaselineKm * costPerKm + dailyPersonnelCosts;
+            let baselineCosts = totalBaselineKm * costPerKm + baselinePersonnelCosts;
             let baselineProfit = baselineRevenue - baselineCosts;
 
             let totalRevenue = totalOptimizedKm * pricePerKm;
@@ -1121,26 +1199,27 @@
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return null;
 
-            const depot = appData.settings.depot;
+            const home = getDriverHomeCoords(driver);
             const firstStudent = orderedStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
             let waypointCoords = orderedStudents.map(s => `${s.lat},${s.lon}`).join('|');
 
-            return `https://www.google.com/maps/dir/?api=1&origin=${depot.lat},${depot.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
+            return `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
         }
 
         function getGoogleMapsReturnUrl(driver) {
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return null;
 
-            const depot = appData.settings.depot;
+            const home = getDriverHomeCoords(driver);
             const firstStudent = orderedStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
-            let reverseWaypoints = [...orderedStudents].reverse().map(s => `${s.lat},${s.lon}`).join('|');
+            const returnOrdered = orderStudentsFromOrigin(orderedStudents, schoolObj.lat, schoolObj.lon, home.lat, home.lon, 0.25);
+            let returnWaypoints = returnOrdered.map(s => `${s.lat},${s.lon}`).join('|');
 
-            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${depot.lat},${depot.lon}&waypoints=${reverseWaypoints}&travelmode=driving`;
+            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${home.lat},${home.lon}&waypoints=${returnWaypoints}&travelmode=driving`;
         }
 
         function formatMinutesToClock(totalMins) {
@@ -1168,8 +1247,9 @@
                 schoolGroups.push({ school: appData.schools[0], students: extraStudents });
             }
 
-            let curOriginLat = appData.settings.depot.lat;
-            let curOriginLon = appData.settings.depot.lon;
+            const home = getDriverHomeCoords(driver);
+            let curOriginLat = home.lat;
+            let curOriginLon = home.lon;
             let schoolArrivalMinutes = 8 * 60;
 
             schoolGroups.forEach(grp => {
@@ -1237,9 +1317,9 @@
                     grpStudents,
                     schoolObj.lat,
                     schoolObj.lon,
-                    appData.settings.depot.lat,
-                    appData.settings.depot.lon,
-                    0.2
+                    home.lat,
+                    home.lon,
+                    0.25
                 );
                 let elapsedAfternoon = 0;
                 let prevLat = schoolObj.lat;
@@ -1652,7 +1732,7 @@
             const morningTbody = document.getElementById('driver-tour-students-tbody');
             morningTbody.innerHTML = '';
             schedule.morning.forEach(stop => {
-                let isSchoolArrival = stop.name.includes("Ankunft ");
+                let isSchoolArrival = stop.name.includes("Ankunft Schule");
                 let isSickStop = !isSchoolArrival && appData.sickStudents.some(sName => {
                     const baseStudentName = cleanStudentName(sName);
                     return stop.name.startsWith(baseStudentName + " ") || stop.name === baseStudentName;

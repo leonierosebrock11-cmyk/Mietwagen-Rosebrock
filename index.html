@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand (Max-Miles)</title>
+    <title>Mietwagenverkehr Rosebrock – Dispositions- und Optimierungsleitstand</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -182,7 +182,7 @@
             display: inline-block;
             text-align: center;
         }
-        
+
         .btn-danger { background-color: var(--danger-color); color: white; }
         .btn-success { background-color: var(--success-color); color: white; }
         .btn-warning { background-color: var(--warning-color); color: white; }
@@ -304,7 +304,7 @@
     <header>
         <div>
             <h1>Mietwagenverkehr Rosebrock</h1>
-            <p>Dispositionsleitstand – Max-Km & 45/90-Min-Zeitschranken</p>
+            <p>Dispositionsleitstand – Gewinnoptimierte Touren & 45/90-Min-Zeitschranken</p>
         </div>
         <div class="time-display" id="live-clock">--.--.----, --:--:--</div>
     </header>
@@ -315,12 +315,12 @@
         <div id="home-view" class="view active">
             <h2 style="font-size: 1.1rem; margin-bottom: 5px;">Auswahl des Portals</h2>
             <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 20px;">Wählen Sie Ihren Login-Bereich:</p>
-            
+
             <div class="portal-grid">
                 <!-- Inhaber -->
                 <div class="portal-card admin">
                     <h3>Inhaber & Zentrale</h3>
-                    <p>Dispositionsleitstand, Kilometer-Maximierungs-VRP & Admin-Steuerung.</p>
+                    <p>Dispositionsleitstand, gewinnoptimierte Routen & Admin-Steuerung.</p>
                     <input type="text" class="portal-input" id="admin-user" value="admin" placeholder="Benutzername">
                     <input type="password" class="portal-input" id="admin-pass" value="demo123" placeholder="Passwort">
                     <button class="portal-btn" onclick="loginAdmin()">Admin-Login</button>
@@ -364,7 +364,7 @@
             <div class="kpi-container">
                 <div class="kpi-card">
                     <h4>Schüler heute</h4>
-                    <div class="kpi-value" id="kpi-students">80 aktiv / 81 Gesamt</div>
+                    <div class="kpi-value" id="kpi-students">81 aktiv / 81 Gesamt</div>
                 </div>
                 <div class="kpi-card">
                     <h4>Aktive Fahrzeuge</h4>
@@ -372,11 +372,19 @@
                 </div>
                 <div class="kpi-card">
                     <h4>Fahrer verfügbar</h4>
-                    <div class="kpi-value" id="kpi-drivers">22 verfügbar / 23 Gesamt</div>
+                    <div class="kpi-value" id="kpi-drivers">23 verfügbar / 23 Gesamt</div>
                 </div>
                 <div class="kpi-card">
-                    <h4>Nettogewinn (Max-Km)</h4>
+                    <h4>Tagesgewinn</h4>
                     <div class="kpi-value" id="kpi-profit">-- €</div>
+                </div>
+            </div>
+
+            <!-- Gewinnübersicht -->
+            <div class="admin-box" style="border-left: 4px solid #38a169; background: #f0fff4;">
+                <h3 style="color: #22543d;">💰 Tagesgewinn & Kalkulation (inkl. 10.000 € Werkstatt/Monat)</h3>
+                <div id="profit-summary" style="font-size: 0.9rem; color: #1a202c;">
+                    Wird berechnet...
                 </div>
             </div>
 
@@ -388,28 +396,16 @@
                 </div>
             </div>
 
-            <!-- Max-Km & Zeitfenster-Optimierung Box -->
+            <!-- Touren- & Zeitfenster-Optimierung Box -->
             <div class="admin-box" style="border-left: 4px solid #805ad5; background: #faf5ff;">
-                <h3 style="color: #6b46c1;">⚡ Max-Km & Zeitfenster-Optimierung</h3>
-                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Maximiert Abrechnungs-km unter strenger Einhaltung von max. 45 Min (Grundschule) & 90 Min (Sek 1) Fahrzeit:</p>
+                <h3 style="color: #6b46c1;">⚡ Touren- & Zeitfenster-Optimierung</h3>
+                <p style="font-size: 0.8rem; color: #4a5568; margin-bottom: 10px;">Ermittelt die gewinnmaximale Tourenzuordnung unter Einhaltung von Kapazität, Rollstuhlpflicht sowie max. 45 Min (Grundschule) und 90 Min (Sek 1) Fahrzeit:</p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Optimierung starten</button>
+                    <button class="btn btn-purple" onclick="runPDVRPTWOptimization()">🚀 Beste Route berechnen</button>
                     <button class="btn btn-warning" onclick="simulateScenario('driver_sick')">Simuliere: Fahrer krank</button>
                     <button class="btn btn-warning" onclick="simulateScenario('student_sick')">Simuliere: Schüler krank</button>
                     <button class="btn btn-danger" onclick="simulateScenario('school_closed')">Simuliere: Schulausfall</button>
                     <button class="btn btn-primary" onclick="resetSystemData()">🔄 Daten zurücksetzen</button>
-                </div>
-            </div>
-
-            <div class="admin-box" id="comparison-box" style="display: none; border-left: 4px solid #319795; background: #e6fffa;">
-                <h3 style="color: #234e52;">📊 Wirtschaftlichkeitsvergleich (Direkt vs. Max-Km-Routen)</h3>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr><th>Metrik</th><th>Direkte Fahrt (Minimal)</th><th>Max-Km-Optimiert (Umsatzfokus)</th><th>Effekt / Mehrerlös</th></tr>
-                        </thead>
-                        <tbody id="comparison-tbody"></tbody>
-                    </table>
                 </div>
             </div>
 
@@ -432,7 +428,7 @@
                 <div class="table-responsive">
                     <table id="admin-drivers-table">
                         <thead>
-                            <tr><th>ID</th><th>Name</th><th>Zugew. Fahrzeug</th><th>Zugewiesene Kinder</th><th>Status</th><th>Aktion</th></tr>
+                            <tr><th>ID</th><th>Name</th><th>Zugew. Fahrzeug</th><th>Zugewiesene Kinder</th><th>Strecke</th><th>Status</th><th>Aktion</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -442,7 +438,7 @@
             <div class="admin-box">
                 <h3>Vollständiges Dispositionsprotokoll</h3>
                 <div class="log-box" id="dispatch-log">
-                    [07:00:00] System initialisiert. Max-Miles & Zeitfenster Engine bereit.<br>
+                    [07:00:00] System initialisiert. Gewinnoptimale Touren-Engine bereit.<br>
                 </div>
             </div>
         </div>
@@ -555,7 +551,7 @@
         <div id="school-view" class="view">
             <button class="back-btn" onclick="showView('home-view')">← Zurück zur Übersicht</button>
             <h2 class="section-title" id="school-view-title">Schul-Portal</h2>
-            
+
             <div class="admin-box">
                 <h3>Erwartete Schulkinderankünfte</h3>
                 <div class="table-responsive">
@@ -601,12 +597,19 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v29';
+        const STORAGE_KEY = 'rosebrock_app_data_profit_workshop10k_v30';
 
         const appData = {
             settings: {
                 depot: { id: "DEP-01", name: "Betriebshof Hannover-Mitte", lat: 52.3759, lon: 9.7320 },
-                costs: { pricePerKm: 2.10, fuelCostPerKm: 0.14, monthlyFixedPersonnel: 33000, workingDaysPerMonth: 20, vehicleWearPerKm: 0.00 }
+                costs: {
+                    pricePerKm: 2.10,
+                    fuelCostPerKm: 0.14,
+                    monthlyFixedPersonnel: 33000,
+                    monthlyWorkshopCost: 10000,
+                    workingDaysPerMonth: 20,
+                    vehicleWearPerKm: 0.00
+                }
             },
             vehicles: [],
             drivers: [],
@@ -621,7 +624,8 @@
             sickStudents: [],
             driverRequests: [],
             events: [],
-            lastMorningCheckDate: ""
+            lastMorningCheckDate: "",
+            lastProfitMetrics: null
         };
 
         let currentLoggedInDriver = null;
@@ -645,6 +649,7 @@
                     appData.driverRequests = parsed.driverRequests || [];
                     appData.events = parsed.events || [];
                     appData.lastMorningCheckDate = parsed.lastMorningCheckDate || "";
+                    appData.lastProfitMetrics = parsed.lastProfitMetrics || null;
                     if (appData.students.length === 81 && appData.drivers.length === 23 && appData.vehicles.length === 20) {
                         return true;
                     }
@@ -690,7 +695,7 @@
         }
 
         function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // km
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -856,7 +861,7 @@
                 let month = parseInt(match[2]) - 1;
                 let year = match[3] ? parseInt(match[3]) : currentYear;
                 if (year < 100) year += 2000;
-                
+
                 if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
                     dates.push(new Date(year, month, day));
                 }
@@ -879,9 +884,9 @@
             const driver = appData.drivers.find(d => d.name === driverName);
             if (driver && driver.status === 'krank') return true;
 
-            const relevantRequests = appData.driverRequests.filter(r => 
-                r.driverName === driverName && 
-                (r.type === 'Urlaubsantrag' || r.type.includes('Krankmeldung')) && 
+            const relevantRequests = appData.driverRequests.filter(r =>
+                r.driverName === driverName &&
+                (r.type === 'Urlaubsantrag' || r.type.includes('Krankmeldung')) &&
                 r.status.includes('genehmigt')
             );
             for (let req of relevantRequests) {
@@ -902,9 +907,9 @@
 
             const firstNames = ["Hans", "Stefan", "Michael", "Thomas", "Andreas", "Christian", "Frank", "Markus", "Bernd", "Uwe", "Jürgen", "Peter", "Klaus", "Dieter", "Wolfgang", "Matthias", "Jörg", "Holger", "Ralf", "Dirk", "Manfred", "Heinz", "Gerhard"];
             const lastNames = ["Rosebrock", "Meyer", "Schmidt", "Weber", "Schulze", "Wagner", "Becker", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Krüger", "Hofmann", "Hartmann", "Lange", "Werner"];
-            
+
             const streetNames = [
-                "Lister Meile 14", "Kröpcke 3", "Goseriede 8", "Schillerstraße 12", "Celler Straße 22", 
+                "Lister Meile 14", "Kröpcke 3", "Goseriede 8", "Schillerstraße 12", "Celler Straße 22",
                 "Braunschweiger Straße 5", "Hildesheimer Straße 104", "Vahrenwalder Straße 55", "Georgstraße 18",
                 "Erich-Kästner-Weg 4", "Theodor-Storm-Straße 7", "Goethestraße 21", "Schillerstraße 9", "Bahnhofstraße 45",
                 "Fritzenwiese 12", "Mühlenstraße 8", "Ackerstraße 3", "Klaus-Groth-Weg 11", "Triftstraße 19"
@@ -972,19 +977,19 @@
             const studentNames = ["Maximilian Müller", "Alexander Schmidt", "Paul Schneider", "Elias Fischer", "Ben Weber", "Noah Meyer", "Leon Wagner", "Louis Becker", "Felix Schulz", "Henry Hoffmann", "Emilia Schäfer", "Hannah Koch", "Sophia Bauer", "Emma Richter", "Mia Klein", "Hanna Wolf", "Lina Schröder", "Mila Neumann", "Ella Schwarz", "Klara Zimmermann", "Jonas Braun", "Lukas Krüger", "Finn Hofmann", "Tim Hartmann", "David Lange"];
             const impairmentTypes = ["Keine Beeinträchtigung", "Körperliche Beeinträchtigung", "Geistige Beeinträchtigung", "Eingeschränkte Mobilität"];
             const attendantSources = ["Extern (Schulbegleitung / Medizinisch)", "Intern (Zusätzliche Reservekraft)"];
-            
+
             for (let i = 1; i <= 81; i++) {
                 let isGrundschuleStudent = (i <= 10);
-                let schoolObj = isGrundschuleStudent 
-                    ? appData.schools[(i % 2)] 
+                let schoolObj = isGrundschuleStudent
+                    ? appData.schools[(i % 2)]
                     : appData.schools[2 + (i % 2)];
-                
+
                 let classNum = isGrundschuleStudent ? ((i % 4) + 1) : (((i - 11) % 6) + 5);
                 let classStr = `Klasse ${classNum}`;
 
                 let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
                 let famName = "Familie " + sName.split(" ")[1];
-                
+
                 let latOffset = (Math.sin(i) * 0.035);
                 let lonOffset = (Math.cos(i) * 0.035);
 
@@ -1038,7 +1043,7 @@
         }
 
         function runPDVRPTWOptimization(isInitial = false) {
-            logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
+            logEvent("Gewinnoptimale Tourenberechnung gestartet...");
 
             appData.drivers.forEach(d => d.assignedStudents = []);
 
@@ -1107,7 +1112,6 @@
                 }
             };
 
-            // Rollstuhlpflichtige Kinder zuerst zuweisen, danach alle übrigen
             const orderedStudentsForAssignment = [
                 ...activeStudents.filter(s => requiresWheelchairVehicle(s)),
                 ...activeStudents.filter(s => !requiresWheelchairVehicle(s))
@@ -1129,7 +1133,6 @@
                     }
                 }
 
-                // Falls alle Zeitfenster-Kombinationen erschöpft sind: Fahrzeugtyp & Kapazität strikt wahren
                 if (!assigned) {
                     for (let offset = 0; offset < activeDrivers.length; offset++) {
                         const idx = (cursor + offset) % activeDrivers.length;
@@ -1148,71 +1151,41 @@
                 }
             });
 
-            // Reale optimierte Flottenkilometer aus allen erzeugten Touren berechnen
             let totalOptimizedKm = 0;
             activeDrivers.forEach(d => {
                 totalOptimizedKm += computeActualRouteKmForDriver(d);
             });
 
-            // Direktfahrten-Referenz (pro Schüler Hin- und Rückweg ab jeweiliger Fahrer-Wohnadresse)
-            let totalBaselineKm = 0;
-            activeStudents.forEach(s => {
-                let schObj = appData.schools.find(sch => sch.name === s.school) || appData.schools[0];
-                let assignedDrv = activeDrivers.find(d => d.assignedStudents.includes(s.id)) || activeDrivers[0];
-                let home = getDriverOrigin(assignedDrv);
-                let distHomeToChild = calculateHaversineDistance(home.lat, home.lon, s.lat, s.lon) * 1.25;
-                let distChildToSchool = calculateHaversineDistance(s.lat, s.lon, schObj.lat, schObj.lon) * 1.25;
-                totalBaselineKm += (distHomeToChild + distChildToSchool) * 2;
-            });
+            const pricePerKm = appData.settings.costs.pricePerKm;
+            const fuelCostPerKm = appData.settings.costs.fuelCostPerKm;
+            const workingDays = appData.settings.costs.workingDaysPerMonth;
+            const dailyPersonnelFixedCost = appData.settings.costs.monthlyFixedPersonnel / workingDays;
+            const dailyWorkshopFixedCost = appData.settings.costs.monthlyWorkshopCost / workingDays;
+            const totalDailyFixedCost = dailyPersonnelFixedCost + dailyWorkshopFixedCost;
 
-            // Kalkulationsparameter:
-            // - Erlös: 2,10 €/km
-            // - Variable Kosten: Tankkosten 0,14 €/km (kein laufender Verschleiß pro km, da monatliche Werkstatt-Fixkosten)
-            // - Fahrer-Tarifgehalt (Fixkosten): 33.000 €/Monat / 20 Schultage (Mo-Fr) = 1.650,00 €/Tag
-            const effectivePricePerKm = appData.settings.costs.pricePerKm; // 2.10 €/km
-            const variableCostPerKm = appData.settings.costs.fuelCostPerKm; // 0.14 €/km
-            const dailyPersonnelFixedCost = appData.settings.costs.monthlyFixedPersonnel / appData.settings.costs.workingDaysPerMonth; // 1.650,00 €/Tag
+            const totalRevenue = totalOptimizedKm * pricePerKm;
+            const totalFuelCosts = totalOptimizedKm * fuelCostPerKm;
+            const dailyContribution = totalRevenue - totalFuelCosts;
+            const netProfit = dailyContribution - totalDailyFixedCost;
 
-            let baselineRevenue = totalBaselineKm * effectivePricePerKm;
-            let baselineFuelCosts = totalBaselineKm * variableCostPerKm;
-            let baselineContribution = baselineRevenue - baselineFuelCosts;
-            let baselineProfit = baselineContribution - dailyPersonnelFixedCost;
+            appData.lastProfitMetrics = {
+                totalKm: totalOptimizedKm,
+                totalRevenue,
+                totalFuelCosts,
+                dailyContribution,
+                dailyPersonnelFixedCost,
+                dailyWorkshopFixedCost,
+                totalDailyFixedCost,
+                netProfit
+            };
 
-            let totalRevenue = totalOptimizedKm * effectivePricePerKm;
-            let totalFuelCosts = totalOptimizedKm * variableCostPerKm;
-            let dailyContribution = totalRevenue - totalFuelCosts;
-            let netProfit = dailyContribution - dailyPersonnelFixedCost;
+            const kpiProfit = document.getElementById('kpi-profit');
+            if (kpiProfit) kpiProfit.textContent = netProfit.toFixed(2) + ' €';
 
-            document.getElementById('kpi-profit').textContent = netProfit.toFixed(2) + ' €';
-
-            const compBox = document.getElementById('comparison-box');
-            const compTbody = document.getElementById('comparison-tbody');
-            if (compBox && compTbody) {
-                compBox.style.display = 'block';
-                let kmDiff = totalOptimizedKm - totalBaselineKm;
-                let kmPct = totalBaselineKm > 0 ? ((kmDiff / totalBaselineKm) * 100) : 0;
-                let extraRevenue = totalRevenue - baselineRevenue;
-                let contribDiff = dailyContribution - baselineContribution;
-                let profitDiff = netProfit - baselineProfit;
-                const kmSign = kmDiff >= 0 ? "+" : "";
-                const revSign = extraRevenue >= 0 ? "+" : "";
-                const contribSign = contribDiff >= 0 ? "+" : "";
-                const profSign = profitDiff >= 0 ? "+" : "";
-
-                compTbody.innerHTML = `
-                    <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:${kmDiff >= 0 ? 'green' : '#2b6cb0'}; font-weight:600;">${kmSign}${kmDiff.toFixed(1)} km (${kmSign}${kmPct.toFixed(1)}% reale Touren-Km)</span></td></tr>
-                    <tr><td>Tages-Umsatz (2,10 €/km)</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:${extraRevenue >= 0 ? 'green' : '#c53030'};">${revSign}${extraRevenue.toFixed(2)} € Erlöseffekt</strong></td></tr>
-                    <tr><td>Tankkosten (0,14 €/km)</td><td>${baselineFuelCosts.toFixed(2)} €</td><td>${totalFuelCosts.toFixed(2)} €</td><td>${(totalFuelCosts - baselineFuelCosts) >= 0 ? '+' : ''}${(totalFuelCosts - baselineFuelCosts).toFixed(2)} €</td></tr>
-                    <tr><td>Deckungsbeitrag (vor Tariflohn)</td><td>${baselineContribution.toFixed(2)} €</td><td><strong style="color:#2b6cb0;">${dailyContribution.toFixed(2)} €</strong></td><td><strong style="color:${contribDiff >= 0 ? 'green' : '#c53030'};">${contribSign}${contribDiff.toFixed(2)} €</strong></td></tr>
-                    <tr><td>Fahrer-Tarifanteil (33.000 € / 20 Tage)</td><td>${dailyPersonnelFixedCost.toFixed(2)} €</td><td>${dailyPersonnelFixedCost.toFixed(2)} €</td><td>0.00 € (Fixkosten/Tag)</td></tr>
-                    <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:${netProfit >= 0 ? 'green' : '#c53030'};">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:${profitDiff >= 0 ? 'green' : '#c53030'};">${profSign}${profitDiff.toFixed(2)} € Gewinneffekt</strong></td></tr>
-                `;
-            }
-
-            logEvent(`Optimierung beendet. Reale Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €.`);
+            logEvent(`Beste Route berechnet. Strecke: ${totalOptimizedKm.toFixed(1)} km | Tagesgewinn: ${netProfit.toFixed(2)} € (Werkstatt: ${dailyWorkshopFixedCost.toFixed(2)} €/Tag).`);
             saveAppData();
             if (!isInitial) {
-                alert("Optimierung erfolgreich!");
+                alert("Beste Route und Gewinn berechnet!");
                 renderAdminDashboard();
             }
         }
@@ -1539,7 +1512,7 @@
                 currentLoggedInDriver.status = status.toLowerCase();
                 document.getElementById('driver-status-text').textContent = `Status: ${status}`;
                 saveAppData();
-                
+
                 if (status.toLowerCase() === 'krank' && prevStatus !== 'krank') {
                     sendTelegramAlert(`🚨 Krankmeldung des Fahrers: *${currentLoggedInDriver.name}* hat sich krankgemeldet.`);
                 }
@@ -1663,6 +1636,28 @@
             const kpiDrivers = document.getElementById('kpi-drivers');
             if (kpiDrivers) kpiDrivers.textContent = `${availableDriversCount} verfügbar / ${totalDrivers} Gesamt`;
 
+            const m = appData.lastProfitMetrics;
+            if (m) {
+                const kpiProfit = document.getElementById('kpi-profit');
+                if (kpiProfit) kpiProfit.textContent = m.netProfit.toFixed(2) + ' €';
+
+                const profitSummary = document.getElementById('profit-summary');
+                if (profitSummary) {
+                    profitSummary.innerHTML = `
+                        <div style="font-size: 1.35rem; font-weight: 700; color: ${m.netProfit >= 0 ? '#22543d' : '#c53030'}; margin-bottom: 6px;">
+                            Gewinn heute: ${m.netProfit.toFixed(2)} €
+                        </div>
+                        <div style="font-size: 0.82rem; color: #2d3748;">
+                            Strecke: <strong>${m.totalKm.toFixed(1)} km</strong> ·
+                            Umsatz (2,10 €/km): <strong>${m.totalRevenue.toFixed(2)} €</strong> ·
+                            Tankkosten (0,14 €/km): <strong>-${m.totalFuelCosts.toFixed(2)} €</strong> ·
+                            Fahrer-Fixkosten (33.000 €/20d): <strong>-${m.dailyPersonnelFixedCost.toFixed(2)} €</strong> ·
+                            Werkstatt-Fixkosten (10.000 €/20d): <strong>-${m.dailyWorkshopFixedCost.toFixed(2)} €</strong>
+                        </div>
+                    `;
+                }
+            }
+
             const absenceSummary = document.getElementById('admin-absence-summary');
             if (absenceSummary) {
                 let unavailableDrivers = appData.drivers.filter(d => d.status === 'krank' || isDriverUnavailableToday(d.name));
@@ -1719,6 +1714,7 @@
 
                     const veh = d.assignedVehicle ? appData.vehicles.find(v => v.id === d.assignedVehicle) : null;
                     const vehInfo = veh ? `${veh.id} (${veh.type}, ${veh.capacity} Plätze)` : 'Reserve';
+                    const kmVal = computeActualRouteKmForDriver(d);
 
                     const homeInfo = getDriverOrigin(d).address;
                     driverTbody.innerHTML += `
@@ -1727,6 +1723,7 @@
                             <td><strong>${d.name}</strong><br><small style="color:#718096">Vertrag: ${d.monthlyContractHours || 100}h/Monat · Wohnort: ${homeInfo}</small></td>
                             <td>${vehInfo}</td>
                             <td>${activeCount} aktive Kinder</td>
+                            <td>${kmVal.toFixed(1)} km</td>
                             <td>${getDriverStatusDisplay(d)}</td>
                             <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSickAdmin('${d.id}')">Status</button></td>
                         </tr>
@@ -1800,7 +1797,7 @@
             }
 
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
-            
+
             const morningTbody = document.getElementById('driver-tour-students-tbody');
             morningTbody.innerHTML = '';
             schedule.morning.forEach(stop => {
@@ -1911,10 +1908,10 @@
             const pdfVehText = pdfVeh ? `${pdfVeh.id} (${pdfVeh.type}, ${pdfVeh.capacity} Plätze)` : 'Reserve';
             doc.text("Fahrzeug: " + pdfVehText, 20, 38);
             doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 44);
-            
+
             const schedule = getDriverTourSchedule(currentLoggedInDriver);
             let y = 54;
-            
+
             doc.setFont("helvetica", "bold");
             doc.text("1. Morgentour (Hinweg zur Schule):", 20, y);
             y += 7;

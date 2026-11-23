@@ -601,12 +601,12 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v26';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v29';
 
         const appData = {
             settings: {
                 depot: { id: "DEP-01", name: "Betriebshof Hannover-Mitte", lat: 52.3759, lon: 9.7320 },
-                costs: { pricePerKm: 2.10, fuelCostPerKm: 0.42, personnelCostPerHour: 22.50, vehicleWearPerKm: 0.30 }
+                costs: { pricePerKm: 2.10, fuelCostPerKm: 0.14, monthlyFixedPersonnel: 33000, workingDaysPerMonth: 20, vehicleWearPerKm: 0.00 }
             },
             vehicles: [],
             drivers: [],
@@ -651,6 +651,38 @@
                 }
             } catch (e) {}
             return false;
+        }
+
+        function normalizeStudentMatchName(raw) {
+            return String(raw || "")
+                .replace(/\s*\([^)]*\)/g, "")
+                .split(/\s*(?:-|–|—|\||\/|,)\s*/)[0]
+                .trim()
+                .toLowerCase();
+        }
+
+        function isStudentSick(student) {
+            if (!student || !Array.isArray(appData.sickStudents) || appData.sickStudents.length === 0) {
+                return false;
+            }
+            const fullNameLower = String(student.name || "").trim().toLowerCase();
+            const cleanedLower = cleanStudentName(student.name || "").trim().toLowerCase();
+            const baseLower = normalizeStudentMatchName(student.name || "");
+
+            return appData.sickStudents.some(entry => {
+                const eStr = String(entry || "").trim();
+                if (!eStr) return false;
+                const eLower = eStr.toLowerCase();
+                const eCleaned = cleanStudentName(eStr).trim().toLowerCase();
+                const eBase = normalizeStudentMatchName(eStr);
+
+                return (
+                    eLower === fullNameLower ||
+                    eLower === cleanedLower ||
+                    eCleaned === cleanedLower ||
+                    (eBase.length > 0 && (eBase === baseLower || eLower.startsWith(cleanedLower + " ") || eLower.startsWith(fullNameLower + " ")))
+                );
+            });
         }
 
         function cleanStudentName(name) {
@@ -734,7 +766,7 @@
             if (!driver || !driver.assignedStudents) return [];
             let activeStudents = driver.assignedStudents
                 .map(sId => appData.students.find(item => item.id === sId))
-                .filter(s => s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school));
+                .filter(s => s && !isStudentSick(s) && !appData.closedSchools.some(cs => cs.name === s.school));
 
             if (activeStudents.length <= 1) return activeStudents;
 
@@ -890,29 +922,29 @@
             }
 
             const driverHomeAddresses = [
-                { addr: "Kirchstraße 12, 31515 Wunstorf", lat: 52.4235, lon: 9.4332 },
                 { addr: "Am Markt 7, 31303 Burgdorf", lat: 52.4486, lon: 10.0068 },
-                { addr: "Lindenallee 19, 30974 Wennigsen", lat: 52.2738, lon: 9.5724 },
-                { addr: "Hauptstraße 34, 31552 Rodenberg", lat: 52.3135, lon: 9.3547 },
-                { addr: "Bahnhofsplatz 5, 31675 Bückeburg", lat: 52.2614, lon: 9.0481 },
                 { addr: "Gartenweg 11, 31275 Lehrte", lat: 52.3728, lon: 9.9781 },
-                { addr: "Feldstraße 26, 30926 Seelze", lat: 52.3958, lon: 9.5982 },
-                { addr: "Schulweg 3, 30989 Gehrden", lat: 52.3143, lon: 9.6004 },
-                { addr: "Dorfstraße 18, 31535 Neustadt a. Rbge.", lat: 52.5056, lon: 9.4631 },
                 { addr: "Waldstraße 42, 30938 Burgwedel", lat: 52.4926, lon: 9.8562 },
                 { addr: "Mühlenweg 9, 31319 Sehnde", lat: 52.3176, lon: 9.9634 },
-                { addr: "Wiesenstraße 15, 30952 Ronnenberg", lat: 52.3189, lon: 9.6441 },
-                { addr: "Birkenweg 22, 30823 Garbsen", lat: 52.4198, lon: 9.5991 },
                 { addr: "Rosenstraße 6, 30853 Langenhagen", lat: 52.4397, lon: 9.7405 },
-                { addr: "Eichenkamp 14, 31542 Bad Nenndorf", lat: 52.3362, lon: 9.3792 },
+                { addr: "Feldstraße 26, 30926 Seelze", lat: 52.3958, lon: 9.5982 },
+                { addr: "Birkenweg 22, 30823 Garbsen", lat: 52.4198, lon: 9.5991 },
+                { addr: "Wiesenstraße 15, 30952 Ronnenberg", lat: 52.3189, lon: 9.6441 },
                 { addr: "Kastanienweg 2, 30966 Hemmingen", lat: 52.3274, lon: 9.7342 },
-                { addr: "Teichstraße 29, 31683 Obernkirchen", lat: 52.2698, lon: 9.1246 },
-                { addr: "Bergstraße 17, 31547 Rehburg-Loccum", lat: 52.4635, lon: 9.2178 },
+                { addr: "Schulweg 3, 30989 Gehrden", lat: 52.3143, lon: 9.6004 },
+                { addr: "Lindenallee 19, 30974 Wennigsen", lat: 52.2738, lon: 9.5724 },
                 { addr: "Auenweg 8, 30890 Barsinghausen", lat: 52.3046, lon: 9.4596 },
+                { addr: "Kirchstraße 12, 31515 Wunstorf", lat: 52.4235, lon: 9.4332 },
+                { addr: "Dorfstraße 18, 31535 Neustadt a. Rbge.", lat: 52.5056, lon: 9.4631 },
+                { addr: "Nordweg 13, 30900 Wedemark", lat: 52.5231, lon: 9.7423 },
                 { addr: "Südfeld 11, 31224 Peine", lat: 52.3204, lon: 10.2335 },
                 { addr: "Westring 47, 29221 Celle", lat: 52.6251, lon: 10.0718 },
                 { addr: "Oststraße 24, 31134 Hildesheim", lat: 52.1548, lon: 9.9579 },
-                { addr: "Nordweg 13, 30900 Wedemark", lat: 52.5231, lon: 9.7423 }
+                { addr: "Eichenkamp 14, 31542 Bad Nenndorf", lat: 52.3362, lon: 9.3792 },
+                { addr: "Hauptstraße 34, 31552 Rodenberg", lat: 52.3135, lon: 9.3547 },
+                { addr: "Hannoversche Straße 19, 31303 Burgdorf", lat: 52.4380, lon: 9.9980 },
+                { addr: "Celler Straße 58, 31275 Lehrte", lat: 52.3840, lon: 9.9850 },
+                { addr: "Bremer Straße 14, 30900 Wedemark", lat: 52.5120, lon: 9.7280 }
             ];
 
             for (let i = 1; i <= 23; i++) {
@@ -1031,7 +1063,7 @@
             }
 
             let activeStudents = appData.students.filter(s => {
-                const isSick = appData.sickStudents.includes(s.name);
+                const isSick = isStudentSick(s);
                 const isSchoolClosed = appData.closedSchools.some(cs => cs.name === s.school);
                 return !isSick && !isSchoolClosed;
             });
@@ -1133,38 +1165,23 @@
                 totalBaselineKm += (distHomeToChild + distChildToSchool) * 2;
             });
 
-            // Realistische Beförderungstarife & Einsatzkosten für rentable Gewinnerzielung im Schülerverkehr
-            const effectivePricePerKm = Math.max(appData.settings.costs.pricePerKm, 2.85);
-            const variableCostPerKm = appData.settings.costs.fuelCostPerKm + appData.settings.costs.vehicleWearPerKm; // 0.72 €/km
-            const hourlyRate = appData.settings.costs.personnelCostPerHour; // 22.50 €/h
-
-            let dailyPersonnelCosts = 0;
-            activeDrivers.forEach(d => {
-                const drvKm = computeActualRouteKmForDriver(d);
-                if (drvKm > 0) {
-                    // Tägliche Einsatzzeit für Hin- und Rücktour (inkl. Halte- und Vorbereitungszeit)
-                    const shiftHours = Math.min(5.0, Math.max(1.5, (drvKm / 36) + 0.5));
-                    dailyPersonnelCosts += shiftHours * hourlyRate;
-                }
-            });
-
-            const baselinePersonnelCosts = activeDrivers.filter(d => computeActualRouteKmForDriver(d) > 0).length * (2.5 * hourlyRate);
+            // Kalkulationsparameter:
+            // - Erlös: 2,10 €/km
+            // - Variable Kosten: Tankkosten 0,14 €/km (kein laufender Verschleiß pro km, da monatliche Werkstatt-Fixkosten)
+            // - Fahrer-Tarifgehalt (Fixkosten): 33.000 €/Monat / 20 Schultage (Mo-Fr) = 1.650,00 €/Tag
+            const effectivePricePerKm = appData.settings.costs.pricePerKm; // 2.10 €/km
+            const variableCostPerKm = appData.settings.costs.fuelCostPerKm; // 0.14 €/km
+            const dailyPersonnelFixedCost = appData.settings.costs.monthlyFixedPersonnel / appData.settings.costs.workingDaysPerMonth; // 1.650,00 €/Tag
 
             let baselineRevenue = totalBaselineKm * effectivePricePerKm;
-            let baselineCosts = totalBaselineKm * variableCostPerKm + baselinePersonnelCosts;
-            let baselineProfit = baselineRevenue - baselineCosts;
+            let baselineFuelCosts = totalBaselineKm * variableCostPerKm;
+            let baselineContribution = baselineRevenue - baselineFuelCosts;
+            let baselineProfit = baselineContribution - dailyPersonnelFixedCost;
 
             let totalRevenue = totalOptimizedKm * effectivePricePerKm;
-            let totalCosts = totalOptimizedKm * variableCostPerKm + dailyPersonnelCosts;
-            let netProfit = totalRevenue - totalCosts;
-
-            // Sicherheitsgarantie: Falls durch extrem wenige aktive Schüler die Fix-/Personalzeit den Tageserlös übersteigen würde,
-            // wird die Tarif-/Mindestvergütung im Optimierungsmodell so kalkuliert, dass ein positiver Gewinn erzielt wird.
-            if (activeStudents.length > 0 && netProfit <= 0) {
-                const targetProfitMargin = Math.max(120, totalCosts * 0.22);
-                totalRevenue = totalCosts + targetProfitMargin;
-                netProfit = totalRevenue - totalCosts;
-            }
+            let totalFuelCosts = totalOptimizedKm * variableCostPerKm;
+            let dailyContribution = totalRevenue - totalFuelCosts;
+            let netProfit = dailyContribution - dailyPersonnelFixedCost;
 
             document.getElementById('kpi-profit').textContent = netProfit.toFixed(2) + ' €';
 
@@ -1175,15 +1192,20 @@
                 let kmDiff = totalOptimizedKm - totalBaselineKm;
                 let kmPct = totalBaselineKm > 0 ? ((kmDiff / totalBaselineKm) * 100) : 0;
                 let extraRevenue = totalRevenue - baselineRevenue;
+                let contribDiff = dailyContribution - baselineContribution;
                 let profitDiff = netProfit - baselineProfit;
                 const kmSign = kmDiff >= 0 ? "+" : "";
                 const revSign = extraRevenue >= 0 ? "+" : "";
+                const contribSign = contribDiff >= 0 ? "+" : "";
                 const profSign = profitDiff >= 0 ? "+" : "";
 
                 compTbody.innerHTML = `
                     <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:${kmDiff >= 0 ? 'green' : '#2b6cb0'}; font-weight:600;">${kmSign}${kmDiff.toFixed(1)} km (${kmSign}${kmPct.toFixed(1)}% reale Touren-Km)</span></td></tr>
-                    <tr><td>Tages-Umsatz</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:${extraRevenue >= 0 ? 'green' : '#c53030'};">${revSign}${extraRevenue.toFixed(2)} € Erlöseffekt</strong></td></tr>
-                    <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:${profitDiff >= 0 ? 'green' : '#c53030'};">${profSign}${profitDiff.toFixed(2)} € Gewinneffekt</strong></td></tr>
+                    <tr><td>Tages-Umsatz (2,10 €/km)</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:${extraRevenue >= 0 ? 'green' : '#c53030'};">${revSign}${extraRevenue.toFixed(2)} € Erlöseffekt</strong></td></tr>
+                    <tr><td>Tankkosten (0,14 €/km)</td><td>${baselineFuelCosts.toFixed(2)} €</td><td>${totalFuelCosts.toFixed(2)} €</td><td>${(totalFuelCosts - baselineFuelCosts) >= 0 ? '+' : ''}${(totalFuelCosts - baselineFuelCosts).toFixed(2)} €</td></tr>
+                    <tr><td>Deckungsbeitrag (vor Tariflohn)</td><td>${baselineContribution.toFixed(2)} €</td><td><strong style="color:#2b6cb0;">${dailyContribution.toFixed(2)} €</strong></td><td><strong style="color:${contribDiff >= 0 ? 'green' : '#c53030'};">${contribSign}${contribDiff.toFixed(2)} €</strong></td></tr>
+                    <tr><td>Fahrer-Tarifanteil (33.000 € / 20 Tage)</td><td>${dailyPersonnelFixedCost.toFixed(2)} €</td><td>${dailyPersonnelFixedCost.toFixed(2)} €</td><td>0.00 € (Fixkosten/Tag)</td></tr>
+                    <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:${netProfit >= 0 ? 'green' : '#c53030'};">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:${profitDiff >= 0 ? 'green' : '#c53030'};">${profSign}${profitDiff.toFixed(2)} € Gewinneffekt</strong></td></tr>
                 `;
             }
 
@@ -1195,29 +1217,37 @@
             }
         }
 
-        function getGoogleMapsMorningUrl(driver) {
+        function getPrimarySchoolBatchForDriver(driver) {
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return null;
 
             const home = getDriverOrigin(driver);
             const firstStudent = orderedStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
+            const sameSchoolStudents = orderedStudents.filter(s => s.school === schoolObj.name);
+            const batch = sameSchoolStudents.length > 0 ? sameSchoolStudents : [firstStudent];
+            const orderedBatch = orderStudentsFromOrigin(batch, home.lat, home.lon, schoolObj.lat, schoolObj.lon, 0.35);
 
-            let waypointCoords = orderedStudents.map(s => `${s.lat},${s.lon}`).join('|');
+            return { home, schoolObj, orderedBatch };
+        }
+
+        function getGoogleMapsMorningUrl(driver) {
+            const ctx = getPrimarySchoolBatchForDriver(driver);
+            if (!ctx) return null;
+
+            const { home, schoolObj, orderedBatch } = ctx;
+            const waypointCoords = orderedBatch.map(s => `${s.lat},${s.lon}`).join('|');
 
             return `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
         }
 
         function getGoogleMapsReturnUrl(driver) {
-            const orderedStudents = getOrderedActiveStudentsForDriver(driver);
-            if (orderedStudents.length === 0) return null;
+            const ctx = getPrimarySchoolBatchForDriver(driver);
+            if (!ctx) return null;
 
-            const home = getDriverOrigin(driver);
-            const firstStudent = orderedStudents[0];
-            const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
-
-            const returnOrdered = orderStudentsFromOrigin(orderedStudents, schoolObj.lat, schoolObj.lon, home.lat, home.lon, 0.25);
-            let returnWaypoints = returnOrdered.map(s => `${s.lat},${s.lon}`).join('|');
+            const { home, schoolObj, orderedBatch } = ctx;
+            const returnOrdered = orderStudentsFromOrigin(orderedBatch, schoolObj.lat, schoolObj.lon, home.lat, home.lon, 0.25);
+            const returnWaypoints = returnOrdered.map(s => `${s.lat},${s.lon}`).join('|');
 
             return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${home.lat},${home.lon}&waypoints=${returnWaypoints}&travelmode=driving`;
         }
@@ -1521,10 +1551,16 @@
 
         function parentReportSick() {
             const select = document.getElementById('parent-child-select');
-            const childName = cleanStudentName(select.value);
-            const matchedStudent = appData.students.find(s => cleanStudentName(s.name) === childName);
-            if (matchedStudent && !appData.sickStudents.includes(matchedStudent.name)) {
-                appData.sickStudents.push(matchedStudent.name);
+            const rawVal = String(select.value || "").trim();
+            const childName = cleanStudentName(rawVal);
+            const matchedStudent = appData.students.find(s =>
+                s.name === rawVal ||
+                cleanStudentName(s.name) === childName ||
+                normalizeStudentMatchName(s.name) === normalizeStudentMatchName(rawVal)
+            );
+            const entryToStore = matchedStudent ? matchedStudent.name : rawVal;
+            if (entryToStore && !appData.sickStudents.includes(entryToStore)) {
+                appData.sickStudents.push(entryToStore);
             }
             runPDVRPTWOptimization(true);
             saveAppData();
@@ -1609,7 +1645,7 @@
         function renderAdminDashboard() {
             const totalStudents = appData.students.length;
             const activeStudentsCount = appData.students.filter(s => {
-                const isSick = appData.sickStudents.includes(s.name);
+                const isSick = isStudentSick(s);
                 const isSchoolClosed = appData.closedSchools.some(cs => cs.name === s.school);
                 return !isSick && !isSchoolClosed;
             }).length;
@@ -1678,7 +1714,7 @@
                 appData.drivers.forEach(d => {
                     let activeCount = d.assignedStudents.filter(sId => {
                         const s = appData.students.find(item => item.id === sId);
-                        return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
+                        return s && !isStudentSick(s) && !appData.closedSchools.some(cs => cs.name === s.school);
                     }).length;
 
                     const veh = d.assignedVehicle ? appData.vehicles.find(v => v.id === d.assignedVehicle) : null;
@@ -1809,7 +1845,7 @@
                 statusBox.style.marginTop = '12px';
                 document.getElementById('parent-view').appendChild(statusBox);
             }
-            const activeSick = listToShow.filter(st => appData.sickStudents.includes(st.name));
+            const activeSick = listToShow.filter(st => isStudentSick(st));
             if (activeSick.length === 0) {
                 statusBox.innerHTML = `<h3>Aktueller Fahrstatus</h3><p style="font-size:0.85rem; color:#2f855a;">Alle Kinder der Familie sind für die heutige Fahrt aktiv eingeteilt.</p>`;
             } else {

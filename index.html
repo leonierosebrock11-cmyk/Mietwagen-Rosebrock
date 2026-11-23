@@ -601,7 +601,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v25';
+        const STORAGE_KEY = 'rosebrock_app_data_pdvrptw_maxmiles_v26';
 
         const appData = {
             settings: {
@@ -715,6 +715,21 @@
             return true;
         }
 
+        function getDriverOrigin(driver) {
+            if (driver && typeof driver.homeLat === "number" && typeof driver.homeLon === "number") {
+                return {
+                    lat: driver.homeLat,
+                    lon: driver.homeLon,
+                    address: driver.homeAddress || appData.settings.depot.name
+                };
+            }
+            return {
+                lat: appData.settings.depot.lat,
+                lon: appData.settings.depot.lon,
+                address: appData.settings.depot.name
+            };
+        }
+
         function getOrderedActiveStudentsForDriver(driver) {
             if (!driver || !driver.assignedStudents) return [];
             let activeStudents = driver.assignedStudents
@@ -723,9 +738,10 @@
 
             if (activeStudents.length <= 1) return activeStudents;
 
+            const origin = getDriverOrigin(driver);
             let orderedAll = [];
-            let curLat = appData.settings.depot.lat;
-            let curLon = appData.settings.depot.lon;
+            let curLat = origin.lat;
+            let curLon = origin.lon;
 
             appData.schools.forEach(sch => {
                 const group = activeStudents.filter(s => s.school === sch.name);
@@ -751,7 +767,7 @@
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return 0;
 
-            const depot = appData.settings.depot;
+            const home = getDriverOrigin(driver);
             let totalKm = 0;
 
             const schoolGroups = [];
@@ -765,8 +781,8 @@
                 schoolGroups.push({ school: appData.schools[0], students: extraStudents });
             }
 
-            let curLat = depot.lat;
-            let curLon = depot.lon;
+            let curLat = home.lat;
+            let curLon = home.lon;
 
             schoolGroups.forEach(grp => {
                 const morningSeq = orderStudentsFromOrigin(grp.students, curLat, curLon, grp.school.lat, grp.school.lon, 0.35);
@@ -779,7 +795,7 @@
                 });
                 totalKm += calculateHaversineDistance(mLat, mLon, grp.school.lat, grp.school.lon) * 1.25;
 
-                const afternoonSeq = orderStudentsFromOrigin(grp.students, grp.school.lat, grp.school.lon, depot.lat, depot.lon, 0.25);
+                const afternoonSeq = orderStudentsFromOrigin(grp.students, grp.school.lat, grp.school.lon, home.lat, home.lon, 0.25);
                 let aLat = grp.school.lat;
                 let aLon = grp.school.lon;
                 afternoonSeq.forEach(st => {
@@ -787,10 +803,10 @@
                     aLat = st.lat;
                     aLon = st.lon;
                 });
-                totalKm += calculateHaversineDistance(aLat, aLon, depot.lat, depot.lon) * 1.25;
+                totalKm += calculateHaversineDistance(aLat, aLon, home.lat, home.lon) * 1.25;
 
-                curLat = depot.lat;
-                curLon = depot.lon;
+                curLat = home.lat;
+                curLon = home.lon;
             });
 
             return totalKm;
@@ -873,10 +889,37 @@
                 });
             }
 
+            const driverHomeAddresses = [
+                { addr: "Kirchstraße 12, 31515 Wunstorf", lat: 52.4235, lon: 9.4332 },
+                { addr: "Am Markt 7, 31303 Burgdorf", lat: 52.4486, lon: 10.0068 },
+                { addr: "Lindenallee 19, 30974 Wennigsen", lat: 52.2738, lon: 9.5724 },
+                { addr: "Hauptstraße 34, 31552 Rodenberg", lat: 52.3135, lon: 9.3547 },
+                { addr: "Bahnhofsplatz 5, 31675 Bückeburg", lat: 52.2614, lon: 9.0481 },
+                { addr: "Gartenweg 11, 31275 Lehrte", lat: 52.3728, lon: 9.9781 },
+                { addr: "Feldstraße 26, 30926 Seelze", lat: 52.3958, lon: 9.5982 },
+                { addr: "Schulweg 3, 30989 Gehrden", lat: 52.3143, lon: 9.6004 },
+                { addr: "Dorfstraße 18, 31535 Neustadt a. Rbge.", lat: 52.5056, lon: 9.4631 },
+                { addr: "Waldstraße 42, 30938 Burgwedel", lat: 52.4926, lon: 9.8562 },
+                { addr: "Mühlenweg 9, 31319 Sehnde", lat: 52.3176, lon: 9.9634 },
+                { addr: "Wiesenstraße 15, 30952 Ronnenberg", lat: 52.3189, lon: 9.6441 },
+                { addr: "Birkenweg 22, 30823 Garbsen", lat: 52.4198, lon: 9.5991 },
+                { addr: "Rosenstraße 6, 30853 Langenhagen", lat: 52.4397, lon: 9.7405 },
+                { addr: "Eichenkamp 14, 31542 Bad Nenndorf", lat: 52.3362, lon: 9.3792 },
+                { addr: "Kastanienweg 2, 30966 Hemmingen", lat: 52.3274, lon: 9.7342 },
+                { addr: "Teichstraße 29, 31683 Obernkirchen", lat: 52.2698, lon: 9.1246 },
+                { addr: "Bergstraße 17, 31547 Rehburg-Loccum", lat: 52.4635, lon: 9.2178 },
+                { addr: "Auenweg 8, 30890 Barsinghausen", lat: 52.3046, lon: 9.4596 },
+                { addr: "Südfeld 11, 31224 Peine", lat: 52.3204, lon: 10.2335 },
+                { addr: "Westring 47, 29221 Celle", lat: 52.6251, lon: 10.0718 },
+                { addr: "Oststraße 24, 31134 Hildesheim", lat: 52.1548, lon: 9.9579 },
+                { addr: "Nordweg 13, 30900 Wedemark", lat: 52.5231, lon: 9.7423 }
+            ];
+
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
                 let monthlyHours = isRes ? 43 : (i % 2 === 0 ? 120 : 100);
+                let homeObj = driverHomeAddresses[(i - 1) % driverHomeAddresses.length];
 
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
@@ -884,7 +927,10 @@
                     password: drvName.toLowerCase().split(" ")[0] + "123",
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
-                    assignedVehicle: isRes ? null : `V-${i.toString().padStart(2, '0')}`,
+                    assignedVehicle: `V-${(((i - 1) % 20) + 1).toString().padStart(2, '0')}`,
+                    homeAddress: homeObj.addr,
+                    homeLat: homeObj.lat,
+                    homeLon: homeObj.lon,
                     isReserve: isRes,
                     monthlyContractHours: monthlyHours,
                     assignedStudents: []
@@ -937,12 +983,13 @@
             runPDVRPTWOptimization(true);
         }
 
-        function estimateBatchMinutes(batchStudents, school) {
+        function estimateBatchMinutes(batchStudents, school, driver = null) {
             if (!batchStudents || batchStudents.length === 0) return 0;
+            const origin = getDriverOrigin(driver);
             const ordered = orderStudentsFromOrigin(
                 batchStudents,
-                appData.settings.depot.lat,
-                appData.settings.depot.lon,
+                origin.lat,
+                origin.lon,
                 school.lat,
                 school.lon,
                 0.35
@@ -1011,7 +1058,7 @@
                 if (checkTimeWindow) {
                     const maxAllowedMin = school.type === "grundschule" ? 45 : 90;
                     const candidateList = [...getSchoolList(drv, school.name), student];
-                    if (estimateBatchMinutes(candidateList, school) > maxAllowedMin) return false;
+                    if (estimateBatchMinutes(candidateList, school, drv) > maxAllowedMin) return false;
                 }
                 return true;
             };
@@ -1075,13 +1122,15 @@
                 totalOptimizedKm += computeActualRouteKmForDriver(d);
             });
 
-            // Direktfahrten-Referenz (pro Schüler Hin- und Rückweg über Depot)
+            // Direktfahrten-Referenz (pro Schüler Hin- und Rückweg ab jeweiliger Fahrer-Wohnadresse)
             let totalBaselineKm = 0;
             activeStudents.forEach(s => {
                 let schObj = appData.schools.find(sch => sch.name === s.school) || appData.schools[0];
-                let distDepotToChild = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, s.lat, s.lon) * 1.25;
+                let assignedDrv = activeDrivers.find(d => d.assignedStudents.includes(s.id)) || activeDrivers[0];
+                let home = getDriverOrigin(assignedDrv);
+                let distHomeToChild = calculateHaversineDistance(home.lat, home.lon, s.lat, s.lon) * 1.25;
                 let distChildToSchool = calculateHaversineDistance(s.lat, s.lon, schObj.lat, schObj.lon) * 1.25;
-                totalBaselineKm += (distDepotToChild + distChildToSchool) * 2;
+                totalBaselineKm += (distHomeToChild + distChildToSchool) * 2;
             });
 
             // Realistische Beförderungstarife & Einsatzkosten für rentable Gewinnerzielung im Schülerverkehr
@@ -1150,27 +1199,27 @@
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return null;
 
-            const depot = appData.settings.depot;
+            const home = getDriverOrigin(driver);
             const firstStudent = orderedStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
             let waypointCoords = orderedStudents.map(s => `${s.lat},${s.lon}`).join('|');
 
-            return `https://www.google.com/maps/dir/?api=1&origin=${depot.lat},${depot.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
+            return `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
         }
 
         function getGoogleMapsReturnUrl(driver) {
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return null;
 
-            const depot = appData.settings.depot;
+            const home = getDriverOrigin(driver);
             const firstStudent = orderedStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
-            const returnOrdered = orderStudentsFromOrigin(orderedStudents, schoolObj.lat, schoolObj.lon, depot.lat, depot.lon, 0.25);
+            const returnOrdered = orderStudentsFromOrigin(orderedStudents, schoolObj.lat, schoolObj.lon, home.lat, home.lon, 0.25);
             let returnWaypoints = returnOrdered.map(s => `${s.lat},${s.lon}`).join('|');
 
-            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${depot.lat},${depot.lon}&waypoints=${returnWaypoints}&travelmode=driving`;
+            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${home.lat},${home.lon}&waypoints=${returnWaypoints}&travelmode=driving`;
         }
 
         function formatClock(totalMins) {
@@ -1198,8 +1247,9 @@
                 schoolGroups.push({ school: appData.schools[0], students: extraStudents });
             }
 
-            let curOriginLat = appData.settings.depot.lat;
-            let curOriginLon = appData.settings.depot.lon;
+            const home = getDriverOrigin(driver);
+            let curOriginLat = home.lat;
+            let curOriginLon = home.lon;
             let schoolArrivalMinutes = 8 * 60;
             let schoolEndMinutes = 13 * 60;
 
@@ -1266,8 +1316,8 @@
                     grpStudents,
                     schoolObj.lat,
                     schoolObj.lon,
-                    appData.settings.depot.lat,
-                    appData.settings.depot.lon,
+                    home.lat,
+                    home.lon,
                     0.25
                 );
                 let elapsedAfternoon = 0;
@@ -1290,18 +1340,18 @@
                     });
                 });
 
-                const backToDepotDist = calculateHaversineDistance(prevLat, prevLon, appData.settings.depot.lat, appData.settings.depot.lon) * 1.25;
-                elapsedAfternoon += Math.max(2, estimateRoadMinutes(backToDepotDist));
+                const backToHomeDist = calculateHaversineDistance(prevLat, prevLon, home.lat, home.lon) * 1.25;
+                elapsedAfternoon += Math.max(2, estimateRoadMinutes(backToHomeDist));
                 afternoonStops.push({
                     time: formatClock(schoolEndMinutes + elapsedAfternoon),
-                    name: `Rückkehr ${appData.settings.depot.name}`,
-                    address: appData.settings.depot.name,
+                    name: `Rückkehr Wohnadresse (${driver.name})`,
+                    address: home.address,
                     school: schoolObj.name,
                     duration: 0
                 });
 
-                curOriginLat = appData.settings.depot.lat;
-                curOriginLon = appData.settings.depot.lon;
+                curOriginLat = home.lat;
+                curOriginLon = home.lon;
                 schoolArrivalMinutes += 15;
                 schoolEndMinutes += 15;
             });
@@ -1634,10 +1684,11 @@
                     const veh = d.assignedVehicle ? appData.vehicles.find(v => v.id === d.assignedVehicle) : null;
                     const vehInfo = veh ? `${veh.id} (${veh.type}, ${veh.capacity} Plätze)` : 'Reserve';
 
+                    const homeInfo = getDriverOrigin(d).address;
                     driverTbody.innerHTML += `
                         <tr>
                             <td>${d.id}</td>
-                            <td><strong>${d.name}</strong><br><small style="color:#718096">Vertrag: ${d.monthlyContractHours || 100}h/Monat</small></td>
+                            <td><strong>${d.name}</strong><br><small style="color:#718096">Vertrag: ${d.monthlyContractHours || 100}h/Monat · Wohnort: ${homeInfo}</small></td>
                             <td>${vehInfo}</td>
                             <td>${activeCount} aktive Kinder</td>
                             <td>${getDriverStatusDisplay(d)}</td>
@@ -1667,7 +1718,8 @@
             if (!currentLoggedInDriver) return;
             const drvVeh = currentLoggedInDriver.assignedVehicle ? appData.vehicles.find(v => v.id === currentLoggedInDriver.assignedVehicle) : null;
             const drvVehText = drvVeh ? `${drvVeh.id} (${drvVeh.type}, ${drvVeh.capacity} Plätze)` : 'Reserve';
-            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${drvVehText}</strong>`;
+            const drvHomeText = getDriverOrigin(currentLoggedInDriver).address;
+            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Wohnadresse: <strong>${drvHomeText}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${drvVehText}</strong>`;
             document.getElementById('driver-status-text').textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
 
             const myReqTbody = document.getElementById('driver-my-requests-tbody');
@@ -1764,7 +1816,7 @@
                 statusBox.innerHTML = `<h3>Aktive Krankmeldungen</h3>` + activeSick.map(st => `
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; font-size:0.85rem;">
                         <span><strong>${cleanStudentName(st.name)}</strong> – heute abgemeldet</span>
-                        <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="cancelParentSick('${st.name.replace(/'/g, "\\'")}')">Wieder teilnehmen</button>
+                        <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="cancelParentSick('${st.name.replace(/'/g, "\'")}')">Wieder teilnehmen</button>
                     </div>
                 `).join('');
             }
@@ -1786,7 +1838,7 @@
                 const csObj = appData.closedSchools.find(cs => cs.name === currentLoggedInSchool.name);
                 closureBanner.innerHTML = `<div class="admin-box" style="border-left:4px solid #e53e3e; background:#fff5f5; display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <span style="font-size:0.85rem; color:#c53030;"><strong>Schulausfall aktiv:</strong> ${csObj ? csObj.reason : 'Gemeldet'}</span>
-                    <button class="btn btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="reopenSchoolClosure('${currentLoggedInSchool.name.replace(/'/g, "\\'")}')">Ausfall aufheben</button>
+                    <button class="btn btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="reopenSchoolClosure('${currentLoggedInSchool.name.replace(/'/g, "\'")}')">Ausfall aufheben</button>
                 </div>`;
             } else {
                 closureBanner.innerHTML = '';

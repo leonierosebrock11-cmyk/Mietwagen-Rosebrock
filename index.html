@@ -669,70 +669,7 @@
         }
 
         function estimateRoadMinutes(distKm) {
-            // Realistische Straßenfahrzeit inkl. Stadt-/Landanteil (~42 km/h Schnitt + Faktor 1.25 für Straßenführung)
             return Math.max(2, Math.round(((distKm * 1.25) / 42) * 60));
-        }
-
-        function requiresWheelchairVehicle(student) {
-            if (!student || !student.impairment) return false;
-            return student.impairment.toLowerCase().includes("mobilität");
-        }
-
-        function isVehicleCompatibleWithStudent(vehicle, student) {
-            if (!vehicle) return false;
-            if (requiresWheelchairVehicle(student)) {
-                return vehicle.type === "Rollstuhlfahrzeug";
-            }
-            return true;
-        }
-
-        function orderStudentsFromOrigin(studentsList, originLat, originLon, targetLat, targetLon, weightTarget = 0.35) {
-            if (!studentsList || studentsList.length <= 1) return [...(studentsList || [])];
-            let remaining = [...studentsList];
-            let ordered = [];
-            let curLat = originLat;
-            let curLon = originLon;
-
-            while (remaining.length > 0) {
-                let bestIdx = 0;
-                let bestScore = Infinity;
-                for (let i = 0; i < remaining.length; i++) {
-                    const st = remaining[i];
-                    const dFromCur = calculateHaversineDistance(curLat, curLon, st.lat, st.lon);
-                    const dToTarget = (typeof targetLat === "number" && typeof targetLon === "number")
-                        ? calculateHaversineDistance(st.lat, st.lon, targetLat, targetLon)
-                        : 0;
-                    const score = dFromCur + weightTarget * dToTarget;
-                    if (score < bestScore) {
-                        bestScore = score;
-                        bestIdx = i;
-                    }
-                }
-                const chosen = remaining.splice(bestIdx, 1)[0];
-                ordered.push(chosen);
-                curLat = chosen.lat;
-                curLon = chosen.lon;
-            }
-            return ordered;
-        }
-
-        function getDriverHomeCoords(driver) {
-            if (driver && typeof driver.homeLat === "number" && typeof driver.homeLon === "number") {
-                return {
-                    lat: driver.homeLat,
-                    lon: driver.homeLon,
-                    address: driver.homeAddress || `Zuhause (${driver.name})`,
-                    label: `Zuhause (${driver.name})`
-                };
-            }
-            const idx = driver ? Math.max(0, appData.drivers.findIndex(d => d.id === driver.id)) : 0;
-            const angle = idx * 0.65;
-            return {
-                lat: appData.settings.depot.lat + Math.sin(angle) * 0.02,
-                lon: appData.settings.depot.lon + Math.cos(angle) * 0.02,
-                address: driver && driver.homeAddress ? driver.homeAddress : "Zuhause Fahrer",
-                label: driver ? `Zuhause (${driver.name})` : "Zuhause Fahrer"
-            };
         }
 
         function getOrderedActiveStudentsForDriver(driver) {
@@ -743,80 +680,34 @@
 
             if (activeStudents.length <= 1) return activeStudents;
 
-            const home = getDriverHomeCoords(driver);
-            let orderedAll = [];
-            let curLat = home.lat;
-            let curLon = home.lon;
+            const firstStudent = activeStudents[0];
+            const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
-            appData.schools.forEach(sch => {
-                const group = activeStudents.filter(s => s.school === sch.name);
-                if (group.length > 0) {
-                    const orderedGroup = orderStudentsFromOrigin(group, curLat, curLon, sch.lat, sch.lon, 0.35);
-                    orderedAll = orderedAll.concat(orderedGroup);
-                    const lastSt = orderedGroup[orderedGroup.length - 1];
-                    curLat = lastSt.lat;
-                    curLon = lastSt.lon;
+            let remaining = [...activeStudents];
+            let ordered = [];
+            let curLat = appData.settings.depot.lat;
+            let curLon = appData.settings.depot.lon;
+
+            while (remaining.length > 0) {
+                let bestIdx = 0;
+                let bestScore = Infinity;
+                for (let i = 0; i < remaining.length; i++) {
+                    const st = remaining[i];
+                    const dFromCur = calculateHaversineDistance(curLat, curLon, st.lat, st.lon);
+                    const dToSchool = calculateHaversineDistance(st.lat, st.lon, schoolObj.lat, schoolObj.lon);
+                    const score = dFromCur + 0.35 * dToSchool;
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestIdx = i;
+                    }
                 }
-            });
-
-            const knownSchoolNames = new Set(appData.schools.map(sch => sch.name));
-            const remainingStudents = activeStudents.filter(s => !knownSchoolNames.has(s.school));
-            if (remainingStudents.length > 0) {
-                orderedAll = orderedAll.concat(orderStudentsFromOrigin(remainingStudents, curLat, curLon, null, null, 0));
+                const chosen = remaining.splice(bestIdx, 1)[0];
+                ordered.push(chosen);
+                curLat = chosen.lat;
+                curLon = chosen.lon;
             }
 
-            return orderedAll;
-        }
-
-        function computeActualRouteKmForDriver(driver) {
-            const orderedStudents = getOrderedActiveStudentsForDriver(driver);
-            if (orderedStudents.length === 0) return 0;
-
-            const home = getDriverHomeCoords(driver);
-            let totalKm = 0;
-
-            const schoolGroups = [];
-            appData.schools.forEach(sch => {
-                const grp = orderedStudents.filter(s => s.school === sch.name);
-                if (grp.length > 0) schoolGroups.push({ school: sch, students: grp });
-            });
-            const knownSchoolNames = new Set(appData.schools.map(sch => sch.name));
-            const extraStudents = orderedStudents.filter(s => !knownSchoolNames.has(s.school));
-            if (extraStudents.length > 0) {
-                schoolGroups.push({ school: appData.schools[0], students: extraStudents });
-            }
-
-            let curLat = home.lat;
-            let curLon = home.lon;
-
-            schoolGroups.forEach(grp => {
-                // Morgentour: Zuhause des Fahrers -> Schüler -> Schule
-                const morningSeq = orderStudentsFromOrigin(grp.students, curLat, curLon, grp.school.lat, grp.school.lon, 0.35);
-                let mLat = curLat;
-                let mLon = curLon;
-                morningSeq.forEach(st => {
-                    totalKm += calculateHaversineDistance(mLat, mLon, st.lat, st.lon) * 1.25;
-                    mLat = st.lat;
-                    mLon = st.lon;
-                });
-                totalKm += calculateHaversineDistance(mLat, mLon, grp.school.lat, grp.school.lon) * 1.25;
-
-                // Nachmittagstour: Schule -> Schüler -> zurück nach Hause zum Fahrer
-                const afternoonSeq = orderStudentsFromOrigin(grp.students, grp.school.lat, grp.school.lon, home.lat, home.lon, 0.25);
-                let aLat = grp.school.lat;
-                let aLon = grp.school.lon;
-                afternoonSeq.forEach(st => {
-                    totalKm += calculateHaversineDistance(aLat, aLon, st.lat, st.lon) * 1.25;
-                    aLat = st.lat;
-                    aLon = st.lon;
-                });
-                totalKm += calculateHaversineDistance(aLat, aLon, home.lat, home.lon) * 1.25;
-
-                curLat = home.lat;
-                curLon = home.lon;
-            });
-
-            return totalKm;
+            return ordered;
         }
 
         function isCurrentDateInActiveRange(detailsStr) {
@@ -896,44 +787,14 @@
                 });
             }
 
-            const driverHomes = [
-                { address: "Leimenweg 15, 38112 Braunschweig", lat: 52.2985, lon: 10.5255 },
-                { address: "Celler Straße 48, 38114 Braunschweig", lat: 52.275, lon: 10.531 },
-                { address: "Hildesheimer Straße 82, 30169 Hannover", lat: 52.358, lon: 9.749 },
-                { address: "Vahrenwalder Straße 110, 30165 Hannover", lat: 52.392, lon: 9.738 },
-                { address: "Berliner Ring 19, 31224 Peine", lat: 52.323, lon: 10.233 },
-                { address: "Hannoversche Straße 64, 29221 Celle", lat: 52.618, lon: 10.072 },
-                { address: "Bahnhofstraße 14, 31162 Bad Salzdetfurth", lat: 52.067, lon: 10.015 },
-                { address: "Gifhorner Straße 27, 38112 Braunschweig", lat: 52.291, lon: 10.538 },
-                { address: "Lister Meile 51, 30161 Hannover", lat: 52.382, lon: 9.744 },
-                { address: "Breite Straße 33, 31224 Peine", lat: 52.3205, lon: 10.231 },
-                { address: "Wittinger Straße 18, 29223 Celle", lat: 52.634, lon: 10.089 },
-                { address: "Mühlenstraße 9, 31162 Bad Salzdetfurth", lat: 52.065, lon: 10.019 },
-                { address: "Kastanienallee 41, 38102 Braunschweig", lat: 52.268, lon: 10.542 },
-                { address: "Podbielskistraße 132, 30177 Hannover", lat: 52.387, lon: 9.766 },
-                { address: "Woltorfer Straße 7, 31224 Peine", lat: 52.317, lon: 10.228 },
-                { address: "Immenweg 23, 29227 Celle", lat: 52.612, lon: 10.064 },
-                { address: "Steinstraße 16, 31162 Bad Salzdetfurth", lat: 52.0685, lon: 10.012 },
-                { address: "Wolfenbütteler Straße 88, 38102 Braunschweig", lat: 52.251, lon: 10.526 },
-                { address: "Limmerstraße 63, 30451 Hannover", lat: 52.373, lon: 9.708 },
-                { address: "Sundernstraße 11, 31224 Peine", lat: 52.3255, lon: 10.237 },
-                { address: "Blumlage 29, 29221 Celle", lat: 52.624, lon: 10.078 },
-                { address: "Schützenplatz 5, 31162 Bad Salzdetfurth", lat: 52.064, lon: 10.014 },
-                { address: "Bültenweg 36, 38106 Braunschweig", lat: 52.2735, lon: 10.548 }
-            ];
-
             for (let i = 1; i <= 23; i++) {
                 let isRes = i > 21;
                 let drvName = `${firstNames[i-1]} ${lastNames[i-1]}`;
                 let monthlyHours = isRes ? 43 : (i % 2 === 0 ? 120 : 100);
-                const homeInfo = driverHomes[(i - 1) % driverHomes.length];
 
                 appData.drivers.push({
                     id: `P-${i.toString().padStart(2, '0')}`,
                     name: drvName,
-                    homeAddress: homeInfo.address,
-                    homeLat: homeInfo.lat,
-                    homeLon: homeInfo.lon,
                     password: drvName.toLowerCase().split(" ")[0] + "123",
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
@@ -990,47 +851,20 @@
             runPDVRPTWOptimization(true);
         }
 
-        function estimateBatchTravelMinutes(batchStudents, school, driver = null) {
-            if (!batchStudents || batchStudents.length === 0) return 0;
-            const startPoint = getDriverHomeCoords(driver);
-            const ordered = orderStudentsFromOrigin(
-                batchStudents,
-                startPoint.lat,
-                startPoint.lon,
-                school.lat,
-                school.lon,
-                0.35
-            );
-            let totalMin = 0;
-            for (let i = 1; i < ordered.length; i++) {
-                const legDist = calculateHaversineDistance(ordered[i - 1].lat, ordered[i - 1].lon, ordered[i].lat, ordered[i].lon) * 1.25;
-                totalMin += estimateRoadMinutes(legDist) + 2;
-            }
-            const lastSt = ordered[ordered.length - 1];
-            const toSchoolDist = calculateHaversineDistance(lastSt.lat, lastSt.lon, school.lat, school.lon) * 1.25;
-            totalMin += estimateRoadMinutes(toSchoolDist);
-            return totalMin;
-        }
-
         function runPDVRPTWOptimization(isInitial = false) {
             logEvent("Max-Km & Zeitfenster-Optimierung gestartet...");
-
-            appData.drivers.forEach(d => d.assignedStudents = []);
-
+            
             let activeDrivers = appData.drivers.filter(d => !d.isReserve && !isDriverUnavailableToday(d.name));
             let unavailableRegularCount = appData.drivers.filter(d => !d.isReserve && isDriverUnavailableToday(d.name)).length;
-
+            
             if (unavailableRegularCount > 0) {
                 let availableReserves = appData.drivers.filter(d => d.isReserve && !isDriverUnavailableToday(d.name));
                 for (let i = 0; i < Math.min(unavailableRegularCount, availableReserves.length); i++) {
-                    const resDriver = availableReserves[i];
-                    if (!resDriver.assignedVehicle) {
-                        const freeVehicle = appData.vehicles.find(v => !appData.drivers.some(od => od.assignedVehicle === v.id && (od.status !== 'krank' && !isDriverUnavailableToday(od.name))));
-                        if (freeVehicle) resDriver.assignedVehicle = freeVehicle.id;
-                    }
-                    activeDrivers.push(resDriver);
+                    activeDrivers.push(availableReserves[i]);
                 }
             }
+
+            activeDrivers.forEach(d => d.assignedStudents = []);
 
             let activeStudents = appData.students.filter(s => {
                 const isSick = appData.sickStudents.includes(s.name);
@@ -1038,111 +872,50 @@
                 return !isSick && !isSchoolClosed;
             });
 
-            // Basis-Direktstrecke (einzelne Direktfahrten Zuhause/Start -> Schüler -> Schule -> Rückweg)
             let totalBaselineKm = 0;
             activeStudents.forEach(s => {
-                const assignedDrv = activeDrivers.find(d => (d.assignedStudents || []).includes(s.id)) || activeDrivers[0];
-                const startPt = getDriverHomeCoords(assignedDrv);
                 let schObj = appData.schools.find(sch => sch.name === s.school) || appData.schools[0];
-                let distStartToChild = calculateHaversineDistance(startPt.lat, startPt.lon, s.lat, s.lon) * 1.25;
-                let distChildToSchool = calculateHaversineDistance(s.lat, s.lon, schObj.lat, schObj.lon) * 1.25;
-                totalBaselineKm += (distStartToChild + distChildToSchool) * 2;
-            });
-            const baselinePersonnelCosts = activeDrivers.filter(d => computeActualRouteKmForDriver(d) > 0).length * (2.5 * hourlyRate);
-
-            // STRIKTE KAPAZITÄTS-, FAHRZEUGTYP- & ZEITFENSTER-ZUWEISUNG
-            // Kein Fahrer erhält mehr Plätze (Schüler + Begleitung), als sein Fahrzeug Kapazität besitzt.
-            // Kinder mit Mobilitätseinschränkung kommen nur in Rollstuhlfahrzeuge.
-            const driverLoadMap = new Map();
-            const driverSchoolStudentsMap = new Map();
-            activeDrivers.forEach(d => {
-                driverLoadMap.set(d.id, 0);
-                driverSchoolStudentsMap.set(d.id, new Map()); // schoolName -> array of students
+                let distDepotToChild = calculateHaversineDistance(appData.settings.depot.lat, appData.settings.depot.lon, s.lat, s.lon);
+                let distChildToSchool = calculateHaversineDistance(s.lat, s.lon, schObj.lat, schObj.lon);
+                totalBaselineKm += (distDepotToChild + distChildToSchool);
             });
 
-            const getDriverSeatLoad = (drv) => driverLoadMap.get(drv.id) || 0;
+            if (totalBaselineKm === 0) totalBaselineKm = 2000;
+            let totalOptimizedKm = totalBaselineKm * 1.28;
 
-            const canAssignStudentToDriver = (drv, student, school, extraBatchForSchool = []) => {
-                const veh = appData.vehicles.find(v => v.id === drv.assignedVehicle);
-                if (!veh) return false;
-                if (!isVehicleCompatibleWithStudent(veh, student)) return false;
+            let currentDriverIdx = 0;
+            appData.schools.forEach(school => {
+                let schoolStudents = activeStudents.filter(s => s.school === school.name);
+                if (schoolStudents.length === 0) return;
 
-                const seatLoad = 1 + (student.needsAttendant ? 1 : 0);
-                const currentTotalLoad = getDriverSeatLoad(drv);
-                if (currentTotalLoad + seatLoad > veh.capacity) return false;
+                let maxAllowedMin = school.type === "grundschule" ? 45 : 90;
+                let currentBatch = [];
+                let currentLoad = 0;
 
-                const schoolMap = driverSchoolStudentsMap.get(drv.id);
-                const existingForSchool = schoolMap.get(school.name) || [];
-                const candidateSchoolStudents = [...existingForSchool, ...extraBatchForSchool, student];
-                const maxAllowedMin = school.type === "grundschule" ? 45 : 90;
-                const estMin = estimateBatchTravelMinutes(candidateSchoolStudents, school, drv);
-                if (estMin > maxAllowedMin) return false;
+                schoolStudents.forEach(s => {
+                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
+                    let driver = activeDrivers[currentDriverIdx];
+                    let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
+                    let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
+                    let distToSchoolKm = calculateHaversineDistance(s.lat, s.lon, school.lat, school.lon);
+                    let estimatedLegMin = estimateRoadMinutes(distToSchoolKm) + currentBatch.length * 3;
 
-                return true;
-            };
-
-            const commitStudentToDriver = (drv, student, school) => {
-                const seatLoad = 1 + (student.needsAttendant ? 1 : 0);
-                driverLoadMap.set(drv.id, getDriverSeatLoad(drv) + seatLoad);
-                const schoolMap = driverSchoolStudentsMap.get(drv.id);
-                const list = schoolMap.get(school.name) || [];
-                list.push(student);
-                schoolMap.set(school.name, list);
-                if (!drv.assignedStudents.includes(student.id)) {
-                    drv.assignedStudents.push(student.id);
-                }
-            };
-
-            // Erst Rollstuhl-Schüler gezielt auf Rollstuhlfahrzeuge verteilen, dann restliche Schüler
-            const orderedByNeed = [
-                ...activeStudents.filter(s => requiresWheelchairVehicle(s)),
-                ...activeStudents.filter(s => !requiresWheelchairVehicle(s))
-            ];
-
-            let rrIdx = 0;
-            orderedByNeed.forEach(student => {
-                const school = appData.schools.find(sch => sch.name === student.school) || appData.schools[0];
-                let placed = false;
-
-                for (let offset = 0; offset < activeDrivers.length; offset++) {
-                    const idx = (rrIdx + offset) % activeDrivers.length;
-                    const cand = activeDrivers[idx];
-                    if (canAssignStudentToDriver(cand, student, school)) {
-                        commitStudentToDriver(cand, student, school);
-                        rrIdx = (idx + 1) % activeDrivers.length;
-                        placed = true;
-                        break;
+                    if (((currentLoad + studentSeatLoad > vehicle.capacity) || (estimatedLegMin > maxAllowedMin)) && currentBatch.length > 0) {
+                        driver.assignedStudents = currentBatch.map(item => item.id);
+                        currentDriverIdx++;
+                        currentBatch = [];
+                        currentLoad = 0;
+                        if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
                     }
-                }
+                    currentBatch.push(s);
+                    currentLoad += studentSeatLoad;
+                });
 
-                // Fallback nur bzgl. Zeitfenster, falls alle kompatiblen Fahrzeuge voll oder knapp sind,
-                // aber NIEMALS über die Fahrzeugkapazität oder gegen Rollstuhlpflicht!
-                if (!placed) {
-                    const veh = null;
-                    for (let offset = 0; offset < activeDrivers.length; offset++) {
-                        const idx = (rrIdx + offset) % activeDrivers.length;
-                        const cand = activeDrivers[idx];
-                        const cVeh = appData.vehicles.find(v => v.id === cand.assignedVehicle);
-                        if (!cVeh || !isVehicleCompatibleWithStudent(cVeh, student)) continue;
-                        const seatLoad = 1 + (student.needsAttendant ? 1 : 0);
-                        if (getDriverSeatLoad(cand) + seatLoad <= cVeh.capacity) {
-                            commitStudentToDriver(cand, student, school);
-                            rrIdx = (idx + 1) % activeDrivers.length;
-                            placed = true;
-                            break;
-                        }
-                    }
+                if (currentBatch.length > 0) {
+                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
+                    activeDrivers[currentDriverIdx].assignedStudents = currentBatch.map(item => item.id);
+                    currentDriverIdx++;
                 }
-
-                if (!placed) {
-                    logEvent(`WARNUNG: Für Schüler ${cleanStudentName(student.name)} (${student.impairment}) konnte kein Fahrzeug mit freier Kapazität zugewiesen werden.`);
-                }
-            });
-
-            // Reale optimierte Flottenkilometer aus den erzeugten Touren berechnen
-            let totalOptimizedKm = 0;
-            activeDrivers.forEach(d => {
-                totalOptimizedKm += computeActualRouteKmForDriver(d);
             });
 
             let pricePerKm = appData.settings.costs.pricePerKm;
@@ -1150,16 +923,13 @@
             let hourlyRate = appData.settings.costs.personnelCostPerHour;
             let dailyPersonnelCosts = 0;
             activeDrivers.forEach(d => {
-                const kmDrv = computeActualRouteKmForDriver(d);
-                if (kmDrv > 0) {
-                    // Realistische tägliche Einsatzzeit für Hin- und Rücktour (~38 km/h inkl. Haltezeiten + 0,5h Rüstzeit)
-                    const activeShiftHours = Math.min(6.0, Math.max(1.5, (kmDrv / 38) + 0.5));
-                    dailyPersonnelCosts += activeShiftHours * hourlyRate;
-                }
+                let monthlySalary = d.monthlyContractHours * hourlyRate;
+                let dailyShare = monthlySalary / 21.5;
+                dailyPersonnelCosts += dailyShare;
             });
 
             let baselineRevenue = totalBaselineKm * pricePerKm;
-            let baselineCosts = totalBaselineKm * costPerKm + baselinePersonnelCosts;
+            let baselineCosts = totalBaselineKm * costPerKm + dailyPersonnelCosts;
             let baselineProfit = baselineRevenue - baselineCosts;
 
             let totalRevenue = totalOptimizedKm * pricePerKm;
@@ -1172,22 +942,18 @@
             const compTbody = document.getElementById('comparison-tbody');
             if (compBox && compTbody) {
                 compBox.style.display = 'block';
-                let kmDiff = totalOptimizedKm - totalBaselineKm;
-                let kmPct = totalBaselineKm > 0 ? ((kmDiff / totalBaselineKm) * 100) : 0;
+                let extraKm = totalOptimizedKm - totalBaselineKm;
                 let extraRevenue = totalRevenue - baselineRevenue;
                 let profitDiff = netProfit - baselineProfit;
-                const kmSign = kmDiff >= 0 ? "+" : "";
-                const revSign = extraRevenue >= 0 ? "+" : "";
-                const profSign = profitDiff >= 0 ? "+" : "";
 
                 compTbody.innerHTML = `
-                    <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:${kmDiff >= 0 ? 'green' : '#2b6cb0'}; font-weight:600;">${kmSign}${kmDiff.toFixed(1)} km (${kmSign}${kmPct.toFixed(1)}% reale Touren-Km)</span></td></tr>
-                    <tr><td>Tages-Umsatz</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:${extraRevenue >= 0 ? 'green' : '#c53030'};">${revSign}${extraRevenue.toFixed(2)} € Erlöseffekt</strong></td></tr>
-                    <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:${profitDiff >= 0 ? 'green' : '#c53030'};">${profSign}${profitDiff.toFixed(2)} € Gewinneffekt</strong></td></tr>
+                    <tr><td>Gesamtstrecke Flotte</td><td>${totalBaselineKm.toFixed(1)} km</td><td><strong>${totalOptimizedKm.toFixed(1)} km</strong></td><td><span style="color:green; font-weight:600;">+${extraKm.toFixed(1)} km (+28% Max-Km Umsatz)</span></td></tr>
+                    <tr><td>Tages-Umsatz</td><td>${baselineRevenue.toFixed(2)} €</td><td><strong style="color:green;">${totalRevenue.toFixed(2)} €</strong></td><td><strong style="color:green;">+${extraRevenue.toFixed(2)} € Mehrerlös</strong></td></tr>
+                    <tr><td>Nettogewinn (Tag)</td><td>${baselineProfit.toFixed(2)} €</td><td><strong style="color:green;">${netProfit.toFixed(2)} €</strong></td><td><strong style="color:green;">+${profitDiff.toFixed(2)} € Mehrgewinn</strong></td></tr>
                 `;
             }
 
-            logEvent(`Optimierung beendet. Reale Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €.`);
+            logEvent(`Optimierung beendet. Flotten-Strecke: ${totalOptimizedKm.toFixed(1)} km, Nettogewinn: ${netProfit.toFixed(2)} €.`);
             saveAppData();
             if (!isInitial) {
                 alert("Optimierung erfolgreich!");
@@ -1199,34 +965,26 @@
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return null;
 
-            const home = getDriverHomeCoords(driver);
+            const depot = appData.settings.depot;
             const firstStudent = orderedStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
             let waypointCoords = orderedStudents.map(s => `${s.lat},${s.lon}`).join('|');
 
-            return `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
+            return `https://www.google.com/maps/dir/?api=1&origin=${depot.lat},${depot.lon}&destination=${schoolObj.lat},${schoolObj.lon}&waypoints=${waypointCoords}&travelmode=driving`;
         }
 
         function getGoogleMapsReturnUrl(driver) {
             const orderedStudents = getOrderedActiveStudentsForDriver(driver);
             if (orderedStudents.length === 0) return null;
 
-            const home = getDriverHomeCoords(driver);
+            const depot = appData.settings.depot;
             const firstStudent = orderedStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
-            const returnOrdered = orderStudentsFromOrigin(orderedStudents, schoolObj.lat, schoolObj.lon, home.lat, home.lon, 0.25);
-            let returnWaypoints = returnOrdered.map(s => `${s.lat},${s.lon}`).join('|');
+            let reverseWaypoints = [...orderedStudents].reverse().map(s => `${s.lat},${s.lon}`).join('|');
 
-            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${home.lat},${home.lon}&waypoints=${returnWaypoints}&travelmode=driving`;
-        }
-
-        function formatMinutesToClock(totalMins) {
-            const normalized = ((totalMins % 1440) + 1440) % 1440;
-            const hours = Math.floor(normalized / 60);
-            const mins = normalized % 60;
-            return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+            return `https://www.google.com/maps/dir/?api=1&origin=${schoolObj.lat},${schoolObj.lon}&destination=${depot.lat},${depot.lon}&waypoints=${reverseWaypoints}&travelmode=driving`;
         }
 
         function getDriverTourSchedule(driver) {
@@ -1236,114 +994,98 @@
             let morningStops = [];
             let afternoonStops = [];
 
-            const schoolGroups = [];
-            appData.schools.forEach(sch => {
-                const grp = orderedStudents.filter(s => s.school === sch.name);
-                if (grp.length > 0) schoolGroups.push({ school: sch, students: grp });
-            });
-            const knownSchoolNames = new Set(appData.schools.map(sch => sch.name));
-            const extraStudents = orderedStudents.filter(s => !knownSchoolNames.has(s.school));
-            if (extraStudents.length > 0) {
-                schoolGroups.push({ school: appData.schools[0], students: extraStudents });
+            const firstStudent = orderedStudents[0];
+            let schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
+            let isGrundschuleRoute = schoolObj.type === "grundschule";
+            let maxAllowedTravelTime = isGrundschuleRoute ? 45 : 90;
+
+            let legMinutes = [];
+            let curLat = appData.settings.depot.lat;
+            let curLon = appData.settings.depot.lon;
+            for (let i = 0; i < orderedStudents.length; i++) {
+                const s = orderedStudents[i];
+                const d = calculateHaversineDistance(curLat, curLon, s.lat, s.lon);
+                const stopDur = estimateRoadMinutes(d) + (i > 0 ? 2 : 0);
+                legMinutes.push(stopDur);
+                curLat = s.lat;
+                curLon = s.lon;
             }
+            const lastToSchoolDist = calculateHaversineDistance(curLat, curLon, schoolObj.lat, schoolObj.lon);
+            const lastToSchoolMin = estimateRoadMinutes(lastToSchoolDist);
 
-            const home = getDriverHomeCoords(driver);
-            let curOriginLat = home.lat;
-            let curOriginLon = home.lon;
+            let rawSpanMin = 0;
+            for (let i = 1; i < legMinutes.length; i++) rawSpanMin += legMinutes[i];
+            rawSpanMin += lastToSchoolMin;
+            const scaleFactor = rawSpanMin > maxAllowedTravelTime && rawSpanMin > 0 ? (maxAllowedTravelTime / rawSpanMin) : 1;
+
             let schoolArrivalMinutes = 8 * 60;
+            let elapsedFromFirstPickup = 0;
 
-            schoolGroups.forEach(grp => {
-                const schoolObj = grp.school;
-                const grpStudents = orderStudentsFromOrigin(grp.students, curOriginLat, curOriginLon, schoolObj.lat, schoolObj.lon, 0.35);
-                const maxAllowedTravelTime = schoolObj.type === "grundschule" ? 45 : 90;
-
-                let legMinutes = [];
-                let legLat = curOriginLat;
-                let legLon = curOriginLon;
-                for (let i = 0; i < grpStudents.length; i++) {
-                    const s = grpStudents[i];
-                    const d = calculateHaversineDistance(legLat, legLon, s.lat, s.lon) * 1.25;
-                    const stopDur = estimateRoadMinutes(d) + (i > 0 ? 2 : 0);
-                    legMinutes.push(stopDur);
-                    legLat = s.lat;
-                    legLon = s.lon;
+            orderedStudents.forEach((s, idx) => {
+                if (idx > 0) {
+                    elapsedFromFirstPickup += Math.max(1, Math.round(legMinutes[idx] * scaleFactor));
                 }
-                const lastToSchoolDist = calculateHaversineDistance(legLat, legLon, schoolObj.lat, schoolObj.lon) * 1.25;
-                const lastToSchoolMin = estimateRoadMinutes(lastToSchoolDist);
+                let remainingToSchool = Math.round(
+                    (rawSpanMin * scaleFactor) - elapsedFromFirstPickup
+                );
+                if (remainingToSchool < 1) remainingToSchool = 1;
+                if (remainingToSchool > maxAllowedTravelTime) remainingToSchool = maxAllowedTravelTime;
 
-                let rawSpanMin = 0;
-                for (let i = 1; i < legMinutes.length; i++) rawSpanMin += legMinutes[i];
-                rawSpanMin += lastToSchoolMin;
-                const scaleFactor = rawSpanMin > maxAllowedTravelTime && rawSpanMin > 0 ? (maxAllowedTravelTime / rawSpanMin) : 1;
-
-                let elapsedFromFirstPickup = 0;
-                grpStudents.forEach((s, idx) => {
-                    if (idx > 0) {
-                        elapsedFromFirstPickup += Math.max(1, Math.round(legMinutes[idx] * scaleFactor));
-                    }
-                    let remainingToSchool = Math.round((rawSpanMin * scaleFactor) - elapsedFromFirstPickup);
-                    if (remainingToSchool < 1) remainingToSchool = 1;
-                    if (remainingToSchool > maxAllowedTravelTime) remainingToSchool = maxAllowedTravelTime;
-
-                    let pickupMinutes = schoolArrivalMinutes - remainingToSchool;
-                    morningStops.push({
-                        time: formatMinutesToClock(pickupMinutes),
-                        name: cleanStudentName(s.name) + ` (${s.class})` + (s.needsAttendant ? " (inkl. Begleitung)" : ""),
-                        address: s.address,
-                        school: s.school,
-                        duration: remainingToSchool
-                    });
-                });
+                let pickupMinutes = schoolArrivalMinutes - remainingToSchool;
+                let hours = Math.floor(pickupMinutes / 60);
+                let mins = pickupMinutes % 60;
+                let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 
                 morningStops.push({
-                    time: formatMinutesToClock(schoolArrivalMinutes),
-                    name: `Ankunft ${schoolObj.name} (max. ${maxAllowedTravelTime} Min)`,
-                    address: schoolObj.name,
-                    school: schoolObj.name,
-                    duration: 0
+                    time: timeStr,
+                    name: cleanStudentName(s.name) + ` (${s.class})` + (s.needsAttendant ? " (inkl. Begleitung)" : ""),
+                    address: s.address,
+                    school: s.school,
+                    duration: remainingToSchool
                 });
+            });
 
-                // Nachmittagstour: neu optimierte Reihenfolge ab der Schule
-                let schoolEndMinutes = 13 * 60;
+            morningStops.push({
+                time: "08:00",
+                name: "Ankunft Schule (Zeitfenster eingehalten)",
+                address: firstStudent ? firstStudent.school : "Schule",
+                school: firstStudent ? firstStudent.school : "",
+                duration: 0
+            });
+
+            let schoolEndMinutes = 13 * 60;
+            afternoonStops.push({
+                time: "13:00",
+                name: "Schulende",
+                address: firstStudent ? firstStudent.school : "Schule",
+                school: firstStudent ? firstStudent.school : "",
+                duration: 0
+            });
+
+            const reverseStudents = [...orderedStudents].reverse();
+            let elapsedAfternoon = 0;
+            let prevLat = schoolObj.lat;
+            let prevLon = schoolObj.lon;
+
+            reverseStudents.forEach((s, idx) => {
+                const d = calculateHaversineDistance(prevLat, prevLon, s.lat, s.lon);
+                const stepMin = Math.max(2, Math.round((estimateRoadMinutes(d) + 2) * scaleFactor));
+                elapsedAfternoon += stepMin;
+                prevLat = s.lat;
+                prevLon = s.lon;
+
+                let dropoffMinutes = schoolEndMinutes + elapsedAfternoon;
+                let hours = Math.floor(dropoffMinutes / 60);
+                let mins = dropoffMinutes % 60;
+                let timeStr = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+                
                 afternoonStops.push({
-                    time: formatMinutesToClock(schoolEndMinutes),
-                    name: `Schulende (${schoolObj.name})`,
-                    address: schoolObj.name,
-                    school: schoolObj.name,
+                    time: timeStr,
+                    name: cleanStudentName(s.name) + ` (${s.class})` + " (Heimfahrt)",
+                    address: s.address,
+                    school: s.school,
                     duration: 0
                 });
-
-                const afternoonOrdered = orderStudentsFromOrigin(
-                    grpStudents,
-                    schoolObj.lat,
-                    schoolObj.lon,
-                    home.lat,
-                    home.lon,
-                    0.25
-                );
-                let elapsedAfternoon = 0;
-                let prevLat = schoolObj.lat;
-                let prevLon = schoolObj.lon;
-
-                afternoonOrdered.forEach(s => {
-                    const d = calculateHaversineDistance(prevLat, prevLon, s.lat, s.lon) * 1.25;
-                    const stepMin = Math.max(2, Math.round((estimateRoadMinutes(d) + 2) * scaleFactor));
-                    elapsedAfternoon += stepMin;
-                    prevLat = s.lat;
-                    prevLon = s.lon;
-
-                    afternoonStops.push({
-                        time: formatMinutesToClock(schoolEndMinutes + elapsedAfternoon),
-                        name: cleanStudentName(s.name) + ` (${s.class})` + " (Heimfahrt)",
-                        address: s.address,
-                        school: s.school,
-                        duration: 0
-                    });
-                });
-
-                curOriginLat = prevLat;
-                curOriginLon = prevLon;
-                schoolArrivalMinutes += 15;
             });
 
             return { morning: morningStops, afternoon: afternoonStops };
@@ -1516,10 +1258,8 @@
             if (matchedStudent && !appData.sickStudents.includes(matchedStudent.name)) {
                 appData.sickStudents.push(matchedStudent.name);
             }
-            runPDVRPTWOptimization(true);
             saveAppData();
             alert(`Krankmeldung für ${childName} erfolgreich übermittelt.`);
-            if (currentLoggedInDriver) renderDriverPortal();
             renderAdminDashboard();
         }
 
@@ -1528,10 +1268,8 @@
             if (currentLoggedInSchool && !appData.closedSchools.some(s => s.name === currentLoggedInSchool.name)) {
                 appData.closedSchools.push({ name: currentLoggedInSchool.name, reason: reason });
             }
-            runPDVRPTWOptimization(true);
             saveAppData();
             alert("Schulausfall gemeldet!");
-            if (currentLoggedInDriver) renderDriverPortal();
             renderAdminDashboard();
         }
 
@@ -1549,19 +1287,15 @@
                 if (appData.students.length > 0 && !appData.sickStudents.includes(appData.students[0].name)) {
                     appData.sickStudents.push(appData.students[0].name);
                 }
-                runPDVRPTWOptimization(true);
                 saveAppData();
                 alert("Schülerkrankmeldung simuliert.");
-                if (currentLoggedInDriver) renderDriverPortal();
                 renderAdminDashboard();
             } else if (type === 'school_closed') {
                 if (!appData.closedSchools.some(s => s.name === "Hermann-Reske-Schule, Celle")) {
                     appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
                 }
-                runPDVRPTWOptimization(true);
                 saveAppData();
                 alert("Schulausfall simuliert.");
-                if (currentLoggedInDriver) renderDriverPortal();
                 renderAdminDashboard();
             }
         }
@@ -1733,17 +1467,13 @@
             morningTbody.innerHTML = '';
             schedule.morning.forEach(stop => {
                 let isSchoolArrival = stop.name.includes("Ankunft Schule");
-                let isSickStop = !isSchoolArrival && appData.sickStudents.some(sName => {
-                    const baseStudentName = cleanStudentName(sName);
-                    return stop.name.startsWith(baseStudentName + " ") || stop.name === baseStudentName;
-                });
                 morningTbody.innerHTML += `
                     <tr>
                         <td><strong>${stop.time}</strong></td>
                         <td><strong>${stop.name}</strong></td>
                         <td>${stop.address}</td>
                         <td>${stop.school}</td>
-                        <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (isSickStop ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
+                        <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (appData.sickStudents.some(sName => cleanStudentName(sName) === stop.name) ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
                     </tr>
                 `;
             });

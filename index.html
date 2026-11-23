@@ -669,7 +669,6 @@
         }
 
         function estimateRoadMinutes(distKm) {
-            // Realistische Straßenfahrzeit inkl. Stadt-/Landanteil (~42 km/h Schnitt + Faktor 1.25 für Straßenführung)
             return Math.max(2, Math.round(((distKm * 1.25) / 42) * 60));
         }
 
@@ -684,7 +683,6 @@
             const firstStudent = activeStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
-            // Nearest-Neighbor-Sortierung vom Betriebshof aus, sodass Hinweg und Google-Maps-Waypoints derselben logischen Reihenfolge folgen
             let remaining = [...activeStudents];
             let ordered = [];
             let curLat = appData.settings.depot.lat;
@@ -885,8 +883,6 @@
             if (totalBaselineKm === 0) totalBaselineKm = 2000;
             let totalOptimizedKm = totalBaselineKm * 1.28;
 
-            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt. 
-            // Über verschiedene Tage/Optimierungsläufe hinweg können Fahrer flexibel anderen Schulen zugeteilt werden.
             let currentDriverIdx = 0;
             appData.schools.forEach(school => {
                 let schoolStudents = activeStudents.filter(s => s.school === school.name);
@@ -1003,7 +999,6 @@
             let isGrundschuleRoute = schoolObj.type === "grundschule";
             let maxAllowedTravelTime = isGrundschuleRoute ? 45 : 90;
 
-            // Kumulative Fahr- und Haltezeiten entlang der tatsächlichen Wegpunkt-Reihenfolge berechnen
             let legMinutes = [];
             let curLat = appData.settings.depot.lat;
             let curLon = appData.settings.depot.lon;
@@ -1018,7 +1013,6 @@
             const lastToSchoolDist = calculateHaversineDistance(curLat, curLon, schoolObj.lat, schoolObj.lon);
             const lastToSchoolMin = estimateRoadMinutes(lastToSchoolDist);
 
-            // Gesamte Hinweg-Dauer von erstem Einstieg bis Schule auf maxAllowedTravelTime begrenzen
             let rawSpanMin = 0;
             for (let i = 1; i < legMinutes.length; i++) rawSpanMin += legMinutes[i];
             rawSpanMin += lastToSchoolMin;
@@ -1387,11 +1381,14 @@
                         return s && !appData.sickStudents.includes(s.name) && !appData.closedSchools.some(cs => cs.name === s.school);
                     }).length;
 
+                    const veh = d.assignedVehicle ? appData.vehicles.find(v => v.id === d.assignedVehicle) : null;
+                    const vehInfo = veh ? `${veh.id} (${veh.type}, ${veh.capacity} Plätze)` : 'Reserve';
+
                     driverTbody.innerHTML += `
                         <tr>
                             <td>${d.id}</td>
                             <td><strong>${d.name}</strong><br><small style="color:#718096">Vertrag: ${d.monthlyContractHours || 100}h/Monat</small></td>
-                            <td>${d.assignedVehicle || 'Reserve'}</td>
+                            <td>${vehInfo}</td>
                             <td>${activeCount} aktive Kinder</td>
                             <td>${getDriverStatusDisplay(d)}</td>
                             <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSickAdmin('${d.id}')">Status</button></td>
@@ -1418,7 +1415,9 @@
 
         function renderDriverPortal() {
             if (!currentLoggedInDriver) return;
-            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${currentLoggedInDriver.assignedVehicle || 'Reserve'}</strong>`;
+            const drvVeh = currentLoggedInDriver.assignedVehicle ? appData.vehicles.find(v => v.id === currentLoggedInDriver.assignedVehicle) : null;
+            const drvVehText = drvVeh ? `${drvVeh.id} (${drvVeh.type}, ${drvVeh.capacity} Plätze)` : 'Reserve';
+            document.getElementById('driver-header-info').innerHTML = `Eingeloggt als: <strong>${currentLoggedInDriver.name}</strong> | Vertrag: <strong>${currentLoggedInDriver.monthlyContractHours || 100}h/Monat</strong> | Fahrzeug: <strong>${drvVehText}</strong>`;
             document.getElementById('driver-status-text').textContent = `Status: ${currentLoggedInDriver.status.charAt(0).toUpperCase() + currentLoggedInDriver.status.slice(1)}`;
 
             const myReqTbody = document.getElementById('driver-my-requests-tbody');
@@ -1530,7 +1529,9 @@
             doc.text(`Tourenplan für Fahrer: ${currentLoggedInDriver.name}`, 20, 30);
             doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
-            doc.text("Fahrzeug: " + (currentLoggedInDriver.assignedVehicle || 'Reserve'), 20, 38);
+            const pdfVeh = currentLoggedInDriver.assignedVehicle ? appData.vehicles.find(v => v.id === currentLoggedInDriver.assignedVehicle) : null;
+            const pdfVehText = pdfVeh ? `${pdfVeh.id} (${pdfVeh.type}, ${pdfVeh.capacity} Plätze)` : 'Reserve';
+            doc.text("Fahrzeug: " + pdfVehText, 20, 38);
             doc.text("Datum: " + new Date().toLocaleDateString('de-DE'), 20, 44);
             
             const schedule = getDriverTourSchedule(currentLoggedInDriver);

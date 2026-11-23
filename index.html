@@ -382,7 +382,7 @@
 
             <!-- Gewinnübersicht -->
             <div class="admin-box" style="border-left: 4px solid #38a169; background: #f0fff4;">
-                <h3 style="color: #22543d;">💰 Tagesgewinn & Kalkulation (inkl. 10.000 € Werkstatt/Monat)</h3>
+                <h3 style="color: #22543d;">💰 Tagesgewinn & Kalkulation</h3>
                 <div id="profit-summary" style="font-size: 0.9rem; color: #1a202c;">
                     Wird berechnet...
                 </div>
@@ -597,7 +597,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_profit_workshop10k_v30';
+        const STORAGE_KEY = 'rosebrock_app_data_profit_workshop10k_v31';
 
         const appData = {
             settings: {
@@ -631,6 +631,13 @@
         let currentLoggedInDriver = null;
         let currentLoggedInParent = null;
         let currentLoggedInSchool = null;
+
+        function formatNum(num, decimals = 2) {
+            return num.toLocaleString('de-DE', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
 
         function saveAppData() {
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch (e) {}
@@ -1180,9 +1187,9 @@
             };
 
             const kpiProfit = document.getElementById('kpi-profit');
-            if (kpiProfit) kpiProfit.textContent = netProfit.toFixed(2) + ' €';
+            if (kpiProfit) kpiProfit.textContent = formatNum(netProfit, 2) + ' €';
 
-            logEvent(`Beste Route berechnet. Strecke: ${totalOptimizedKm.toFixed(1)} km | Tagesgewinn: ${netProfit.toFixed(2)} € (Werkstatt: ${dailyWorkshopFixedCost.toFixed(2)} €/Tag).`);
+            logEvent(`Beste Route berechnet. Strecke: ${formatNum(totalOptimizedKm, 1)} km | Tagesgewinn: ${formatNum(netProfit, 2)} € (Werkstatt: ${formatNum(dailyWorkshopFixedCost, 2)} €/Tag).`);
             saveAppData();
             if (!isInitial) {
                 alert("Beste Route und Gewinn berechnet!");
@@ -1639,20 +1646,20 @@
             const m = appData.lastProfitMetrics;
             if (m) {
                 const kpiProfit = document.getElementById('kpi-profit');
-                if (kpiProfit) kpiProfit.textContent = m.netProfit.toFixed(2) + ' €';
+                if (kpiProfit) kpiProfit.textContent = formatNum(m.netProfit, 2) + ' €';
 
                 const profitSummary = document.getElementById('profit-summary');
                 if (profitSummary) {
                     profitSummary.innerHTML = `
                         <div style="font-size: 1.35rem; font-weight: 700; color: ${m.netProfit >= 0 ? '#22543d' : '#c53030'}; margin-bottom: 6px;">
-                            Gewinn heute: ${m.netProfit.toFixed(2)} €
+                            Gewinn heute: ${formatNum(m.netProfit, 2)} €
                         </div>
                         <div style="font-size: 0.82rem; color: #2d3748;">
-                            Strecke: <strong>${m.totalKm.toFixed(1)} km</strong> ·
-                            Umsatz (2,10 €/km): <strong>${m.totalRevenue.toFixed(2)} €</strong> ·
-                            Tankkosten (0,14 €/km): <strong>-${m.totalFuelCosts.toFixed(2)} €</strong> ·
-                            Fahrer-Fixkosten (33.000 €/20d): <strong>-${m.dailyPersonnelFixedCost.toFixed(2)} €</strong> ·
-                            Werkstatt-Fixkosten (10.000 €/20d): <strong>-${m.dailyWorkshopFixedCost.toFixed(2)} €</strong>
+                            Strecke: <strong>${formatNum(m.totalKm, 1)} km</strong> ·
+                            Umsatz (2,10 €/km): <strong>${formatNum(m.totalRevenue, 2)} €</strong> ·
+                            Tankkosten (0,14 €/km): <strong>-${formatNum(m.totalFuelCosts, 2)} €</strong> ·
+                            Fahrer-Fixkosten (33.000 € / 20 Tage): <strong>-${formatNum(m.dailyPersonnelFixedCost, 2)} €</strong> ·
+                            Werkstatt-Fixkosten (10.000 € / 20 Tage): <strong>-${formatNum(m.dailyWorkshopFixedCost, 2)} €</strong>
                         </div>
                     `;
                 }
@@ -1723,7 +1730,7 @@
                             <td><strong>${d.name}</strong><br><small style="color:#718096">Vertrag: ${d.monthlyContractHours || 100}h/Monat · Wohnort: ${homeInfo}</small></td>
                             <td>${vehInfo}</td>
                             <td>${activeCount} aktive Kinder</td>
-                            <td>${kmVal.toFixed(1)} km</td>
+                            <td>${formatNum(kmVal, 1)} km</td>
                             <td>${getDriverStatusDisplay(d)}</td>
                             <td><button class="btn btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="toggleDriverSickAdmin('${d.id}')">Status</button></td>
                         </tr>

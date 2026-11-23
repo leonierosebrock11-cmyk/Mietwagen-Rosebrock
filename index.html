@@ -885,40 +885,58 @@
             if (totalBaselineKm === 0) totalBaselineKm = 2000;
             let totalOptimizedKm = totalBaselineKm * 1.28;
 
-            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt. 
+            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt.
             // Über verschiedene Tage/Optimierungsläufe hinweg können Fahrer flexibel anderen Schulen zugeteilt werden.
             let currentDriverIdx = 0;
+            const assignBatchToDriver = (batchStudents) => {
+                if (!batchStudents || batchStudents.length === 0 || activeDrivers.length === 0) return;
+                if (currentDriverIdx >= activeDrivers.length) {
+                    currentDriverIdx = activeDrivers.length - 1;
+                }
+                const targetDriver = activeDrivers[currentDriverIdx];
+                const existingIds = new Set(targetDriver.assignedStudents || []);
+                batchStudents.forEach(item => existingIds.add(item.id));
+                targetDriver.assignedStudents = Array.from(existingIds);
+                currentDriverIdx++;
+            };
+
             appData.schools.forEach(school => {
                 let schoolStudents = activeStudents.filter(s => s.school === school.name);
-                if (schoolStudents.length === 0) return;
+                if (schoolStudents.length === 0 || activeDrivers.length === 0) return;
 
                 let maxAllowedMin = school.type === "grundschule" ? 45 : 90;
                 let currentBatch = [];
                 let currentLoad = 0;
 
                 schoolStudents.forEach(s => {
-                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    let driver = activeDrivers[currentDriverIdx];
+                    let previewDriverIdx = currentDriverIdx < activeDrivers.length ? currentDriverIdx : activeDrivers.length - 1;
+                    let driver = activeDrivers[previewDriverIdx];
                     let vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
                     let studentSeatLoad = 1 + (s.needsAttendant ? 1 : 0);
                     let distToSchoolKm = calculateHaversineDistance(s.lat, s.lon, school.lat, school.lon);
                     let estimatedLegMin = estimateRoadMinutes(distToSchoolKm) + currentBatch.length * 3;
 
-                    if (((currentLoad + studentSeatLoad > vehicle.capacity) || (estimatedLegMin > maxAllowedMin)) && currentBatch.length > 0) {
-                        driver.assignedStudents = currentBatch.map(item => item.id);
-                        currentDriverIdx++;
+                    const exceedsCapacity = (currentLoad + studentSeatLoad) > vehicle.capacity;
+                    const exceedsTime = estimatedLegMin > maxAllowedMin;
+
+                    if ((exceedsCapacity || exceedsTime) && currentBatch.length > 0) {
+                        assignBatchToDriver(currentBatch);
                         currentBatch = [];
                         currentLoad = 0;
-                        if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
+
+                        previewDriverIdx = currentDriverIdx < activeDrivers.length ? currentDriverIdx : activeDrivers.length - 1;
+                        driver = activeDrivers[previewDriverIdx];
+                        vehicle = appData.vehicles.find(v => v.id === driver.assignedVehicle) || { capacity: 8 };
+                        distToSchoolKm = calculateHaversineDistance(s.lat, s.lon, school.lat, school.lon);
+                        estimatedLegMin = estimateRoadMinutes(distToSchoolKm);
                     }
+
                     currentBatch.push(s);
                     currentLoad += studentSeatLoad;
                 });
 
                 if (currentBatch.length > 0) {
-                    if (currentDriverIdx >= activeDrivers.length) currentDriverIdx = activeDrivers.length - 1;
-                    activeDrivers[currentDriverIdx].assignedStudents = currentBatch.map(item => item.id);
-                    currentDriverIdx++;
+                    assignBatchToDriver(currentBatch);
                 }
             });
 

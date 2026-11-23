@@ -669,6 +669,7 @@
         }
 
         function estimateRoadMinutes(distKm) {
+            // Realistische Straßenfahrzeit inkl. Stadt-/Landanteil (~42 km/h Schnitt + Faktor 1.25 für Straßenführung)
             return Math.max(2, Math.round(((distKm * 1.25) / 42) * 60));
         }
 
@@ -683,6 +684,7 @@
             const firstStudent = activeStudents[0];
             const schoolObj = appData.schools.find(sch => sch.name === firstStudent.school) || appData.schools[0];
 
+            // Nearest-Neighbor-Sortierung vom Betriebshof aus, sodass Hinweg und Google-Maps-Waypoints derselben logischen Reihenfolge folgen
             let remaining = [...activeStudents];
             let ordered = [];
             let curLat = appData.settings.depot.lat;
@@ -883,6 +885,8 @@
             if (totalBaselineKm === 0) totalBaselineKm = 2000;
             let totalOptimizedKm = totalBaselineKm * 1.28;
 
+            // DYNAMISCHE TOUR-TRENNUNG: Innerhalb einer Tour werden keine Schulen gemischt. 
+            // Über verschiedene Tage/Optimierungsläufe hinweg können Fahrer flexibel anderen Schulen zugeteilt werden.
             let currentDriverIdx = 0;
             appData.schools.forEach(school => {
                 let schoolStudents = activeStudents.filter(s => s.school === school.name);
@@ -1258,8 +1262,10 @@
             if (matchedStudent && !appData.sickStudents.includes(matchedStudent.name)) {
                 appData.sickStudents.push(matchedStudent.name);
             }
+            runPDVRPTWOptimization(true);
             saveAppData();
             alert(`Krankmeldung für ${childName} erfolgreich übermittelt.`);
+            if (currentLoggedInDriver) renderDriverPortal();
             renderAdminDashboard();
         }
 
@@ -1268,8 +1274,10 @@
             if (currentLoggedInSchool && !appData.closedSchools.some(s => s.name === currentLoggedInSchool.name)) {
                 appData.closedSchools.push({ name: currentLoggedInSchool.name, reason: reason });
             }
+            runPDVRPTWOptimization(true);
             saveAppData();
             alert("Schulausfall gemeldet!");
+            if (currentLoggedInDriver) renderDriverPortal();
             renderAdminDashboard();
         }
 
@@ -1287,15 +1295,19 @@
                 if (appData.students.length > 0 && !appData.sickStudents.includes(appData.students[0].name)) {
                     appData.sickStudents.push(appData.students[0].name);
                 }
+                runPDVRPTWOptimization(true);
                 saveAppData();
                 alert("Schülerkrankmeldung simuliert.");
+                if (currentLoggedInDriver) renderDriverPortal();
                 renderAdminDashboard();
             } else if (type === 'school_closed') {
                 if (!appData.closedSchools.some(s => s.name === "Hermann-Reske-Schule, Celle")) {
                     appData.closedSchools.push({ name: "Hermann-Reske-Schule, Celle", reason: "Unwetter" });
                 }
+                runPDVRPTWOptimization(true);
                 saveAppData();
                 alert("Schulausfall simuliert.");
+                if (currentLoggedInDriver) renderDriverPortal();
                 renderAdminDashboard();
             }
         }
@@ -1467,13 +1479,17 @@
             morningTbody.innerHTML = '';
             schedule.morning.forEach(stop => {
                 let isSchoolArrival = stop.name.includes("Ankunft Schule");
+                let isSickStop = !isSchoolArrival && appData.sickStudents.some(sName => {
+                    const baseStudentName = cleanStudentName(sName);
+                    return stop.name.startsWith(baseStudentName + " ") || stop.name === baseStudentName;
+                });
                 morningTbody.innerHTML += `
                     <tr>
                         <td><strong>${stop.time}</strong></td>
                         <td><strong>${stop.name}</strong></td>
                         <td>${stop.address}</td>
                         <td>${stop.school}</td>
-                        <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (appData.sickStudents.some(sName => cleanStudentName(sName) === stop.name) ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
+                        <td>${isSchoolArrival ? '<span style="color:#2b6cb0; font-weight:600;">Ziel</span>' : (isSickStop ? '<span style="color:red; font-weight:600;">Krank gemeldet</span>' : '<span style="color:green; font-weight:600;">Aktiv</span>')}</td>
                     </tr>
                 `;
             });

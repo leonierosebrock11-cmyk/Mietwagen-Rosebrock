@@ -582,9 +582,10 @@
 
     <script>
         const TELEGRAM_BOT_TOKEN = "8819254996:AAGz62lvwmHF1PMs6yPx3IiNi_8waL84JGQ";
-        const TELEGRAM_CHAT_ID = "8864346585";
+        const TELEGRAM_CHAT_ID = "8864346585";;
 
         function sendTelegramAlert(text) {
+            if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
             const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
             fetch(url, {
                 method: 'POST',
@@ -597,7 +598,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_profit_workshop10k_v31';
+        const STORAGE_KEY = 'rosebrock_app_data_profit_workshop10k_v33';
 
         const appData = {
             settings: {
@@ -614,11 +615,12 @@
             vehicles: [],
             drivers: [],
             students: [],
+            // pricePerKm = dein Angebotspreis je Los (€/km je Kind); lot = Losname -> bitte anpassen
             schools: [
-                { id: "SCH-01", name: "Hermann-Reske-Schule, Celle", lat: 52.6236, lon: 10.0807, type: "grundschule" },
-                { id: "SCH-02", name: "Grundschule Altenhagen", lat: 52.6000, lon: 10.1200, type: "grundschule" },
-                { id: "SCH-03", name: "Internat Bad Salzdetfurth", lat: 52.0667, lon: 10.0167, type: "sek1" },
-                { id: "SCH-04", name: "Gesamtschule Peine", lat: 52.3198, lon: 10.2251, type: "sek1" }
+                { id: "SCH-01", name: "Hermann-Reske-Schule, Celle", lat: 52.6236, lon: 10.0807, type: "grundschule", lot: "Los 1", pricePerKm: 2.10 },
+                { id: "SCH-02", name: "Grundschule Altenhagen", lat: 52.6000, lon: 10.1200, type: "grundschule", lot: "Los 1", pricePerKm: 2.10 },
+                { id: "SCH-03", name: "Internat Bad Salzdetfurth", lat: 52.0667, lon: 10.0167, type: "sek1", lot: "Los 2", pricePerKm: 2.10 },
+                { id: "SCH-04", name: "Gesamtschule Peine", lat: 52.3198, lon: 10.2251, type: "sek1", lot: "Los 2", pricePerKm: 2.10 }
             ],
             closedSchools: [],
             sickStudents: [],
@@ -688,6 +690,7 @@
                 const eCleaned = cleanStudentName(eStr).trim().toLowerCase();
                 const eBase = normalizeStudentMatchName(eStr);
 
+                if (/\(\d+\)\s*$/.test(eStr)) return eLower === fullNameLower;
                 return (
                     eLower === fullNameLower ||
                     eLower === cleanedLower ||
@@ -807,53 +810,55 @@
             return orderedAll;
         }
 
-        function computeActualRouteKmForDriver(driver) {
-            const orderedStudents = getOrderedActiveStudentsForDriver(driver);
-            if (orderedStudents.length === 0) return 0;
+        function getSchoolPricePerKm(school) {
+            return (school && typeof school.pricePerKm === "number") ? school.pricePerKm : appData.settings.costs.pricePerKm;
+        }
 
+        // Fahrzeug-km (Kosten) und je Kind abrechenbare km (Umsatz, Lospreis der Schule)
+        function computeRouteFinancials(driver, studentsList) {
+            const res = { km: 0, billedKm: 0, revenue: 0 };
+            if (!studentsList || studentsList.length === 0) return res;
             const home = getDriverOrigin(driver);
-            let totalKm = 0;
-
-            const schoolGroups = [];
+            const known = new Set(appData.schools.map(sch => sch.name));
+            const groups = [];
             appData.schools.forEach(sch => {
-                const grp = orderedStudents.filter(s => s.school === sch.name);
-                if (grp.length > 0) schoolGroups.push({ school: sch, students: grp });
+                const grp = studentsList.filter(s => s.school === sch.name);
+                if (grp.length > 0) groups.push({ school: sch, students: grp });
             });
-            const knownSchoolNames = new Set(appData.schools.map(sch => sch.name));
-            const extraStudents = orderedStudents.filter(s => !knownSchoolNames.has(s.school));
-            if (extraStudents.length > 0) {
-                schoolGroups.push({ school: appData.schools[0], students: extraStudents });
-            }
+            const extra = studentsList.filter(s => !known.has(s.school));
+            if (extra.length > 0) groups.push({ school: appData.schools[0], students: extra });
+            const dist = (a, b, c, d) => calculateHaversineDistance(a, b, c, d) * 1.25;
 
-            let curLat = home.lat;
-            let curLon = home.lon;
-
-            schoolGroups.forEach(grp => {
-                const morningSeq = orderStudentsFromOrigin(grp.students, curLat, curLon, grp.school.lat, grp.school.lon, 0.35);
-                let mLat = curLat;
-                let mLon = curLon;
-                morningSeq.forEach(st => {
-                    totalKm += calculateHaversineDistance(mLat, mLon, st.lat, st.lon) * 1.25;
-                    mLat = st.lat;
-                    mLon = st.lon;
+            groups.forEach(grp => {
+                const sch = grp.school;
+                const price = getSchoolPricePerKm(sch);
+                const m = orderStudentsFromOrigin(grp.students, home.lat, home.lon, sch.lat, sch.lon, 0.35);
+                const legs = [];
+                let pLat = home.lat, pLon = home.lon;
+                m.forEach(st => { legs.push(dist(pLat, pLon, st.lat, st.lon)); pLat = st.lat; pLon = st.lon; });
+                const toSchool = dist(pLat, pLon, sch.lat, sch.lon);
+                res.km += legs.reduce((a, b) => a + b, 0) + toSchool;
+                for (let k = 0; k < m.length; k++) {
+                    let inCar = toSchool;
+                    for (let j = k + 1; j < m.length; j++) inCar += legs[j];
+                    res.billedKm += inCar;
+                    res.revenue += inCar * price;
+                }
+                const a = orderStudentsFromOrigin(grp.students, sch.lat, sch.lon, home.lat, home.lon, 0.25);
+                let aLat = sch.lat, aLon = sch.lon, cum = 0;
+                a.forEach(st => {
+                    cum += dist(aLat, aLon, st.lat, st.lon);
+                    aLat = st.lat; aLon = st.lon;
+                    res.billedKm += cum;
+                    res.revenue += cum * price;
                 });
-                totalKm += calculateHaversineDistance(mLat, mLon, grp.school.lat, grp.school.lon) * 1.25;
-
-                const afternoonSeq = orderStudentsFromOrigin(grp.students, grp.school.lat, grp.school.lon, home.lat, home.lon, 0.25);
-                let aLat = grp.school.lat;
-                let aLon = grp.school.lon;
-                afternoonSeq.forEach(st => {
-                    totalKm += calculateHaversineDistance(aLat, aLon, st.lat, st.lon) * 1.25;
-                    aLat = st.lat;
-                    aLon = st.lon;
-                });
-                totalKm += calculateHaversineDistance(aLat, aLon, home.lat, home.lon) * 1.25;
-
-                curLat = home.lat;
-                curLon = home.lon;
+                res.km += cum + dist(aLat, aLon, home.lat, home.lon);
             });
+            return res;
+        }
 
-            return totalKm;
+        function computeActualRouteKmForDriver(driver) {
+            return computeRouteFinancials(driver, getOrderedActiveStudentsForDriver(driver)).km;
         }
 
         function isCurrentDateInActiveRange(detailsStr) {
@@ -971,7 +976,8 @@
                     password: drvName.toLowerCase().split(" ")[0] + "123",
                     role: isRes ? "Reservefahrer" : "Regulärer Fahrer",
                     status: "verfügbar",
-                    assignedVehicle: `V-${(((i - 1) % 20) + 1).toString().padStart(2, '0')}`,
+                    assignedVehicle: i <= 20 ? `V-${i.toString().padStart(2, '0')}` : null,
+                    dynamicVehicle: i > 20,
                     homeAddress: homeObj.addr,
                     homeLat: homeObj.lat,
                     homeLon: homeObj.lon,
@@ -986,12 +992,12 @@
             const attendantSources = ["Extern (Schulbegleitung / Medizinisch)", "Intern (Zusätzliche Reservekraft)"];
 
             for (let i = 1; i <= 81; i++) {
-                let isGrundschuleStudent = (i <= 10);
+                let isGrundschuleStudent = (i <= 4);
                 let schoolObj = isGrundschuleStudent
                     ? appData.schools[(i % 2)]
                     : appData.schools[2 + (i % 2)];
 
-                let classNum = isGrundschuleStudent ? ((i % 4) + 1) : (((i - 11) % 6) + 5);
+                let classNum = isGrundschuleStudent ? ((i % 4) + 1) : (((i - 5) % 6) + 5);
                 let classStr = `Klasse ${classNum}`;
 
                 let sName = studentNames[(i - 1) % studentNames.length] + ` (${i})`;
@@ -1053,6 +1059,7 @@
             logEvent("Gewinnoptimale Tourenberechnung gestartet...");
 
             appData.drivers.forEach(d => d.assignedStudents = []);
+            appData.drivers.forEach(d => { if (d.dynamicVehicle) d.assignedVehicle = null; });
 
             let activeDrivers = appData.drivers.filter(d => !d.isReserve && !isDriverUnavailableToday(d.name));
             let unavailableRegularCount = appData.drivers.filter(d => !d.isReserve && isDriverUnavailableToday(d.name)).length;
@@ -1061,18 +1068,15 @@
                 let availableReserves = appData.drivers.filter(d => d.isReserve && !isDriverUnavailableToday(d.name));
                 for (let i = 0; i < Math.min(unavailableRegularCount, availableReserves.length); i++) {
                     const resDrv = availableReserves[i];
-                    if (!resDrv.assignedVehicle) {
-                        const usedVehIds = new Set(
-                            appData.drivers
-                                .filter(od => od.assignedVehicle && od.status !== 'krank' && !isDriverUnavailableToday(od.name))
-                                .map(od => od.assignedVehicle)
-                        );
-                        const freeVeh = appData.vehicles.find(v => !usedVehIds.has(v.id));
-                        if (freeVeh) resDrv.assignedVehicle = freeVeh.id;
-                    }
                     activeDrivers.push(resDrv);
                 }
             }
+
+            const usedVeh = new Set(activeDrivers.map(d => d.assignedVehicle).filter(Boolean));
+            activeDrivers.filter(d => !d.assignedVehicle).forEach(d => {
+                const fv = appData.vehicles.find(v => !usedVeh.has(v.id));
+                if (fv) { d.assignedVehicle = fv.id; usedVeh.add(fv.id); }
+            });
 
             let activeStudents = appData.students.filter(s => {
                 const isSick = isStudentSick(s);
@@ -1124,43 +1128,39 @@
                 ...activeStudents.filter(s => !requiresWheelchairVehicle(s))
             ];
 
-            let cursor = 0;
+            const fuelPerKm = appData.settings.costs.fuelCostPerKm;
+            const driverStudents = new Map(activeDrivers.map(d => [d.id, []]));
+            const marginalProfit = (drv, student) => {
+                const cur = driverStudents.get(drv.id);
+                const before = computeRouteFinancials(drv, cur);
+                const after = computeRouteFinancials(drv, [...cur, student]);
+                return (after.revenue - before.revenue) - fuelPerKm * (after.km - before.km);
+            };
+
             orderedStudentsForAssignment.forEach(student => {
                 const school = appData.schools.find(sch => sch.name === student.school) || appData.schools[0];
-                let assigned = false;
-
-                for (let offset = 0; offset < activeDrivers.length; offset++) {
-                    const idx = (cursor + offset) % activeDrivers.length;
-                    const drv = activeDrivers[idx];
-                    if (canFitStudent(drv, student, school, true)) {
-                        assignStudent(drv, student, school);
-                        cursor = (idx + 1) % activeDrivers.length;
-                        assigned = true;
-                        break;
-                    }
+                let best = null, bestProfit = -Infinity, relaxed = false;
+                for (const strict of [true, false]) {
+                    activeDrivers.forEach(drv => {
+                        if (!canFitStudent(drv, student, school, strict)) return;
+                        const p = marginalProfit(drv, student);
+                        if (p > bestProfit) { bestProfit = p; best = drv; }
+                    });
+                    if (best) { relaxed = !strict; break; }
                 }
-
-                if (!assigned) {
-                    for (let offset = 0; offset < activeDrivers.length; offset++) {
-                        const idx = (cursor + offset) % activeDrivers.length;
-                        const drv = activeDrivers[idx];
-                        if (canFitStudent(drv, student, school, false)) {
-                            assignStudent(drv, student, school);
-                            cursor = (idx + 1) % activeDrivers.length;
-                            assigned = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!assigned) {
+                if (best) {
+                    assignStudent(best, student, school);
+                    driverStudents.get(best.id).push(student);
+                    if (relaxed) logEvent(`WARNUNG: Zeitfenster für ${cleanStudentName(student.name)} nicht einhaltbar (Zuweisung trotzdem).`);
+                } else {
                     logEvent(`HINWEIS: Keine freie Kapazität/Fahrzeugklasse für ${cleanStudentName(student.name)}.`);
                 }
             });
 
-            let totalOptimizedKm = 0;
+            let totalOptimizedKm = 0, totalBilledKm = 0, totalRevenue = 0;
             activeDrivers.forEach(d => {
-                totalOptimizedKm += computeActualRouteKmForDriver(d);
+                const f = computeRouteFinancials(d, getOrderedActiveStudentsForDriver(d));
+                totalOptimizedKm += f.km; totalBilledKm += f.billedKm; totalRevenue += f.revenue;
             });
 
             const pricePerKm = appData.settings.costs.pricePerKm;
@@ -1170,13 +1170,13 @@
             const dailyWorkshopFixedCost = appData.settings.costs.monthlyWorkshopCost / workingDays;
             const totalDailyFixedCost = dailyPersonnelFixedCost + dailyWorkshopFixedCost;
 
-            const totalRevenue = totalOptimizedKm * pricePerKm;
             const totalFuelCosts = totalOptimizedKm * fuelCostPerKm;
             const dailyContribution = totalRevenue - totalFuelCosts;
             const netProfit = dailyContribution - totalDailyFixedCost;
 
             appData.lastProfitMetrics = {
                 totalKm: totalOptimizedKm,
+                totalBilledKm,
                 totalRevenue,
                 totalFuelCosts,
                 dailyContribution,
@@ -1856,7 +1856,7 @@
                 statusBox.innerHTML = `<h3>Aktive Krankmeldungen</h3>` + activeSick.map(st => `
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; font-size:0.85rem;">
                         <span><strong>${cleanStudentName(st.name)}</strong> – heute abgemeldet</span>
-                        <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="cancelParentSick('${st.name.replace(/'/g, "\'")}')">Wieder teilnehmen</button>
+                        <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="cancelParentSick('${st.name.replace(/'/g, "\\'")}')">Wieder teilnehmen</button>
                     </div>
                 `).join('');
             }
@@ -1878,7 +1878,7 @@
                 const csObj = appData.closedSchools.find(cs => cs.name === currentLoggedInSchool.name);
                 closureBanner.innerHTML = `<div class="admin-box" style="border-left:4px solid #e53e3e; background:#fff5f5; display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <span style="font-size:0.85rem; color:#c53030;"><strong>Schulausfall aktiv:</strong> ${csObj ? csObj.reason : 'Gemeldet'}</span>
-                    <button class="btn btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="reopenSchoolClosure('${currentLoggedInSchool.name.replace(/'/g, "\'")}')">Ausfall aufheben</button>
+                    <button class="btn btn-success" style="padding:4px 8px; font-size:0.75rem;" onclick="reopenSchoolClosure('${currentLoggedInSchool.name.replace(/'/g, "\\'")}')">Ausfall aufheben</button>
                 </div>`;
             } else {
                 closureBanner.innerHTML = '';
@@ -1888,7 +1888,7 @@
 
             appData.students.filter(s => s.school === currentLoggedInSchool.name).forEach(s => {
                 let assignedDrv = appData.drivers.find(d => d.assignedStudents.includes(s.id));
-                let isSick = appData.sickStudents.includes(s.name);
+                let isSick = isStudentSick(s);
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${cleanStudentName(s.name)}</strong></td>

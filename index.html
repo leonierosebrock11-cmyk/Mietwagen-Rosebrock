@@ -598,7 +598,7 @@
             }).catch(err => console.error("Telegram Fehler:", err));
         }
 
-        const STORAGE_KEY = 'rosebrock_app_data_profit_workshop10k_v35';
+        const STORAGE_KEY = 'rosebrock_app_data_profit_workshop10k_v37';
 
         const appData = {
             settings: {
@@ -1031,12 +1031,12 @@
             ];
 
             for (let i = 1; i <= 20; i++) {
-                let type = i >= 14 && i <= 18 ? "Rollstuhlfahrzeug" : "Kleinbus";
+                let type = i >= 14 && i <= 18 ? "Rollstuhlfahrzeug" : (i >= 19 ? "Pkw" : "Kleinbus"); // 13 Kleinbusse, 5 Rollstuhlfahrzeuge, 2 Pkw
                 appData.vehicles.push({
                     id: `V-${i.toString().padStart(2, '0')}`,
                     name: `Fahrzeug ${i} (${type})`,
                     type: type,
-                    capacity: i >= 14 && i <= 18 ? 5 : 8,
+                    capacity: type === "Rollstuhlfahrzeug" ? 5 : (type === "Pkw" ? 4 : 8), // Sitzplätze für Kinder (Pkw 4)
                     status: "verfügbar"
                 });
             }
@@ -1112,7 +1112,11 @@
                 let street = streetNames[(i - 1) % streetNames.length];
                 let address = `${street}, ${isGrundschuleStudent ? 'Region Celle' : 'Region Hannover'}`;
 
+                // Nur 5 Kinder benötigen ein Rollstuhlfahrzeug (Nr. 3, 19, 42, 63, 75); sonst Kinder ohne Rollstuhl
+                const WHEELCHAIR_IDS = [3, 19, 42, 63, 75];
                 let impairment = impairmentTypes[i % impairmentTypes.length];
+                if (WHEELCHAIR_IDS.includes(i)) impairment = "Eingeschränkte Mobilität";
+                else if (impairment === "Eingeschränkte Mobilität") impairment = "Körperliche Beeinträchtigung";
                 let needsAttendant = (i % 10 === 0);
                 let attendantSource = needsAttendant ? attendantSources[i % attendantSources.length] : "Keine Begleitung erforderlich";
 
